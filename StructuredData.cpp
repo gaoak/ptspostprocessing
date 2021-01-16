@@ -1,11 +1,10 @@
-#include "TECIO.h"
-#include "MASTER.h"
 #include<string>
 #include<vector>
 #include<cmath>
 #include "StructuredData.h"
 
-StructuredData::StructuredData(int i, int j, int k) {
+StructuredData::StructuredData(int i, int j, int k, double x0, double x1,
+                               double y0, double y1, double z0, double z1) {
     m_i = i;
     m_j = j;
     m_k = k;
@@ -17,7 +16,10 @@ StructuredData::StructuredData(int i, int j, int k) {
         m_x.push_back(std::vector<double>(m_Np, 0.));
     }
     m_varList = "x, y, z";
+    GenPoints(x0, x1, y0, y1, z0, z1);
 }
+
+
 
 int StructuredData::OutputCSV(std::string filename) {
     std::ofstream file(filename.c_str());
@@ -74,18 +76,24 @@ int StructuredData::GenPoints(double x0, double x1, double y0, double y1, double
             for(int i=0; i<m_i; ++i) {
                 int index = ArrayIndex(i, j, k);
                 if(m_i>1) {
-                    m_x[0][index] = x0 + i*(x1 - x0)/(m_i-1);
+                    m_dx = (x1 - x0)/(m_i-1);
+                    m_x[0][index] = x0 + i*m_dx;
                 } else {
+                    m_dx = std::nan("1");
                     m_x[0][index] = x0;
                 }
                 if(m_j>1) {
-                    m_x[1][index] = y0 + j*(y1 - y0)/(m_j-1);
+                    m_dy = (y1 - y0)/(m_j-1);
+                    m_x[1][index] = y0 + j*m_dy;
                 } else {
+                    m_dy = std::nan("1");
                     m_x[1][index] = y0;
                 }
                 if(m_k>1) {
-                    m_x[2][index] = z0 + k*(z1 - z0)/(m_k-1);
+                    m_dz = (z1 - z0)/(m_k-1);
+                    m_x[2][index] = z0 + k*m_dz;
                 } else {
+                    m_dz = std::nan("1");
                     m_x[2][index] = z0;
                 }
             }
@@ -101,117 +109,7 @@ int StructuredData::ArrayIndex(int i, int j, int k) {
     return i + j*m_i + k*m_i*m_j;
 }
 
-void parserDouble(const char * cstr, std::vector<double> & value) {
-    value.clear();
-    std::vector<int> digs;
-    std::vector<int> dige;
-    int i=0;
-    int flag = 0; //digit chunk
-    while(1) {
-        if((cstr[i]>='0' && cstr[i]<='9') ||
-            cstr[i]=='.' ||
-            cstr[i]=='e' || cstr[i]=='E' ||
-            cstr[i]=='+' || cstr[i]=='-') {
-            if(flag==0) {
-                digs.push_back(i);
-            }
-            flag = 1;
-        } else {
-            if(flag==1) {
-                dige.push_back(i);
-            }
-            flag =  0;
-        }
-        if(cstr[i]==0) break;
-        ++i;
-    }
-    double k;
-    for(int i=0; i<digs.size(); ++i) {
-        std::string cuts(cstr+digs[i], dige[i]-digs[i]);
-        if(sscanf(cuts.c_str(), "%lf", &k)<1) {
-            printf("error: parser double %s\n", cuts.c_str());
-        }
-        value.push_back(k);
-    }
-}
 
-int OutputTec360(std::string filename, std::string variables,
-                 int i, int j, int k, std::vector<void*> data,
-                 int isdouble,
-                 int debug,
-                 int filetype,
-                 int fileformat)
-{
-    INTEGER4 Debug = debug;
-    INTEGER4 VIsDouble = isdouble;
-    INTEGER4 FileType = filetype;
-    INTEGER4 FileFormat = fileformat; // 0 == PLT, 1 == SZPLT
-    INTEGER4 I = 0; /* Used to track return codes */
-    /*
-    * Open the file and write the tecplot datafile
-    * header information
-    */
-    I = TECINI142((char*)"OutputTec360", // dataset title, seems not important
-                (char*)variables.c_str(),  // variables list
-                (char*)filename.c_str(), // output filename
-                (char*)".", // Scratch Directory
-                &FileFormat,
-                &FileType,
-                &Debug,
-                &VIsDouble);
-    if(I) return -1;
-
-    /*Ordered Zone Parameters*/
-    INTEGER4 IMax = i;
-    INTEGER4 JMax = j;
-    INTEGER4 KMax = k;
-    INTEGER4 ZoneType = 0;
-    INTEGER4 ICellMax = 0;
-    INTEGER4 JCellMax = 0;
-    INTEGER4 KCellMax = 0;
-    double   SolTime  = 0.;
-    INTEGER4 StrandID = 0;
-    INTEGER4 ParentZn = 0;
-    INTEGER4 IsBlock = 1;
-    INTEGER4 NFConns = 0;
-    INTEGER4 FNMode = 0;
-    INTEGER4 TotalNumFaceNodes = 1;
-    INTEGER4 TotalNumBndryFaces = 1;
-    INTEGER4 TotalNumBndryConnections = 1;
-    INTEGER4 ShrConn = 0;
-    I = TECZNE142((char*)"Ordered Zone", // zone name, seems not important
-                &ZoneType, // 0 is ordered zone
-                &IMax,
-                &JMax,
-                &KMax,
-                &ICellMax,
-                &JCellMax,
-                &KCellMax,
-                &SolTime,
-                &StrandID,
-                &ParentZn,
-                &IsBlock,
-                &NFConns,
-                &FNMode,
-                &TotalNumFaceNodes,
-                &TotalNumBndryFaces,
-                &TotalNumBndryConnections,
-                NULL,
-                NULL,
-                NULL,
-                &ShrConn);
-    if(I) return -1;
-
-    INTEGER4 III = IMax * JMax * KMax;
-    for(int i=0; i<data.size(); ++i) {
-        I = TECDAT142(&III, data[i], &VIsDouble);
-        if(I) return -1;
-    }
-    I = TECEND142();
-    if(I) return -1;
-    
-    return 0;
-}
 
 int StructuredData::OutputTec360(std::string filename)
 {
