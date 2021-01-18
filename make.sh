@@ -1,1 +1,3 @@
-c++ -o a.out StructuredData.cpp  /usr/Tecplot/tecplot360ex/lib/libtecio.a /usr/Tecplot/tecplot360ex/lib/libadkutil.a   -lstdc++ -pthread
+rm *.o
+c++ -c -I $TECINCLUDE *cpp
+c++ -o process *.o $TECLIB/libtecio.a $TECLIB/libadkutil.a -lstdc++ -pthread

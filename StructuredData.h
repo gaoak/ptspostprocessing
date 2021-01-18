@@ -11,26 +11,21 @@
 
 class StructuredData {
 public:
-    StructuredData(int i, int j, int k, double x0, double x1,
-                   double y0, double y1, double z0, double z1);
+    StructuredData(const std::vector<int> &N, const std::vector<double> &range);
     int OutputCSV(std::string filename);
     int OutputTec360(std::string filename);
     int LoadCSV(std::string filename);
-    int Smoothing(double l, const std::vector<double> &idata, std::vector<double> &odata);
+    int Smoothing(double sigma, const std::vector<double> &idata, std::vector<double> &odata);
     int Diff(int dir, const std::vector<double> &idata, std::vector<double> &odata, int order = 2);
-    int m_i;
-    int m_j;
-    int m_k;
     int m_Np;
-    double m_dx;
-    double m_dy;
-    double m_dz;
+    std::vector<int> m_N;
+    std::vector<double> m_range;
+    std::vector<double> m_dx;
     std::vector<std::vector<double> > m_x; // i first, then j, k last
     std::vector<std::vector<double> > m_phys; //physics fields
     std::string m_varList;
 private:
-    int GenPoints(double x0, double x1, double y0, double y1, double z0, double z1);
-    int ArrayIndex(int i, int j, int k);
+    int GenPoints();
     int ParserCSVHeader(const char * header);
 };
 #endif

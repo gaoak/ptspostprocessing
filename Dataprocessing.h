@@ -1,10 +1,10 @@
 #ifndef DATAPROCESS_H
 #define DATAPROCESS_H
 #include<vector>
-
-class GaussKernel {
+#define GAUSS 0
+class KernelSmooth {
 public:
-    GaussKernel(double sigma, double dx, double cutoff = 5.);
+    KernelSmooth(double sigma, double dx, double cutoff = 5., int kernel = GAUSS);
     int GetIMax();
     double GW(int i, int padding);
     std::vector<std::vector<double> > m_weight;
@@ -18,6 +18,12 @@ public:
 private:
 	double Sum(const double *data, int padding);
     int BoundPadding(int padding);
+    double Kernel(double sigma, double x, int kernel = GAUSS);
+};
+
+class Derivative {
+public:
+    Derivative(int direction, double dx, double cutoff = 5., int order = 2);
 };
 
 #endif

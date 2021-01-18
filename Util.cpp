@@ -63,6 +63,9 @@ int Index(const std::vector<int> &N, const std::vector<int> & index) {
     int res = index[0];
     int Np = N[0];
     for(int i=1; i<N.size(); ++i) {
+        if(index[i]<0 || index[i]>=N[i]) {
+            printf("error: illegal index %d in Index %d\n", index[i], N[i]);
+        }
         res += Np*index[i];
         Np *= N[i];
     }

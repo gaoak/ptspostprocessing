@@ -6,28 +6,35 @@
 #include "Dataprocessing.h"
 #include "Util.h"
 
-GaussKernel::GaussKernel(double sigma, double dx, double cutoff) {
+KernelSmooth::KernelSmooth(double sigma, double dx, double cutoff, int kernel) {
     m_maxOffset = std::floor(cutoff*sigma/dx);
-    std::vector<double> gauss(m_maxOffset + 1, 0.);
+    std::vector<double> coeff(m_maxOffset + 1, 0.);
     std::vector<double> sum(m_maxOffset + 1, 1.);
     for(int i=0; i<=m_maxOffset; ++i) {
-        double tmp = i*dx/sigma;
-        tmp = std::exp(-0.5*tmp*tmp);
-        gauss[i] = tmp;
+        coeff[i] = Kernel(sigma, i*dx, kernel);
         if(i) {
-            sum[i] = sum[i-1] + 2. * gauss[i];
+            sum[i] = sum[i-1] + 2. * coeff[i];
         }
     }
     for(int i=-0; i<=m_maxOffset; ++i) {
         std::vector<double> tmpw(i+1);
         for(int j=0; j<=i; ++j) {
-            tmpw[j] = gauss[j]/sum[i];
+            tmpw[j] = coeff[j]/sum[i];
         }
         m_weight.push_back(tmpw);
     }
 }
 
-int GaussKernel::BoundPadding(int padding) {
+double KernelSmooth::Kernel(double sigma, double x, int kernel) {
+    if(kernel == GAUSS) {
+        double tmp = x/sigma;
+        return std::exp(-0.5*tmp*tmp);
+    } else {
+        return 1.;
+    }
+}
+
+int KernelSmooth::BoundPadding(int padding) {
     if(padding<0) {
         return 0;
     } else if(padding>m_maxOffset) {
@@ -37,7 +44,7 @@ int GaussKernel::BoundPadding(int padding) {
     }
 }
 
-double GaussKernel::GW(int i, int padding) {
+double KernelSmooth::GW(int i, int padding) {
     if(i>padding) {
         printf("error: array exceed bound in GW\n");
     }
@@ -45,7 +52,7 @@ double GaussKernel::GW(int i, int padding) {
     return m_weight[padding][std::abs(i)];
 }
 
-double GaussKernel::Sum(const double *data, int padding) {
+double KernelSmooth::Sum(const double *data, int padding) {
     double sum = *data;
     padding = BoundPadding(padding);
     sum = (*data) * m_weight[padding][0];
@@ -55,7 +62,7 @@ double GaussKernel::Sum(const double *data, int padding) {
     return sum;
 }
 
-int GaussKernel::DoSmooth(int N, const double * data, double * sdata) {
+int KernelSmooth::DoSmooth(int N, const double * data, double * sdata) {
     for(int i=0; i<N; ++i) {
         int padding = std::min(i, N-i);
         padding = BoundPadding(padding);
@@ -64,7 +71,13 @@ int GaussKernel::DoSmooth(int N, const double * data, double * sdata) {
     return N;
 }
 
-int GaussKernel::DoSmooth(const std::vector<int> &N, const double *data, double *sdata) {
+int KernelSmooth::DoSmooth(const std::vector<int> &Nraw, const double *data, double *sdata) {
+    std::vector<int> N;
+    for(int i=0; i<Nraw.size(); ++i) {
+        if(Nraw[i]>1) {
+            N.push_back(Nraw[i]);
+        }
+    }
     std::vector<int> Np(N.size(), 1);
     std::vector<int> oN(N.size());
     std::vector<int> sN(N.size());
@@ -85,70 +98,14 @@ int GaussKernel::DoSmooth(const std::vector<int> &N, const double *data, double 
         for(int p=0; p<Np[dir]; ++p) {
             DoSmooth(N[dir], swap.data()+p*N[dir], sdata+p*N[dir]);
         }
-        if(dir<N.size()-1) {
-            LeftShiftIndex(sN, oN, sdata, swap.data());
-            sN = oN;
-        }
+        LeftShiftIndex(sN, oN, sdata, swap.data());
+        sN = oN;
+    }
+    for(int i=0; i<Npt; ++i) {
+        sdata[i] = swap[i];
     }
 }
 
-
-
-int GaussKernel::GetIMax() {
+int KernelSmooth::GetIMax() {
     return m_maxOffset;
-}
-
-std::map<bool, std::string> testresults = {{true, "pass"},{false, "fail"}};
-
-int test_weight(int padding) {
-    GaussKernel ker(1., 0.3);
-    double sum = 0.;
-    for(int i=-padding; i<=padding; ++i) {
-        double tmp = ker.GW(i, padding);
-        printf("%g,",tmp);
-        sum+= tmp;
-    }
-    printf("\ntest weight: sum %g, %s\n", sum-1., testresults[fabs(sum-1.)<1E-14].c_str());
-}
-
-int test_index(std::vector<int> &N) {
-    int Np = N[0];
-    for(int i=1; i<N.size(); ++i) {
-        Np *= N[i];
-    }
-    std::vector<int> ind(N.size());
-    int failcount = 0;
-    for(int i=0; i<Np; ++i) {
-        invIndex(N, i, ind);
-        int tmp = Index(N, ind);
-        printf("%d, (", i);
-        for(int j=0; j<ind.size(); ++j) {
-            printf("%d,",ind[j]);
-        }
-        printf("), %d\n", tmp);
-        failcount += i != tmp;
-    }
-    printf("test index: %d, %s\n", failcount, testresults[!failcount].c_str());
-}
-
-int main() {
-    test_weight(6);
-    std::vector<int> N={4,2,3};
-    test_index(N);
-    N={2,1,3};
-    test_index(N);
-    N={1,2,3};
-    test_index(N);
-    N={1,2,1};
-    test_index(N);
-    N={4,2,1};
-    test_index(N);
-    N={2,3};
-    test_index(N);
-    N={1,2};
-    test_index(N);
-    N={4,1};
-    test_index(N);
-    N={4,2,3,5};
-    test_index(N);
 }

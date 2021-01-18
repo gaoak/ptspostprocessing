@@ -3,20 +3,30 @@
 #include<cmath>
 #include "StructuredData.h"
 
-StructuredData::StructuredData(int i, int j, int k, double x0, double x1,
-                               double y0, double y1, double z0, double z1) {
-    m_i = i;
-    m_j = j;
-    m_k = k;
-    m_Np = m_i * m_j * m_k;
-    if(m_Np==0) {
+StructuredData::StructuredData(const std::vector<int> &N, const std::vector<double> &range) {
+    m_N = N;
+    for(int i=N.size(); i<3; ++i) {
+        m_N.push_back(1);
+    }
+    m_range = range;
+    for(int i=range.size(); i<3; ++i) {
+        m_range.push_back(0.);
+        m_range.push_back(0.);
+    }
+    m_Np = 1.;
+    if(N.size()==0) {
         printf("error: 0 points\n");
+        m_Np = 0;
+    } else {
+        for(int i=0; i<m_N.size(); ++i) {
+            m_Np *= m_N[i];
+        }
     }
     for(int i=0; i<3; ++i) {
         m_x.push_back(std::vector<double>(m_Np, 0.));
     }
     m_varList = "x, y, z";
-    GenPoints(x0, x1, y0, y1, z0, z1);
+    GenPoints();
 }
 
 
@@ -70,31 +80,35 @@ int StructuredData::LoadCSV(std::string filename) {
     return index;
 }
 
-int StructuredData::GenPoints(double x0, double x1, double y0, double y1, double z0, double z1) {
-    for(int k=0; k<m_k; ++k) {
-        for(int j=0; j<m_j; ++j) {
-            for(int i=0; i<m_i; ++i) {
-                int index = ArrayIndex(i, j, k);
-                if(m_i>1) {
-                    m_dx = (x1 - x0)/(m_i-1);
-                    m_x[0][index] = x0 + i*m_dx;
+int StructuredData::GenPoints() {
+    for(int k=0; k<m_N[2]; ++k) {
+        for(int j=0; j<m_N[1]; ++j) {
+            for(int i=0; i<m_N[0]; ++i) {
+                std::vector<int> index(3);
+                index[0] = i;
+                index[1] = j;
+                index[2] = k;
+                int index = Index(m_N, index);
+                if(m_N[0]>1) {
+                    m_dx[0] = (m_range[1] - m_range[0])/(m_N[0]-1);
+                    m_x[0][index] = m_range[0] + i*m_dx[0];
                 } else {
                     m_dx = std::nan("1");
-                    m_x[0][index] = x0;
+                    m_x[0][index] = m_range[0];
                 }
-                if(m_j>1) {
-                    m_dy = (y1 - y0)/(m_j-1);
-                    m_x[1][index] = y0 + j*m_dy;
+                if(m_N[1]>1) {
+                    m_dx[1] = (m_range[3] - m_range[2])/(m_N[1]-1);
+                    m_x[1][index] = m_range[2] + j*m_dx[1];
                 } else {
-                    m_dy = std::nan("1");
-                    m_x[1][index] = y0;
+                    m_dx[1] = std::nan("1");
+                    m_x[1][index] = m_range[2];
                 }
-                if(m_k>1) {
-                    m_dz = (z1 - z0)/(m_k-1);
-                    m_x[2][index] = z0 + k*m_dz;
+                if(m_N[2]>1) {
+                    m_dx[2] = (m_range[5] - m_range[4])/(m_N[2]-1);
+                    m_x[2][index] = m_range[4] + k*m_dx[2];
                 } else {
-                    m_dz = std::nan("1");
-                    m_x[2][index] = z0;
+                    m_dx[2] = std::nan("1");
+                    m_x[2][index] = m_range[4];
                 }
             }
         }
