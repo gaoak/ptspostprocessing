@@ -15,8 +15,8 @@ public:
     int OutputCSV(std::string filename);
     int OutputTec360(std::string filename);
     int LoadCSV(std::string filename);
-    int Smoothing(double sigma, const std::vector<double> &idata, std::vector<double> &odata);
-    int Diff(int dir, const std::vector<double> &idata, std::vector<double> &odata, int order = 2);
+    int Smoothing(double sigma, std::vector<std::vector<double> > &odata);
+    int Diff(const std::vector<std::vector<double> > &u, std::vector<std::vector<double> > &du, int order);
     int m_Np;
     std::vector<int> m_N;
     std::vector<double> m_range;

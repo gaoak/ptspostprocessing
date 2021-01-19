@@ -9,7 +9,7 @@
 std::map<bool, std::string> testresults = {{true, "pass"},{false, "fail"}};
 
 int test_weight(int padding) {
-    GaussKernel ker(1., 0.3);
+    KernelSmooth ker;
     double sum = 0.;
     for(int i=-padding; i<=padding; ++i) {
         double tmp = ker.GW(i, padding);
@@ -41,7 +41,7 @@ int test_index(std::vector<int> &N) {
 
 int main() {
     test_weight(6);
-    std::vector<int> N={4,2,3};
+    std::vector<int> N = {4,2,3};
     test_index(N);
     N={2,1,3};
     test_index(N);

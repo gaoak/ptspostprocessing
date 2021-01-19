@@ -2,6 +2,7 @@
 #include<vector>
 #include<cmath>
 #include "StructuredData.h"
+#include "Dataprocessing.h"
 
 StructuredData::StructuredData(const std::vector<int> &N, const std::vector<double> &range) {
     m_N = N;
@@ -84,16 +85,14 @@ int StructuredData::GenPoints() {
     for(int k=0; k<m_N[2]; ++k) {
         for(int j=0; j<m_N[1]; ++j) {
             for(int i=0; i<m_N[0]; ++i) {
-                std::vector<int> index(3);
-                index[0] = i;
-                index[1] = j;
-                index[2] = k;
-                int index = Index(m_N, index);
+                std::vector<int> ind(3);
+                ind[0] = i; ind[1] = j; ind[2] = k;
+                int index = Index(m_N, ind);
                 if(m_N[0]>1) {
                     m_dx[0] = (m_range[1] - m_range[0])/(m_N[0]-1);
                     m_x[0][index] = m_range[0] + i*m_dx[0];
                 } else {
-                    m_dx = std::nan("1");
+                    m_dx[0] = std::nan("1");
                     m_x[0][index] = m_range[0];
                 }
                 if(m_N[1]>1) {
@@ -116,17 +115,7 @@ int StructuredData::GenPoints() {
     return m_Np;
 }
 
-int StructuredData::ArrayIndex(int i, int j, int k) {
-    if(i<0 || i>=m_i || j<0 || j>=m_j || k<0 || k>=m_k) {
-        printf("error: ilegal index (%d,%d,%d) for array size (%d,%d,%d)\n", i, j, k, m_i, m_j, m_k);
-    }
-    return i + j*m_i + k*m_i*m_j;
-}
-
-
-
-int StructuredData::OutputTec360(std::string filename)
-{
+int StructuredData::OutputTec360(std::string filename) {
     int isdouble = 1;
     std::vector<void*> data;
     for(int i=0; i<m_x.size(); ++i) {
@@ -135,6 +124,20 @@ int StructuredData::OutputTec360(std::string filename)
     for(int i=0; i<m_phys.size(); ++i) {
         data.push_back((void*) (m_phys[i].data()) );
     }
-    ::OutputTec360(filename, m_varList, m_i, m_j, m_k, data, isdouble);
+    ::OutputTec360(filename, m_varList, m_N[0], m_N[1], m_N[2], data, isdouble);
     return m_x.size() + m_phys.size();
+}
+
+int StructuredData::Smoothing(double sigma, std::vector<std::vector<double> > &odata) {
+    KernelSmooth kernel;
+    std::vector<double> sigma_dx(3);
+    for(int i=0; i<3; ++i) {
+        sigma_dx[i] = sigma / m_dx[i];
+    }
+    return kernel.DoSmooth(sigma_dx, m_N, odata);
+}
+
+int StructuredData::Diff(const std::vector<std::vector<double> > &u, std::vector<std::vector<double> > &du, int order) {
+    Derivative der;
+    der.Diff(m_N, u, du, m_dx[0], order);
 }

@@ -35,26 +35,50 @@ void parserDouble(const char * cstr, std::vector<double> & value) {
     }
 }
 
-void LeftShiftArray(const std::vector<int> &a, std::vector<int> &res) {
-    for(int i=0; i<res.size(); ++i) {
-        res[i] = a[(i+1)%res.size()];
+void ShiftArray(std::vector<int> &a, int dir) {
+    if(a.size()==0) {
+        return;
+    }
+    if(dir<0) {
+        dir = (a.size() + dir % a.size()) % a.size();
+    } else {
+        dir = dir % a.size();
+    }
+    std::vector<int> tmp = a;
+    for(int i=0; i<a.size(); ++i) {
+        a[(i+dir)%a.size()] = tmp[i];
     }
 }
 
-int LeftShiftIndex(std::vector<int> &N, std::vector<int> &oN, const double *data, double * odata) {
+int ShiftIndex(std::vector<int> &N, std::vector<double*> &odata, int dir) {
     // i,j,k to j,k,i
+    if(odata.size()==0) {
+        return 0;
+    }
     size_t dim = N.size();
-    LeftShiftArray(N, oN);
     int Np = 1;
     for(int i=0; i<dim; ++i) {
         Np *= N[i];
     }
+    std::vector<std::vector<double> > data;
+    for(int i=0; i<odata.size(); ++i) {
+        data.push_back(std::vector<double>(Np));
+        for(int j=0; j<Np; ++j) {
+            data[i][j] = odata[i][j];
+        }
+    }
+    std::vector<int> oN = N;
+    ShiftArray(oN, dir);
     std::vector<int> ind(dim);
     std::vector<int> indo(dim);
     for(int i=0; i<Np; ++i) {
         invIndex(N, i, ind);
-        LeftShiftArray(ind, indo);
-        odata[Index(oN, indo)] = data[i];
+        indo = ind;
+        ShiftArray(indo, dir);
+        int it = Index(oN, indo);
+        for(int n=0; n<data.size(); ++n) {
+            odata[n][it] = data[n][i];
+        }
     }
     return Np;
 }
