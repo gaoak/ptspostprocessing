@@ -30,7 +30,9 @@ StructuredData::StructuredData(const std::vector<int> &N, const std::vector<doub
     GenPoints();
 }
 
-
+int StructuredData::GetTotPoints() {
+    return m_Np;
+}
 
 int StructuredData::OutputCSV(std::string filename) {
     std::ofstream file(filename.c_str());
@@ -137,7 +139,18 @@ int StructuredData::Smoothing(double sigma, std::vector<std::vector<double> > &o
     return kernel.DoSmooth(sigma_dx, m_N, odata);
 }
 
-int StructuredData::Diff(const std::vector<std::vector<double> > &u, std::vector<std::vector<double> > &du, int order) {
+int StructuredData::Diff(std::vector<std::vector<double> > &u, std::vector<std::vector<double> > &du, int dir, int order) {
+    if(m_N[dir]==0) {
+        printf("error: cannot calculate finite difference in 1 data, dir %d\n", dir);
+        return 0;
+    }
     Derivative der;
-    der.Diff(m_N, u, du, m_dx[0], order);
+    if(dir) {
+        ShiftIndex(m_N, u, -dir);
+    }
+    der.Diff(m_N, u, du, m_dx[dir], order);
+    if(dir) {
+        ShiftIndex(m_N, u, dir);
+        ShiftIndex(m_N, du, dir);
+    }
 }

@@ -50,15 +50,45 @@ void ShiftArray(std::vector<int> &a, int dir) {
     }
 }
 
-int ShiftIndex(std::vector<int> &N, std::vector<double*> &odata, int dir) {
+bool CompactArray(std::vector<int> &N) {
+    std::vector<int> sN = N;
+    N.clear();
+    for(int i=0; i<sN.size(); ++i) {
+        if(1!=sN[i]) {
+            N.push_back(sN[i]);
+        }
+    }
+    return N.size()!=sN.size();
+}
+
+bool NeedShift(std::vector<int> N, int dir) {
+    std::vector<int> sN = N;
+    ShiftArray(sN, dir);
+    CompactArray(N);
+    CompactArray(sN);
+    for(int i=0; i<N.size(); ++i) {
+        if(N[i]!=sN[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+int ShiftIndex(std::vector<int> &N, std::vector<std::vector<double> > &odata, int dir) {
     // i,j,k to j,k,i
     if(odata.size()==0) {
         return 0;
     }
-    size_t dim = N.size();
+    std::vector<int> sN = N;
+    ShiftArray(N, dir);
+    if(!NeedShift(sN, dir)) {
+        return 0;
+    }
+
+    size_t dim = sN.size();
     int Np = 1;
     for(int i=0; i<dim; ++i) {
-        Np *= N[i];
+        Np *= sN[i];
     }
     std::vector<std::vector<double> > data;
     for(int i=0; i<odata.size(); ++i) {
@@ -67,15 +97,14 @@ int ShiftIndex(std::vector<int> &N, std::vector<double*> &odata, int dir) {
             data[i][j] = odata[i][j];
         }
     }
-    std::vector<int> oN = N;
-    ShiftArray(oN, dir);
+    
     std::vector<int> ind(dim);
     std::vector<int> indo(dim);
     for(int i=0; i<Np; ++i) {
-        invIndex(N, i, ind);
+        invIndex(sN, i, ind);
         indo = ind;
         ShiftArray(indo, dir);
-        int it = Index(oN, indo);
+        int it = Index(N, indo);
         for(int n=0; n<data.size(); ++n) {
             odata[n][it] = data[n][i];
         }

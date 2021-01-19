@@ -100,11 +100,9 @@ int KernelSmooth::DoSmooth(const std::vector<double> &sigmaintegerwidth, const s
         sN[dir] = N[dir];
     }
     std::vector<std::vector<double> > swap;
-    std::vector<double*> swapdata;
     for(int i=0; i<sdata.size(); ++i) {
         std::vector<double> tmpv(Npt, 0.);
         swap.push_back(tmpv);
-        swapdata.push_back(tmpv.data());
     }
     for(int d=0; d<sdata.size(); ++d) {
         for(int i=0; i<Npt; ++i) {
@@ -115,10 +113,10 @@ int KernelSmooth::DoSmooth(const std::vector<double> &sigmaintegerwidth, const s
         UpdateWeight(sigma[dir]);
         for(int d=0; d<sdata.size(); ++d) {
             for(int p=0; p<Np[dir]; ++p) {
-                DoSmooth(N[dir], swapdata[d]+p*N[dir]);
+                DoSmooth(N[dir], swap[d].data()+p*N[dir]);
             }
         }
-        ShiftIndex(sN, swapdata, -1);
+        ShiftIndex(sN, swap, -1);
     }
     for(int d=0; d<sdata.size(); ++d) {
         for(int i=0; i<Npt; ++i) {
