@@ -15,15 +15,18 @@ public:
     int OutputCSV(std::string filename);
     int OutputTec360(std::string filename);
     int LoadCSV(std::string filename);
-    int Smoothing(double sigma, std::vector<std::vector<double> > &odata);
-    int Diff(std::vector<std::vector<double> > &u, std::vector<std::vector<double> > &du, int dir, int order);
     int GetTotPoints();
+    int AddPhysics(std::string var, void * func);
+    int Smoothing(double sigma, std::vector<int > &field, bool inplace = true);
+    int Diff(std::vector<int > &field, int dir, int order = 2);
     std::vector<std::vector<double> > m_x; // i first, then j, k last
     std::vector<std::vector<double> > m_phys; //physics fields
     std::string m_varList;
 private:
     int GenPoints();
     int ParserCSVHeader(const char * header);
+    int Smoothing(double sigma, std::vector<std::vector<double> > &odata);
+    int Diff(std::vector<std::vector<double> > &u, std::vector<std::vector<double> > &du, int dir, int order);
     std::vector<int> m_N;        //dimension 3
     std::vector<double> m_range; //dimension 6
     std::vector<double> m_dx;    //dimension 3

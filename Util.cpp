@@ -62,6 +62,11 @@ bool CompactArray(std::vector<int> &N) {
 }
 
 bool NeedShift(std::vector<int> N, int dir) {
+    for(int i=0; i<N.size(); ++i) {
+        if(N[i]!=1) {
+            N[i] = 10 + i;
+        }
+    }
     std::vector<int> sN = N;
     ShiftArray(sN, dir);
     CompactArray(N);
@@ -92,10 +97,7 @@ int ShiftIndex(std::vector<int> &N, std::vector<std::vector<double> > &odata, in
     }
     std::vector<std::vector<double> > data;
     for(int i=0; i<odata.size(); ++i) {
-        data.push_back(std::vector<double>(Np));
-        for(int j=0; j<Np; ++j) {
-            data[i][j] = odata[i][j];
-        }
+        data.push_back(odata[i]);
     }
     
     std::vector<int> ind(dim);

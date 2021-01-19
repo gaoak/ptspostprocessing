@@ -38,8 +38,23 @@ int test_index(std::vector<int> &N) {
     }
     printf("test index: %d, %s\n", failcount, testresults[!failcount].c_str());
 }
-
+double sinfunc(std::vector<double> p) {
+    return sin(200.*M_PI*p[2]) + sin(2.*M_PI*p[2]) + 0.*cos(2.*M_PI*p[1]);
+}
 int main() {
+    std::vector<int> N = {1, 128, 128};
+    std::vector<double> range = {0., 1., 0., 1., 0., 1.};
+    StructuredData sdata(N, range);
+    sdata.OutputCSV("coor.csv");
+    sdata.OutputTec360("coor.plt");
+    sdata.AddPhysics("sin", (void*) sinfunc);
+    sdata.OutputTec360("addphys.plt");
+    std::vector<int> field = {0};
+    sdata.Smoothing(0.02, field, false);
+    sdata.OutputTec360("smoothphys.plt");
+}
+
+int TestSummary() {
     test_weight(6);
     std::vector<int> N = {4,2,3};
     test_index(N);

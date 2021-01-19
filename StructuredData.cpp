@@ -14,6 +14,7 @@ StructuredData::StructuredData(const std::vector<int> &N, const std::vector<doub
         m_range.push_back(0.);
         m_range.push_back(0.);
     }
+    m_dx = std::vector<double>(3, 1.);
     m_Np = 1.;
     if(N.size()==0) {
         printf("error: 0 points\n");
@@ -57,6 +58,20 @@ int StructuredData::ParserCSVHeader(const char * header) {
         vcount += header[i]==',';
     }
     return vcount;
+}
+
+int StructuredData::AddPhysics(std::string var, void * func) {
+    double(*physfun)(std::vector<double>) = (double(*)(std::vector<double>))func;
+    m_varList += "," + var;
+    m_phys.push_back(std::vector<double>(m_Np));
+    for(int i=0; i<m_Np; ++i) {
+        std::vector<double> p(3);
+        p[0] = m_x[0][i];
+        p[1] = m_x[1][i];
+        p[2] = m_x[2][i];
+        m_phys[m_phys.size()-1][i] = physfun(p);
+    }
+    return m_Np;
 }
 
 int StructuredData::LoadCSV(std::string filename) {
@@ -152,5 +167,40 @@ int StructuredData::Diff(std::vector<std::vector<double> > &u, std::vector<std::
     if(dir) {
         ShiftIndex(m_N, u, dir);
         ShiftIndex(m_N, du, dir);
+    }
+}
+
+int StructuredData::Smoothing(double sigma, std::vector<int> &field, bool inplace) {
+    std::vector<std::vector<double> > data;
+    for(int i=0; i<field.size(); ++i) {
+        data.push_back(m_phys[field[i]]);
+    }
+    Smoothing(sigma, data);
+    if(!inplace) {
+        char buffer[100];
+        for(int i=0; i<field.size(); ++i) {
+            sprintf(buffer, ",Sv%d", field[i]);
+            m_varList += buffer;
+            m_phys.push_back(data[i]);
+        }
+    } else {
+        for(int i=0; i<field.size(); ++i) {
+            m_phys[field[i]] = data[i];
+        }
+    }
+}
+int StructuredData::Diff(std::vector<int > &field, int dir, int order) {
+    char buffer[100];
+    std::vector<std::vector<double> > u;
+    std::vector<std::vector<double> > du;
+    for(int i=0; i<field.size(); ++i) {
+        u.push_back(m_phys[field[i]]);
+        du.push_back(m_phys[field[i]]);
+    }
+    Diff(u, du, dir, order);
+    for(int i=0; i<field.size(); ++i) {
+        sprintf(buffer, ",v%d_%d", field[i], dir);
+        m_varList += buffer;
+        m_phys.push_back(du[i]);
     }
 }

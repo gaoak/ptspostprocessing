@@ -2,6 +2,7 @@
 *.dat
 *.plt
 *.vtu
+*.csv
 *.o
 *.pos
 *.fld
@@ -20,3 +21,5 @@ test*
 .vscode
 .~lock.meshdivision.pptx#
 a.out
+.vscode
+process
