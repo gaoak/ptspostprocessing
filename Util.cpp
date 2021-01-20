@@ -36,17 +36,18 @@ void parserDouble(const char * cstr, std::vector<double> & value) {
 }
 
 void ShiftArray(std::vector<int> &a, int dir) {
-    if(a.size()==0) {
+    int N = a.size();
+    if(N==0) {
         return;
     }
     if(dir<0) {
-        dir = (a.size() + dir % a.size()) % a.size();
+        dir = (N + dir % N ) % N;
     } else {
-        dir = dir % a.size();
+        dir = dir % N;
     }
     std::vector<int> tmp = a;
-    for(int i=0; i<a.size(); ++i) {
-        a[(i+dir)%a.size()] = tmp[i];
+    for(int i=0; i<N; ++i) {
+        a[(i+dir)%N] = tmp[i];
     }
 }
 

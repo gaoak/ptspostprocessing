@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string.h>
 #include <map>
+#include <limits>
 #include "Dataprocessing.h"
 #include "Util.h"
 
@@ -21,7 +22,7 @@ void KernelSmooth::UpdateWeight(double sigmaintegerwidth, double cutoff, int ker
         }
     }
     m_weight.clear();
-    for(int i=-0; i<=m_maxOffset; ++i) {
+    for(int i=0; i<=m_maxOffset; ++i) {
         std::vector<double> tmpw(i+1);
         for(int j=0; j<=i; ++j) {
             tmpw[j] = coeff[j]/sum[i];
@@ -32,8 +33,12 @@ void KernelSmooth::UpdateWeight(double sigmaintegerwidth, double cutoff, int ker
 
 double KernelSmooth::Kernel(double sigma, double x, int kernel) {
     if(kernel == GAUSS) {
-        double tmp = x/sigma;
-        return std::exp(-0.5*tmp*tmp);
+        if( x < std::numeric_limits<double>::epsilon() ) {
+            return 1.;
+        } else {
+            double tmp = x/sigma;
+            return std::exp(-0.5*tmp*tmp);
+        }
     } else {
         return 1.;
     }
@@ -90,7 +95,6 @@ int KernelSmooth::DoSmooth(const std::vector<double> &sigmaintegerwidth, const s
         }
     }
     std::vector<int> Np(N.size(), 1);
-    printf("size Np %d\n", (int)Np.size());
     std::vector<int> sN(N.size());
     for(int dir=0; dir<N.size(); ++dir) {
         for(int i=0; i<N.size(); ++i) {
@@ -142,7 +146,7 @@ int Derivative::Diff(int N, const double * uu, double * du, double dx, int order
         int padding = std::min(order/2, i);
         padding = std::min(padding, N-1-i);
         du[i] = 0.;
-        for(int k=1;k<padding;++k) {
+        for(int k=1;k<=padding;++k) {
             du[i] += m_centralcoeff[padding][k] * (uu[i+k] - uu[i-k]);
         }
         du[i] *= dx;

@@ -38,11 +38,23 @@ int test_index(std::vector<int> &N) {
     }
     printf("test index: %d, %s\n", failcount, testresults[!failcount].c_str());
 }
+double highfreq(std::vector<double> p) {
+    return sin(200.*M_PI*p[2]) + sin(200.*M_PI*p[0]) + sin(200.*M_PI*p[1]);
+}
+double lowfreq(std::vector<double> p) {
+    return sin(2.*M_PI*p[2]);
+}
+double deriv(std::vector<double> p) {
+    return 2.*M_PI*cos(2.*M_PI*p[2]);
+}
 double sinfunc(std::vector<double> p) {
-    return sin(200.*M_PI*p[2]) + sin(2.*M_PI*p[2]) + 0.*cos(2.*M_PI*p[1]);
+     return highfreq(p) + lowfreq(p);
+}
+double exact(std::vector<double> p) {
+    return lowfreq(p);
 }
 int main() {
-    std::vector<int> N = {1, 128, 128};
+    std::vector<int> N = {2, 129, 128};
     std::vector<double> range = {0., 1., 0., 1., 0., 1.};
     StructuredData sdata(N, range);
     sdata.OutputCSV("coor.csv");
@@ -51,6 +63,17 @@ int main() {
     sdata.OutputTec360("addphys.plt");
     std::vector<int> field = {0};
     sdata.Smoothing(0.02, field, false);
+/*
+    field.push_back(1);
+    sdata.Diff(field, 2, 4);
+    field.push_back(2);
+    field.push_back(3);
+    sdata.Smoothing(0.02, field, true);
+*/
+    field = {1};
+    std::vector<double> def = {0.};
+    sdata.MaskBoundary(0.02, field, def);
+    sdata.AddPhysics("exact", (void*) exact);
     sdata.OutputTec360("smoothphys.plt");
 }
 

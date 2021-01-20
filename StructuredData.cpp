@@ -160,13 +160,15 @@ int StructuredData::Diff(std::vector<std::vector<double> > &u, std::vector<std::
         return 0;
     }
     Derivative der;
+    std::vector<int> N = m_N;
     if(dir) {
-        ShiftIndex(m_N, u, -dir);
+        ShiftIndex(N, u, -dir);
     }
-    der.Diff(m_N, u, du, m_dx[dir], order);
+    der.Diff(N, u, du, m_dx[dir], order);
     if(dir) {
-        ShiftIndex(m_N, u, dir);
-        ShiftIndex(m_N, du, dir);
+        std::vector<int> tN = N;
+        ShiftIndex(N, u, dir);
+        ShiftIndex(tN, du, dir);
     }
 }
 
@@ -202,5 +204,27 @@ int StructuredData::Diff(std::vector<int > &field, int dir, int order) {
         sprintf(buffer, ",v%d_%d", field[i], dir);
         m_varList += buffer;
         m_phys.push_back(du[i]);
+    }
+}
+
+int StructuredData::MaskBoundary(double sigma, std::vector<int> &field, std::vector<double> & def) {
+    std::vector<int> numbers(3, -1);
+    std::vector<int> index(3);
+    for(int i=0; i<3; ++i) {
+        if(m_N[i]>1) {
+            numbers[i] = std::round(sigma/m_dx[i]);
+        }
+    }
+    for(int i=0; i<m_Np; ++i) {
+        invIndex(m_N, i, index);
+        for(int k=0; k<3; ++k) {
+            if(m_N[k]==1) continue;
+            if(index[k]<numbers[k] || m_N[k]-1-index[k]<numbers[k]) {
+                for(auto f=field.begin(); f!=field.end(); ++f) {
+                    m_phys[*f][i] = def[*f];
+                }
+                break;
+            }
+        }
     }
 }
