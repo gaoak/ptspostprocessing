@@ -1,6 +1,43 @@
 #include<vector>
 #include<string>
 #include "Util.h"
+
+void parserUInt(const char * cstr, std::vector<int> & value) {
+    value.clear();
+    std::vector<int> digs;
+    std::vector<int> dige;
+    int i=0;
+    int flag = 0; //digit chunk
+    while(1) {
+        if(cstr[i]>='0' && cstr[i]<='9') {
+            if(flag==0) {
+                digs.push_back(i);
+            }
+            flag = 1;
+        } else {
+            if(flag==1) {
+                dige.push_back(i);
+            }
+            flag =  0;
+        }
+        if(cstr[i]==0) break;
+        ++i;
+    }
+    int k;
+    for(int i=0; i<digs.size(); ++i) {
+        std::string cuts(cstr+digs[i], dige[i]-digs[i]);// data  in [s e-1]
+        if(sscanf(cuts.c_str(), "%d", &k)<1) {
+            printf("error: parser int %s \n",  cuts.c_str());
+        }
+        if(i>0 && (digs[i] - dige[i-1])==1 && cstr[digs[i]-1]=='-') {
+            for(int j=value[value.size()-1]+1; j<k; ++j) {
+                value.push_back(j);
+            }
+        }
+        value.push_back(k);
+    }
+}
+
 void parserDouble(const char * cstr, std::vector<double> & value) {
     value.clear();
     std::vector<int> digs;

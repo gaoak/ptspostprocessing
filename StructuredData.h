@@ -23,6 +23,7 @@ public:
     double GetPhysNorm(int f, int p);
     double GetPhysValue(int f, int i);
     double GetCoordValue(int f, int i);
+    int GetNumPhys();
     std::vector<std::vector<double> > m_x; // i first, then j, k last
     std::vector<std::vector<double> > m_phys; //physics fields
     std::string m_varList;

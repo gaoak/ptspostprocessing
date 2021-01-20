@@ -5,7 +5,7 @@
 #include "Dataprocessing.h"
 #include "Util.h"
 #include "StructuredData.h"
-
+using namespace std;
 std::map<bool, std::string> testresults = {{true, "pass"},{false, "fail"}};
 
 int test_weight(int padding) {
@@ -101,6 +101,53 @@ int TestSummary() {
     test_index(N);
 }
 
-int main() {
-    test_structuredData();
+int main(int argc, char *argv[]) {
+    std::vector<int> N(3, 1);
+    std::vector<double> range(6, 0.);
+    for(int c=1; c<argc; ++c) {
+        if(0==string("range").compare(argv[c])) {
+            parserDouble(argv[c+1], range);
+        }
+        if(0==string("num").compare(argv[c])) {
+            parserUInt(argv[c+1], N);
+        }
+    }
+
+    StructuredData sdata(N, range);
+    string filename;
+    std::vector<double> sigma, value;
+    for(int c=1; c<argc; ++c) {
+        if(0==string("dump").compare(argv[c])) {
+            filename = argv[c+1];
+            sdata.OutputCSV(filename);
+        }
+        if(0==string("load").compare(argv[c])) {
+            filename = argv[c+1];
+            sdata.LoadCSV(filename);
+        }
+        if(0==string("dosmooth").compare(argv[c])) {
+            parserDouble(argv[c+1], sigma);
+
+            std::vector<int> field;
+            for(int i=0; i<sdata.GetNumPhys(); ++i) {
+                field.push_back(i);
+            }
+            sdata.Smoothing(sigma[0], field, true);
+        }
+        if(0==string("maskbound").compare(argv[c])) {
+            parserDouble(argv[c+1], value);
+            std::vector<int> field;
+            map<int, double> def;
+            for(int i=0; i<sdata.GetNumPhys(); ++i) {
+                field.push_back(i);
+                def[i] = value[i];
+            }
+            sdata.MaskBoundary(3.*sigma[0], field, def);
+        }
+        if(0==string("output_def").compare(argv[c])) {
+            filename = argv[c+1];
+            sdata.OutputTec360(filename);
+        }
+    }
+    return 0;
 }

@@ -35,6 +35,10 @@ int StructuredData::GetTotPoints() {
     return m_Np;
 }
 
+int StructuredData::GetNumPhys() {
+    return m_phys.size();
+}
+
 int StructuredData::OutputCSV(std::string filename) {
     std::ofstream file(filename.c_str());
     file << "# " << m_varList << "\n";
