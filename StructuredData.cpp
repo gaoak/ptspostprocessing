@@ -65,13 +65,36 @@ int StructuredData::AddPhysics(std::string var, void * func) {
     m_varList += "," + var;
     m_phys.push_back(std::vector<double>(m_Np));
     for(int i=0; i<m_Np; ++i) {
-        std::vector<double> p(3);
-        p[0] = m_x[0][i];
-        p[1] = m_x[1][i];
-        p[2] = m_x[2][i];
+        std::vector<double> p;
+        for(int k=0; k<m_x.size(); ++k) {
+            p.push_back(m_x[k][i]);
+        }
+        for(int k=0; k<m_phys.size(); ++k) {
+            p.push_back(m_phys[k][i]);
+        }
         m_phys[m_phys.size()-1][i] = physfun(p);
     }
     return m_Np;
+}
+
+double StructuredData::GetPhysNorm(int f, int p) {
+    double sum = 0.;
+    for(int i=0; i<m_Np; ++i) {
+        if(p>0) {
+            sum += std::pow(std::fabs(m_phys[f][i]), p);
+        } else {
+            sum = std::max(sum, std::fabs(m_phys[f][i]));
+        }
+    }
+    return sum;
+}
+
+double StructuredData::GetPhysValue(int f, int i) {
+    return m_phys[f][i];
+}
+
+double StructuredData::GetCoordValue(int f, int i) {
+    return m_x[f][i];
 }
 
 int StructuredData::LoadCSV(std::string filename) {
@@ -207,7 +230,7 @@ int StructuredData::Diff(std::vector<int > &field, int dir, int order) {
     }
 }
 
-int StructuredData::MaskBoundary(double sigma, std::vector<int> &field, std::vector<double> & def) {
+int StructuredData::MaskBoundary(double sigma, std::vector<int> &field, std::map<int, double> def) {
     std::vector<int> numbers(3, -1);
     std::vector<int> index(3);
     for(int i=0; i<3; ++i) {

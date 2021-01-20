@@ -39,13 +39,14 @@ int test_index(std::vector<int> &N) {
     printf("test index: %d, %s\n", failcount, testresults[!failcount].c_str());
 }
 double highfreq(std::vector<double> p) {
+    return 0.;
     return sin(200.*M_PI*p[2]) + sin(200.*M_PI*p[0]) + sin(200.*M_PI*p[1]);
 }
 double lowfreq(std::vector<double> p) {
-    return sin(2.*M_PI*p[2]);
+    return sin(2.*M_PI*p[1]) + sin(2.*M_PI*p[2]);
 }
 double deriv(std::vector<double> p) {
-    return 2.*M_PI*cos(2.*M_PI*p[2]);
+    return 2.*M_PI*cos(2.*M_PI*p[1]) - p[4];
 }
 double sinfunc(std::vector<double> p) {
      return highfreq(p) + lowfreq(p);
@@ -53,28 +54,29 @@ double sinfunc(std::vector<double> p) {
 double exact(std::vector<double> p) {
     return lowfreq(p);
 }
-int main() {
-    std::vector<int> N = {2, 129, 128};
+int test_structuredData() {
+    std::vector<int> N = {12, 128 + 1, 2};
     std::vector<double> range = {0., 1., 0., 1., 0., 1.};
     StructuredData sdata(N, range);
-    sdata.OutputCSV("coor.csv");
-    sdata.OutputTec360("coor.plt");
+    //sdata.OutputCSV("coor.csv");
+    //sdata.OutputTec360("coor.plt");
     sdata.AddPhysics("sin", (void*) sinfunc);
-    sdata.OutputTec360("addphys.plt");
+    //sdata.OutputTec360("addphys.plt");
     std::vector<int> field = {0};
-    sdata.Smoothing(0.02, field, false);
-/*
-    field.push_back(1);
-    sdata.Diff(field, 2, 4);
-    field.push_back(2);
-    field.push_back(3);
-    sdata.Smoothing(0.02, field, true);
-*/
-    field = {1};
-    std::vector<double> def = {0.};
-    sdata.MaskBoundary(0.02, field, def);
-    sdata.AddPhysics("exact", (void*) exact);
+    //sdata.Smoothing(0.02, field, false);
+
+    field[0] = 0;
+    sdata.Diff(field, 1, 6);
+    //field = {2,3};
+    //sdata.Smoothing(0.02, field, true);
+
+    sdata.AddPhysics("deriv", (void*) deriv);
+    std::map<int, double> def = {{2, 2.*M_PI}, {3, 2.*M_PI}};
+    field = {2};
+    def = {{2,0.}};
+    sdata.MaskBoundary(0.1, field, def);
     sdata.OutputTec360("smoothphys.plt");
+    printf("sum %g\n", sdata.GetPhysNorm(2, -1));
 }
 
 int TestSummary() {
@@ -97,4 +99,8 @@ int TestSummary() {
     test_index(N);
     N={4,2,3,5};
     test_index(N);
+}
+
+int main() {
+    test_structuredData();
 }
