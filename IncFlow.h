@@ -8,5 +8,6 @@ public:
     int ExtractCore2Dplane(const std::vector<int> &N, const std::vector<int> &initial,
         const std::vector<int> &padding, std::vector<double> &data,
         std::vector<double> &core, bool ismin = true);
+    int CalculateVorticity(int order = 2);
 };
 #endif

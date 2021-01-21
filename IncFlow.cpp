@@ -7,6 +7,45 @@ IncFlow::IncFlow(const std::vector<int> &N, const std::vector<double> &range)
         :StructuredData(N, range) {
 }
 
+int IncFlow::CalculateVorticity(int order) {
+    std::vector<std::vector<double> > u, ux(3), uy(3), uz(3);
+    u.push_back(m_phys[0]);
+    u.push_back(m_phys[1]);
+    u.push_back(m_phys[2]);
+    for(int i=0; i<3; ++i) {
+        ux[i].resize(m_Np);
+        uy[i].resize(m_Np);
+        uz[i].resize(m_Np);
+    }
+    Diff(u, ux, 0, order);
+    Diff(u, uy, 1, order);
+    Diff(u, uz, 2, order);
+    int id;
+    //W_x
+    m_varList += ",W_x,W_y,W_z";
+    id = m_phys.size();
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    for(int i=0; i<m_Np; ++i) {
+        m_phys[id  ][i] = uy[2][i] - uz[1][i];
+        m_phys[id+1][i] = uz[0][i] - ux[2][i];
+        m_phys[id+2][i] = ux[1][i] - uy[0][i];
+    }
+
+    // Q Criterion
+    m_varList += ",Q";
+    id = m_phys.size();
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    for(int i=0; i<m_Np; ++i) {
+        m_phys[id][i] = -0.5 * (
+            ux[0][i]*ux[0][i] + ux[1][i]*uy[0][i] + ux[2][i]*uz[0][i] +
+            uy[0][i]*ux[1][i] + uy[1][i]*uy[1][i] + uy[2][i]*uz[1][i] +
+            uz[0][i]*ux[2][i] + uz[1][i]*uy[2][i] + uz[2][i]*uz[2][i]
+        );
+    }
+}
+
 int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > & cores, int dir) {
     cores.clear();
     std::vector<std::vector<double> > odata;
@@ -37,10 +76,10 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
             break;
         }
         dir = plane.first;
-        printf("search plane %d, %d\n", dir, plane.second);
+        //printf("search plane %d, %d\n", dir, plane.second);
         ExtractPlane(odata[0], plane, planeN, planedata);
         ShiftArray<double>(dx, 2-dir);
-        ShiftArray<double>(range, 2-dir);
+        ShiftArray<double>(range, 2*(2-dir));
         ShiftArray<int>(N, 2-dir);
         ShiftArray<int>(padding, 2-dir);
         ShiftArray<int>(intcenter, 2-dir);
@@ -57,13 +96,14 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
         intcenter.push_back(plane.second);
         ShiftArray<double>(dx, dir-2);
         ShiftArray<double>(physcenter, dir-2);
-        ShiftArray<double>(range, dir-2);
+        ShiftArray<double>(range, 2*(dir-2));
         ShiftArray<int>(N, dir-2);
         ShiftArray<int>(padding, dir-2);
         ShiftArray<int>(intcenter, dir-2);
         ShiftArray<int>(padding, dir-2);
         cores.push_back(physcenter);
         searched.insert(plane);
+        //printf("location %d, %d, %d\n", intcenter[0], intcenter[1], intcenter[2]);
         if(count) {
             int num = cores.size() - 1;
             double tmp = std::fabs(cores[num][0] - cores[num-1][0]);
@@ -83,6 +123,7 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
         } else {
             plane.second += 1;
         }
+        //printf("next plane %d, %d\n", plane.first, plane.second);
         if(searched.find(plane)!=searched.end()) {
             break;
         }
@@ -104,7 +145,7 @@ int IncFlow::ExtractCore2Dplane(const std::vector<int> &N, const std::vector<int
     int Np = N[0] * N[1];
     int imin = FindMin<double>(Np, data.data());
     double pmin = data[imin];
-    double thresh = 0.9 * pmin;
+    double thresh = 0.95 * pmin;
     std::vector<double> center;
     DoMaskShift<double>(Np, thresh, -1, data.data());
     core.clear();

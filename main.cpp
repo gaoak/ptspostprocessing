@@ -168,5 +168,8 @@ int main() {
               << cores[i][2] << "\n";
     }
     ofile.close();
+    vector<int> field = {0,1,2};
+    flow.Smoothing(0.03, field);
+    flow.CalculateVorticity();
     flow.OutputTec360("pro.plt");
 }
