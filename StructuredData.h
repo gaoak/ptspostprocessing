@@ -6,6 +6,7 @@
 #include<fstream>
 #include<iomanip>
 #include<map>
+#include<tuple>
 #include "Tecplotwraper.h"
 #include "Util.h"
 
@@ -18,19 +19,20 @@ public:
     int GetTotPoints();
     int AddPhysics(std::string var, void * func);
     int Smoothing(double sigma, std::vector<int> &field, bool inplace = true);
+    int Smoothing(double sigma, std::vector<std::vector<double> > &odata);
     int MaskBoundary(double sigma, std::vector<int> &field, std::map<int, double> def);
     int Diff(std::vector<int > &field, int dir, int order = 2);
     double GetPhysNorm(int f, int p);
+    int ExtractPlane(const std::vector<double> &data, std::pair<int, int> plane, std::vector<int> & N, std::vector<double> &odata);
     double GetPhysValue(int f, int i);
     double GetCoordValue(int f, int i);
     int GetNumPhys();
     std::vector<std::vector<double> > m_x; // i first, then j, k last
     std::vector<std::vector<double> > m_phys; //physics fields
     std::string m_varList;
-private:
+protected:
     int GenPoints();
     int ParserCSVHeader(const char * header);
-    int Smoothing(double sigma, std::vector<std::vector<double> > &odata);
     int Diff(std::vector<std::vector<double> > &u, std::vector<std::vector<double> > &du, int dir, int order);
     std::vector<int> m_N;        //dimension 3
     std::vector<double> m_range; //dimension 6

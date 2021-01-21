@@ -181,6 +181,42 @@ int StructuredData::Smoothing(double sigma, std::vector<std::vector<double> > &o
     return kernel.DoSmooth(sigma_dx, m_N, odata);
 }
 
+int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int, int> plane, std::vector<int> & N, std::vector<double> &odata) {
+    odata.clear();
+    N.resize(2);
+    int dir = plane.first;
+    if(dir%3==0) {
+        N[0] = m_N[1];
+        N[1] = m_N[2];
+        for(int k=0; k<m_N[2]; ++k) {
+            for(int j=0; j<m_N[1]; ++j) {
+                std::vector<int> ind = {plane.second, j, k};
+                odata.push_back(data[Index(m_N, ind)]);
+            }
+        }
+    }
+    if(dir%3==1) {
+        N[0] = m_N[2];
+        N[1] = m_N[0];
+        for(int i=0; i<m_N[0]; ++i) {
+            for(int k=0; k<m_N[2]; ++k) {
+                std::vector<int> ind = {i, plane.second, k};
+                odata.push_back(data[Index(m_N, ind)]);
+            }
+        }
+    }
+    if(dir%3==2) {
+        N[0] = m_N[0];
+        N[1] = m_N[1];
+        for(int j=0; j<m_N[1]; ++j) {
+            for(int i=0; i<m_N[0]; ++i) {
+                std::vector<int> ind = {i, j, plane.second};
+                odata.push_back(data[Index(m_N, ind)]);
+            }
+        }
+    }
+}
+
 int StructuredData::Diff(std::vector<std::vector<double> > &u, std::vector<std::vector<double> > &du, int dir, int order) {
     if(m_N[dir]==0) {
         printf("error: cannot calculate finite difference in 1 data, dir %d\n", dir);
@@ -194,8 +230,8 @@ int StructuredData::Diff(std::vector<std::vector<double> > &u, std::vector<std::
     der.Diff(N, u, du, m_dx[dir], order);
     if(dir) {
         std::vector<int> tN = N;
-        ShiftIndex(N, u, dir);
-        ShiftIndex(tN, du, dir);
+        ShiftIndex<double>(N, u, dir);
+        ShiftIndex<double>(tN, du, dir);
     }
 }
 

@@ -114,7 +114,7 @@ int KernelSmooth::DoSmooth(const std::vector<double> &sigmaintegerwidth, const s
                 DoSmooth(N[dir], swap[d].data()+p*N[dir]);
             }
         }
-        ShiftIndex(sN, swap, -1);
+        ShiftIndex<double>(sN, swap, -1);
     }
     for(int d=0; d<sdata.size(); ++d) {
         sdata[d] = swap[d];

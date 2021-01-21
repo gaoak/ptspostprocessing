@@ -72,22 +72,6 @@ void parserDouble(const char * cstr, std::vector<double> & value) {
     }
 }
 
-void ShiftArray(std::vector<int> &a, int dir) {
-    int N = a.size();
-    if(N==0) {
-        return;
-    }
-    if(dir<0) {
-        dir = (N + dir % N ) % N;
-    } else {
-        dir = dir % N;
-    }
-    std::vector<int> tmp = a;
-    for(int i=0; i<N; ++i) {
-        a[(i+dir)%N] = tmp[i];
-    }
-}
-
 bool CompactArray(std::vector<int> &N) {
     std::vector<int> sN = N;
     N.clear();
@@ -106,7 +90,7 @@ bool NeedShift(std::vector<int> N, int dir) {
         }
     }
     std::vector<int> sN = N;
-    ShiftArray(sN, dir);
+    ShiftArray<int>(sN, dir);
     CompactArray(N);
     CompactArray(sN);
     for(int i=0; i<N.size(); ++i) {
@@ -115,41 +99,6 @@ bool NeedShift(std::vector<int> N, int dir) {
         }
     }
     return false;
-}
-
-int ShiftIndex(std::vector<int> &N, std::vector<std::vector<double> > &odata, int dir) {
-    // i,j,k to j,k,i
-    if(odata.size()==0) {
-        return 0;
-    }
-    std::vector<int> sN = N;
-    ShiftArray(N, dir);
-    if(!NeedShift(sN, dir)) {
-        return 0;
-    }
-
-    size_t dim = sN.size();
-    int Np = 1;
-    for(int i=0; i<dim; ++i) {
-        Np *= sN[i];
-    }
-    std::vector<std::vector<double> > data;
-    for(int i=0; i<odata.size(); ++i) {
-        data.push_back(odata[i]);
-    }
-    
-    std::vector<int> ind(dim);
-    std::vector<int> indo(dim);
-    for(int i=0; i<Np; ++i) {
-        invIndex(sN, i, ind);
-        indo = ind;
-        ShiftArray(indo, dir);
-        int it = Index(N, indo);
-        for(int n=0; n<data.size(); ++n) {
-            odata[n][it] = data[n][i];
-        }
-    }
-    return Np;
 }
 
 int Index(const std::vector<int> &N, const std::vector<int> & index) {
@@ -166,6 +115,7 @@ int Index(const std::vector<int> &N, const std::vector<int> & index) {
 }
 
 void invIndex(const std::vector<int> &N, int index, std::vector<int> & res) {
+    res.resize(N.size());
     res[0] = N[0];
     for(int i=1; i<N.size()-1; ++i) {
         res[i] = res[i-1] * N[i];

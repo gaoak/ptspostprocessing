@@ -5,6 +5,7 @@
 #include "Dataprocessing.h"
 #include "Util.h"
 #include "StructuredData.h"
+#include "IncFlow.h"
 using namespace std;
 std::map<bool, std::string> testresults = {{true, "pass"},{false, "fail"}};
 
@@ -101,7 +102,7 @@ int TestSummary() {
     test_index(N);
 }
 
-int main(int argc, char *argv[]) {
+int test_main(int argc, char *argv[]) {
     std::vector<int> N(3, 1);
     std::vector<double> range(6, 0.);
     for(int c=1; c<argc; ++c) {
@@ -150,4 +151,22 @@ int main(int argc, char *argv[]) {
         }
     }
     return 0;
+}
+
+int main() {
+    vector<int> N = {65,65,65};
+    vector<double> range = {0.2,1.1,-0.2,0.6,0.,5.};
+    IncFlow flow(N, range);
+    flow.LoadCSV("small_data.csv");
+    std::vector<std::vector<double> > cores;
+    flow.ExtractCore(3, 0.03, cores, 2);
+    ofstream ofile("core.dat");
+    ofile << "variables = x,y,z" << endl;
+    for(int i=0; i<cores.size(); ++i) {
+        ofile << cores[i][0] << " "
+              << cores[i][1] << " "
+              << cores[i][2] << "\n";
+    }
+    ofile.close();
+    flow.OutputTec360("pro.plt");
 }
