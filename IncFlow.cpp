@@ -50,7 +50,7 @@ void IncFlow::SetBody(std::string bodyname, std::vector<double> param) {
     m_body = Body(bodyname, param[0]);
 }
 
-std::pair<int, int> IncFlow::GetDirection(double sigma, std::vector<std::vector<double> > & cores) {
+std::pair<int, int> IncFlow::GetProceedDirection(double sigma, std::vector<std::vector<double> > & cores) {
     std::pair<int, int> res;
     res.first = -1;
     res.second = 0;
@@ -70,15 +70,7 @@ std::pair<int, int> IncFlow::GetDirection(double sigma, std::vector<std::vector<
         AddVect(1., tmp, 1., ave, ave);
     }
     
-    double tmp = std::fabs(ave[0]);
-    int itmp = 0;
-    if(tmp < std::fabs(ave[1])) {
-        itmp = 1;
-        tmp = std::fabs(ave[1]);
-    }
-    if(tmp < std::fabs(ave[2])) {
-        itmp = 2;
-    }
+    int itmp = FindAbsMax(3, ave.data());
     res.first = itmp;
     int sign = 1;
     if(ave[itmp] < 0) sign = -1;
@@ -149,7 +141,7 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
             break;
         }
         if(count) {
-            std::pair<int, int> incplane = GetDirection(paddingsize, cores);
+            std::pair<int, int> incplane = GetProceedDirection(paddingsize, cores);
             plane.first = incplane.first;
             plane.second = intcenter[incplane.first] + incplane.second;
         } else {

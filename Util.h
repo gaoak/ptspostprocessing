@@ -31,6 +31,8 @@ int FindMax(int N, const T* data) {
     return ind;
 }
 
+int FindAbsMax(int N, const double* data);
+
 template<typename T>
 int FindMin(int N, const T* data) {
     int ind=0;

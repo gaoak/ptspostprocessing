@@ -11,6 +11,18 @@ double Distance(const std::vector<double> &a, const std::vector<double> &b) {
     return std::sqrt(res);
 }
 
+int FindAbsMax(int N, const double* data) {
+    int ind=0;
+    double tmp = std::fabs(data[0]);
+    for(int i=1; i<N; ++i) {
+        if(tmp < std::fabs(data[i])) {
+            ind = i;
+            tmp = std::fabs(data[i]);
+        }
+    }
+    return ind;
+}
+
 int AddVect(const double a1, const std::vector<double> &a, const double b1, const std::vector<double> &b, std::vector<double> & res) {
     for(int i=0; i<a.size(); ++i) {
         res[i] = a1*a[i] + b1*b[i];
