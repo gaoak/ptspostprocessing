@@ -79,10 +79,10 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         }
     }
     Smoothing(sigma, odata);
-    double vorticitysign = 1.;
+    double vorticityproceedsign = 1.;
     if(dir<0) {
         dir = -dir;
-        vorticitysign = -1.;
+        vorticityproceedsign = -1.;
     }
 
     std::vector<int> N = m_N;
@@ -127,6 +127,11 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
 
         std::vector<double> newcenter;
         std::vector<int> Nslice = {N[0], N[1]};
+        double tmpsign = vorticityproceedsign;
+        if(intcenter.size()) {
+            tmpsign = planevorticity[Index(Nslice, intcenter)];
+        }
+        PurgeDifferentSign(Nslice, planevorticity, planedata, tmpsign);
         ExtractCore2Dplane(Nslice, intcenter, padding, planedata, newcenter);
         std::vector<double> physcenter = newcenter;
         intcenter.resize(2);
@@ -162,7 +167,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         }
 
         std::vector<double> vor = {odata[0][centerindex], odata[1][centerindex], odata[2][centerindex]};
-        incplane = GetProceedDirection(vor, vorticitysign);
+        incplane = GetProceedDirection(vor, vorticityproceedsign);
         plane.first = incplane.first;
         plane.second = intcenter[incplane.first] + incplane.second;
         //printf("next plane %d, %d\n", plane.first, plane.second);
@@ -190,6 +195,18 @@ int IncFlow::ExtractCore2Dplane(const std::vector<int> &N, const std::vector<int
     core.clear();
     WeightedCenter<double>(N, data.data(), core);
     return core.size();
+}
+
+int IncFlow::PurgeDifferentSign(const std::vector<int> &N, const std::vector<double> &v, std::vector<double> &data, double sign) {
+    int Np = 1;
+    for(int i=0; i<N.size(); ++i) Np *= N[i];
+    if(Np>data.size()) Np = data.size();
+    for(int i=0; i<Np; ++i) {
+        if(v[i]*sign < 0.) {
+            data[i] = 0.;
+        }
+    }
+    return Np;
 }
 
 int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,

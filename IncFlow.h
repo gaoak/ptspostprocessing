@@ -16,6 +16,7 @@ public:
         std::vector<double> &core, bool ismin = true);
     int CalculateVorticity(int order = 2);
     std::pair<int, int> GetProceedDirection(const std::vector<double> &vor, double sign);
+    int PurgeDifferentSign(const std::vector<int> &N, const std::vector<double> &v, std::vector<double> &data, double sign);
 protected:
     Body m_body;
 };
