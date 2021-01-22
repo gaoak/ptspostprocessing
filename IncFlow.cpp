@@ -58,7 +58,7 @@ std::pair<int, int> IncFlow::GetProceedDirection(const std::vector<double> &vor,
     } else {
         res.second = -1;
     }
-    printf("direction %d, %d\n", res.first, res.second);
+    //printf("direction %d, %d\n", res.first, res.second);
     return res;
 }
 
@@ -114,7 +114,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
             break;
         }
         dir = plane.first;
-        printf("search plane %d, %d\n", dir, plane.second);
+        //printf("search plane %d, %d\n", dir, plane.second);
         ExtractPlane(odata[3], plane, planeN, planedata);
         ExtractPlane(odata[dir], plane, planeN, planevorticity);
 
@@ -154,7 +154,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
             break;
         }
         searched.insert(centerindex);
-        printf("location %d, %d, %d\n", intcenter[0], intcenter[1], intcenter[2]);
+        //printf("location %d, %d, %d\n", intcenter[0], intcenter[1], intcenter[2]);
         if(m_body.IsInBody(physcenter, m_dx[1])) {
             break;
         }
@@ -163,7 +163,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         incplane = GetProceedDirection(vor, vorticitysign);
         plane.first = incplane.first;
         plane.second = intcenter[incplane.first] + incplane.second;
-        printf("next plane %d, %d\n", plane.first, plane.second);
+        //printf("next plane %d, %d\n", plane.first, plane.second);
         ++count;
     }
     return count;
