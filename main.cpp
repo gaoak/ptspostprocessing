@@ -129,6 +129,14 @@ int main(int argc, char *argv[]) {
         }
         if(0==string("process").compare(argv[c])) {
             parserDouble(argv[c+1], sigma);
+            //vorticity Q
+            //u, v, w, p, W_x, W_y, W_z, Q
+            vector<int> field = {0,1,2};
+            sdata.Smoothing(sigma[0], field);
+            sdata.CalculateVorticity();
+            field = {7};
+            sdata.Smoothing(sigma[0], field);
+            //vortex
             std::vector<std::vector<double> > cores;
             sdata.ExtractCore(3, sigma[0], cores, 2);
             filename += "core.dat";
@@ -140,9 +148,6 @@ int main(int argc, char *argv[]) {
                     << cores[i][2] << "\n";
             }
             ofile.close();
-            vector<int> field = {0,1,2};
-            sdata.Smoothing(sigma[0], field);
-            sdata.CalculateVorticity();
         }
         if(0==string("maskbound").compare(argv[c])) {
             parserDouble(argv[c+1], value);
