@@ -102,7 +102,7 @@ int TestSummary() {
     test_index(N);
 }
 
-int test_main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     std::vector<int> N(3, 1);
     std::vector<double> range(6, 0.);
     for(int c=1; c<argc; ++c) {
@@ -114,7 +114,8 @@ int test_main(int argc, char *argv[]) {
         }
     }
 
-    StructuredData sdata(N, range);
+    IncFlow sdata(N, range);
+    sdata.SetBody("0012", {15./180.*M_PI});
     string filename;
     std::vector<double> sigma, value;
     for(int c=1; c<argc; ++c) {
@@ -126,14 +127,22 @@ int test_main(int argc, char *argv[]) {
             filename = argv[c+1];
             sdata.LoadCSV(filename);
         }
-        if(0==string("dosmooth").compare(argv[c])) {
+        if(0==string("process").compare(argv[c])) {
             parserDouble(argv[c+1], sigma);
-
-            std::vector<int> field;
-            for(int i=0; i<sdata.GetNumPhys(); ++i) {
-                field.push_back(i);
+            std::vector<std::vector<double> > cores;
+            sdata.ExtractCore(3, sigma[0], cores, 2);
+            filename += "core.dat";
+            ofstream ofile(filename.c_str());
+            ofile << "variables = x,y,z" << endl;
+            for(int i=0; i<cores.size(); ++i) {
+                ofile << cores[i][0] << " "
+                    << cores[i][1] << " "
+                    << cores[i][2] << "\n";
             }
-            sdata.Smoothing(sigma[0], field, true);
+            ofile.close();
+            vector<int> field = {0,1,2};
+            sdata.Smoothing(sigma[0], field);
+            sdata.CalculateVorticity();
         }
         if(0==string("maskbound").compare(argv[c])) {
             parserDouble(argv[c+1], value);
@@ -145,32 +154,10 @@ int test_main(int argc, char *argv[]) {
             }
             sdata.MaskBoundary(3.*sigma[0], field, def);
         }
-        if(0==string("output_def").compare(argv[c])) {
+        if(0==string("output").compare(argv[c])) {
             filename = argv[c+1];
             sdata.OutputTec360(filename);
         }
     }
     return 0;
-}
-
-int main() {
-    vector<int> N = {65,65,65};
-    vector<double> range = {0.2,1.1,-0.2,0.6,0.,5.};
-    IncFlow flow(N, range);
-    flow.SetBody("0012", {15./180.*M_PI});
-    flow.LoadCSV("small_data.csv");
-    std::vector<std::vector<double> > cores;
-    flow.ExtractCore(3, 0.03, cores, 2);
-    ofstream ofile("core.dat");
-    ofile << "variables = x,y,z" << endl;
-    for(int i=0; i<cores.size(); ++i) {
-        ofile << cores[i][0] << " "
-              << cores[i][1] << " "
-              << cores[i][2] << "\n";
-    }
-    ofile.close();
-    vector<int> field = {0,1,2};
-    flow.Smoothing(0.03, field);
-    flow.CalculateVorticity();
-    flow.OutputTec360("pro.plt");
 }

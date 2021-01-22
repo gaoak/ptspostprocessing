@@ -75,7 +75,7 @@ std::pair<int, int> IncFlow::GetProceedDirection(double sigma, std::vector<std::
     int sign = 1;
     if(ave[itmp] < 0) sign = -1;
     res.second = sign;
-    printf("direction %d, %d\n", res.first, res.second);
+    //printf("direction %d, %d\n", res.first, res.second);
     return res;
 }
 int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > & cores, int dir) {
@@ -109,7 +109,7 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
             break;
         }
         dir = plane.first;
-        printf("search plane %d, %d\n", dir, plane.second);
+        //printf("search plane %d, %d\n", dir, plane.second);
         ExtractPlane(odata[0], plane, planeN, planedata);
         ShiftArray<double>(dx, 2-dir);
         ShiftArray<double>(range, 2*(2-dir));
@@ -136,7 +136,7 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
         ShiftArray<int>(padding, dir-2);
         cores.push_back(physcenter);
         searched.insert(plane);
-        printf("location %d, %d, %d\n", intcenter[0], intcenter[1], intcenter[2]);
+        //printf("location %d, %d, %d\n", intcenter[0], intcenter[1], intcenter[2]);
         if(m_body.IsInBody(physcenter, m_dx[1])) {
             break;
         }
@@ -147,7 +147,7 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
         } else {
             plane.second += 1;
         }
-        printf("next plane %d, %d\n", plane.first, plane.second);
+        //printf("next plane %d, %d\n", plane.first, plane.second);
         if(searched.find(plane)!=searched.end()) {
             break;
         }
