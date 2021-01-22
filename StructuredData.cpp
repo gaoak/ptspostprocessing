@@ -275,7 +275,7 @@ int StructuredData::MaskBoundary(double sigma, std::vector<int> &field, std::map
     std::vector<int> index(3);
     for(int i=0; i<3; ++i) {
         if(m_N[i]>1) {
-            numbers[i] = std::round(sigma/m_dx[i]);
+            numbers[i] = myRound<double>(sigma/m_dx[i]);
         }
     }
     for(int i=0; i<m_Np; ++i) {

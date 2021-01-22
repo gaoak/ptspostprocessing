@@ -1,6 +1,22 @@
 #include<vector>
 #include<string>
+#include<cmath>
 #include "Util.h"
+
+double Distance(const std::vector<double> &a, const std::vector<double> &b) {
+    double res = 0.;
+    for(int i=0; i<a.size(); ++i) {
+        res += (b[i]-a[i])*(b[i]-a[i]);
+    }
+    return std::sqrt(res);
+}
+
+int AddVect(const double a1, const std::vector<double> &a, const double b1, const std::vector<double> &b, std::vector<double> & res) {
+    for(int i=0; i<a.size(); ++i) {
+        res[i] = a1*a[i] + b1*b[i];
+    }
+    return a.size();
+}
 
 void parserUInt(const char * cstr, std::vector<int> & value) {
     value.clear();

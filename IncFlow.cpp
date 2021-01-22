@@ -46,6 +46,42 @@ int IncFlow::CalculateVorticity(int order) {
     }
 }
 
+std::pair<int, int> IncFlow::GetDirection(double sigma, std::vector<std::vector<double> > & cores) {
+    std::pair<int, int> res;
+    res.first = -1;
+    res.second = 0;
+    if(cores.size()<2) return res;
+    std::vector<double> ave(3, 0.);
+    int count = 0;
+    int plast = cores.size() -1;
+    int p = plast-1;
+    for(; p>=0 && Distance(cores[plast], cores[p]) <= sigma; --p) ;
+    if(p<0) p = 0;
+    for(int i=p; i<plast; ++i) {
+        double dist = Distance(cores[p], cores[plast]);
+        if(dist<1E-9) continue;
+        dist = 1./dist;
+        std::vector<double> tmp(3, 0.);
+        AddVect(dist, cores[plast], -dist, cores[p], tmp);
+        AddVect(1., tmp, 1., ave, ave);
+    }
+    
+    double tmp = std::fabs(ave[0]);
+    int itmp = 0;
+    if(tmp < std::fabs(ave[1])) {
+        itmp = 1;
+        tmp = std::fabs(ave[1]);
+    }
+    if(tmp < std::fabs(ave[2])) {
+        itmp = 2;
+    }
+    res.first = itmp;
+    int sign = 1;
+    if(ave[itmp] < 0) sign = -1;
+    res.second = sign;
+    printf("direction %d, %d\n", res.first, res.second);
+    return res;
+}
 int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > & cores, int dir) {
     cores.clear();
     std::vector<std::vector<double> > odata;
@@ -56,9 +92,10 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
     std::vector<double> dx = m_dx;
     std::vector<double> range = m_range;
     std::vector<int> padding(3);
+    double paddingsize = 3.*sigma;
     for(int i=0; i<3; ++i) {
         if(N[i]>1) {
-            padding[i] = std::round(3.*sigma/dx[i]);
+            padding[i] = std::max(myRound<double>(paddingsize/dx[i]), 3);
         } else {
             padding[i] = 0;
         }
@@ -76,7 +113,7 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
             break;
         }
         dir = plane.first;
-        //printf("search plane %d, %d\n", dir, plane.second);
+        printf("search plane %d, %d\n", dir, plane.second);
         ExtractPlane(odata[0], plane, planeN, planedata);
         ShiftArray<double>(dx, 2-dir);
         ShiftArray<double>(range, 2*(2-dir));
@@ -90,7 +127,7 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
         intcenter.resize(2);
         for(int k=0; k<2; ++k) {
             physcenter[k] = range[2*k] + dx[k] * physcenter[k];
-            intcenter[k] = std::round(newcenter[k]);
+            intcenter[k] = myRound<double>(newcenter[k]);
         }
         physcenter.push_back(range[4] + (plane.second)*dx[2]);
         intcenter.push_back(plane.second);
@@ -103,27 +140,15 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
         ShiftArray<int>(padding, dir-2);
         cores.push_back(physcenter);
         searched.insert(plane);
-        //printf("location %d, %d, %d\n", intcenter[0], intcenter[1], intcenter[2]);
+        printf("location %d, %d, %d\n", intcenter[0], intcenter[1], intcenter[2]);
         if(count) {
-            int num = cores.size() - 1;
-            double tmp = std::fabs(cores[num][0] - cores[num-1][0]);
-            int itmp = 0;
-            if(tmp < std::fabs(cores[num][1] - cores[num-1][1])) {
-                itmp = 1;
-                tmp = std::fabs(cores[num][1] - cores[num-1][1]);
-            }
-            if(tmp < std::fabs(cores[num][2] - cores[num-1][2])) {
-                itmp = 2;
-            }
-            plane.first = itmp;
-            int sign = 1;
-            if(cores[num][itmp] - cores[num-1][itmp] < 0) sign = -1;
-            plane.second = intcenter[itmp] + sign;
-
+            std::pair<int, int> incplane = GetDirection(paddingsize, cores);
+            plane.first = incplane.first;
+            plane.second = intcenter[incplane.first] + incplane.second;
         } else {
             plane.second += 1;
         }
-        //printf("next plane %d, %d\n", plane.first, plane.second);
+        printf("next plane %d, %d\n", plane.first, plane.second);
         if(searched.find(plane)!=searched.end()) {
             break;
         }

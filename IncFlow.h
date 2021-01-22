@@ -9,5 +9,6 @@ public:
         const std::vector<int> &padding, std::vector<double> &data,
         std::vector<double> &core, bool ismin = true);
     int CalculateVorticity(int order = 2);
+    std::pair<int, int> GetDirection(double sigma, std::vector<std::vector<double> > & cores);
 };
 #endif

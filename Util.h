@@ -14,6 +14,8 @@ template<typename T>
 void ShiftArray(std::vector<T> &a, int dir);
 template<typename T>
 int ShiftIndex(std::vector<int> &N, std::vector<std::vector<T> > &odata, int dir);
+double Distance(const std::vector<double> &a, const std::vector<double> &b);
+int AddVect(const double a1, const std::vector<double> &a, const double b1, const std::vector<double> &b, std::vector<double> & res);
 
 template<typename T>
 int FindMax(int N, const T* data) {
@@ -172,5 +174,10 @@ void ShiftArray(std::vector<T> &a, int dir) {
     for(int i=0; i<N; ++i) {
         a[(i+dir)%N] = tmp[i];
     }
+}
+
+template<typename T>
+int myRound(T x) {
+    return (int) (x + 0.5);
 }
 #endif
