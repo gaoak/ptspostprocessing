@@ -92,10 +92,10 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
     std::vector<double> dx = m_dx;
     std::vector<double> range = m_range;
     std::vector<int> padding(3);
-    double paddingsize = 3.*sigma;
+    double paddingsize = 6.*sigma;
     for(int i=0; i<3; ++i) {
         if(N[i]>1) {
-            padding[i] = std::max(myRound<double>(paddingsize/dx[i]), 3);
+            padding[i] = myRound<double>(paddingsize/dx[i]);
         } else {
             padding[i] = 0;
         }
@@ -170,7 +170,7 @@ int IncFlow::ExtractCore2Dplane(const std::vector<int> &N, const std::vector<int
     int Np = N[0] * N[1];
     int imin = FindMin<double>(Np, data.data());
     double pmin = data[imin];
-    double thresh = 0.95 * pmin;
+    double thresh = 0.98 * pmin;
     std::vector<double> center;
     DoMaskShift<double>(Np, thresh, -1, data.data());
     core.clear();
