@@ -138,7 +138,18 @@ int main(int argc, char *argv[]) {
             std::vector<std::vector<double> > cores;
             std::vector<double> radius;
             std::vector<double> circulation;
-            sdata.ExtractCore(sigma[0], cores, radius, circulation, -2, 3);
+            std::vector<int> intcenter;
+            ifstream ifilecenter(".swap.center");
+            if(ifilecenter.is_open()) {
+                printf("read swap data\n");
+                intcenter.resize(3);
+                ifilecenter >> intcenter[0] >> intcenter[1] >> intcenter[2];
+                ifilecenter.close();
+            }
+            sdata.ExtractCore(sigma[0], cores, radius, circulation, intcenter, -2, 3);
+            ofstream ofilecenter(".swap.center");
+            ofilecenter << intcenter[0] << " " << intcenter[1] << " " << intcenter[2];
+            ofilecenter.close();
             filename += "core.dat";
             ofstream ofile(filename.c_str());
             ofile << "variables = x,y,z,radius,Gamma" << endl;
@@ -168,5 +179,6 @@ int main(int argc, char *argv[]) {
             sdata.OutputTec360(filename + ".plt");
         }
     }
+    printf("finished %s\n", filename.c_str());
     return 0;
 }

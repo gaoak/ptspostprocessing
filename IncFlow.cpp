@@ -63,7 +63,8 @@ std::pair<int, int> IncFlow::GetProceedDirection(const std::vector<double> &vor,
 }
 
 int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores,
-    std::vector<double> & radius, std::vector<double> &circulation, int dir, int f) {
+    std::vector<double> & radius, std::vector<double> &circulation,
+    std::vector<int> &inputcenter, int dir, int f) {
     cores.clear();
     std::vector<std::vector<double> > odata;
     //u, v, w, p, W_x, W_y, W_z, Q
@@ -99,7 +100,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
 
     int Trymax = m_N[0] + m_N[1] + m_N[2];
     std::set<int> searched;
-    std::vector<int> intcenter;
+    std::vector<int> intcenter = inputcenter;
     std::pair<int, int> plane(dir, 0);
     std::vector<int> planeN;
     std::vector<double> planedata;
@@ -149,6 +150,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         radius.push_back(tmpradius);
         circulation.push_back(std::fabs(tmpcirculation));
         int centerindex = Index(m_N, intcenter);
+        if(count==0) inputcenter = intcenter;
         if(searched.find(centerindex)!=searched.end()) {
             searched.insert(centerindex);
             break;
