@@ -46,6 +46,10 @@ int IncFlow::CalculateVorticity(int order) {
     }
 }
 
+void IncFlow::SetBody(std::string bodyname, std::vector<double> param) {
+    m_body = Body(bodyname, param[0]);
+}
+
 std::pair<int, int> IncFlow::GetDirection(double sigma, std::vector<std::vector<double> > & cores) {
     std::pair<int, int> res;
     res.first = -1;
@@ -141,6 +145,9 @@ int IncFlow::ExtractCore(int f, double sigma, std::vector<std::vector<double> > 
         cores.push_back(physcenter);
         searched.insert(plane);
         printf("location %d, %d, %d\n", intcenter[0], intcenter[1], intcenter[2]);
+        if(m_body.IsInBody(physcenter, m_dx[1])) {
+            break;
+        }
         if(count) {
             std::pair<int, int> incplane = GetDirection(paddingsize, cores);
             plane.first = incplane.first;

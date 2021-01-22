@@ -1,4 +1,4 @@
 rm *.o process
-c++ -Og -c -I $TECINCLUDE *cpp -g
-c++ -Og -o process *.o libtecio.a libadkutil.a -lstdc++ -pthread -g
+c++ -std=c++11 -c -I $TECINCLUDE *cpp CAD2D/*.cpp -Og -g
+c++ -std=c++11 -o process *.o libtecio.a libadkutil.a -lstdc++ -pthread -Og -g
 ./process

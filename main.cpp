@@ -157,6 +157,7 @@ int main() {
     vector<int> N = {65,65,65};
     vector<double> range = {0.2,1.1,-0.2,0.6,0.,5.};
     IncFlow flow(N, range);
+    flow.SetBody("0012", {15./180.*M_PI});
     flow.LoadCSV("small_data.csv");
     std::vector<std::vector<double> > cores;
     flow.ExtractCore(3, 0.03, cores, 2);

@@ -16,6 +16,7 @@ template<typename T>
 int ShiftIndex(std::vector<int> &N, std::vector<std::vector<T> > &odata, int dir);
 double Distance(const std::vector<double> &a, const std::vector<double> &b);
 int AddVect(const double a1, const std::vector<double> &a, const double b1, const std::vector<double> &b, std::vector<double> & res);
+void transform(std::vector<double> &p, double AoA);
 
 template<typename T>
 int FindMax(int N, const T* data) {
