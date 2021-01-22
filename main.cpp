@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
             std::vector<double> circulation;
             std::vector<int> intcenter;
             ifstream ifilecenter(".swap.center");
-            if(false && ifilecenter.is_open()) {
+            if(ifilecenter.is_open()) {
                 printf("read swap data\n");
                 intcenter.resize(3);
                 ifilecenter >> intcenter[0] >> intcenter[1] >> intcenter[2];
