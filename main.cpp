@@ -121,11 +121,11 @@ int main(int argc, char *argv[]) {
     for(int c=1; c<argc; ++c) {
         if(0==string("dump").compare(argv[c])) {
             filename = argv[c+1];
-            sdata.OutputCSV(filename);
+            sdata.OutputCSV(filename + ".csv");
         }
         if(0==string("load").compare(argv[c])) {
             filename = argv[c+1];
-            sdata.LoadCSV(filename);
+            sdata.LoadCSV(filename + ".csv");
         }
         if(0==string("process").compare(argv[c])) {
             parserDouble(argv[c+1], sigma);
@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
         }
         if(0==string("output").compare(argv[c])) {
             filename = argv[c+1];
-            sdata.OutputTec360(filename);
+            sdata.OutputTec360(filename + ".plt");
         }
     }
     return 0;
