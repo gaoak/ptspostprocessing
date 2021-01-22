@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
             std::vector<std::vector<double> > cores;
             std::vector<double> radius;
             std::vector<double> circulation;
-            sdata.ExtractCore(sigma[0], cores, radius, circulation, 2);
+            sdata.ExtractCore(sigma[0], cores, radius, circulation, -2, 3);
             filename += "core.dat";
             ofstream ofile(filename.c_str());
             ofile << "variables = x,y,z,radius,Gamma" << endl;

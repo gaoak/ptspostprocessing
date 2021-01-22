@@ -50,36 +50,20 @@ void IncFlow::SetBody(std::string bodyname, std::vector<double> param) {
     m_body = Body(bodyname, param[0]);
 }
 
-std::pair<int, int> IncFlow::GetProceedDirection(double sigma, std::vector<std::vector<double> > & cores) {
+std::pair<int, int> IncFlow::GetProceedDirection(const std::vector<double> &vor, double sign) {
     std::pair<int, int> res;
-    res.first = -1;
-    res.second = 0;
-    if(cores.size()<2) return res;
-    std::vector<double> ave(3, 0.);
-    int count = 0;
-    int plast = cores.size() -1;
-    int p = plast-1;
-    for(; p>=0 && Distance(cores[plast], cores[p]) <= sigma; --p) ;
-    if(p<0) p = 0;
-    for(int i=p; i<plast; ++i) {
-        double dist = Distance(cores[p], cores[plast]);
-        if(dist<1E-9) continue;
-        dist = 1./dist;
-        std::vector<double> tmp(3, 0.);
-        AddVect(dist, cores[plast], -dist, cores[p], tmp);
-        AddVect(1., tmp, 1., ave, ave);
+    res.first = FindAbsMax(3, vor.data());
+    if(sign * vor[res.first] > 0) {
+        res.second = 1;
+    } else {
+        res.second = -1;
     }
-    
-    int itmp = FindAbsMax(3, ave.data());
-    res.first = itmp;
-    int sign = 1;
-    if(ave[itmp] < 0) sign = -1;
-    res.second = sign;
-    //printf("direction %d, %d\n", res.first, res.second);
+    printf("direction %d, %d\n", res.first, res.second);
     return res;
 }
+
 int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores,
-    std::vector<double> & radius, std::vector<double> &circulation, int dir) {
+    std::vector<double> & radius, std::vector<double> &circulation, int dir, int f) {
     cores.clear();
     std::vector<std::vector<double> > odata;
     //u, v, w, p, W_x, W_y, W_z, Q
@@ -87,8 +71,18 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     odata.push_back(m_phys[4]);
     odata.push_back(m_phys[5]);
     odata.push_back(m_phys[6]);
-    odata.push_back(m_phys[3]);
+    odata.push_back(m_phys[std::abs(f)]);
+    if(f<0) {
+        for(int i=0; i<m_Np; ++i) {
+            odata[3][i] = -odata[3][i];
+        }
+    }
     Smoothing(sigma, odata);
+    double vorticitysign = 1.;
+    if(dir<0) {
+        dir = -dir;
+        vorticitysign = -1.;
+    }
 
     std::vector<int> N = m_N;
     std::vector<double> dx = m_dx;
@@ -104,7 +98,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     }
 
     int Trymax = m_N[0] + m_N[1] + m_N[2];
-    std::set<std::pair<int, int> > searched;
+    std::set<int> searched;
     std::vector<int> intcenter;
     std::pair<int, int> plane(dir, 0);
     std::vector<int> planeN;
@@ -112,19 +106,24 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     int count = 0;
     double tmpradius, tmpcirculation;
     std::vector<double> planevorticity;
+    std::pair<int, int> incplane;
+    incplane.first = dir;
+    incplane.second = 1;
     while(count<Trymax) {
         if(plane.second<0 || plane.second>=N[plane.first]) {
             break;
         }
         dir = plane.first;
-        //printf("search plane %d, %d\n", dir, plane.second);
+        printf("search plane %d, %d\n", dir, plane.second);
         ExtractPlane(odata[3], plane, planeN, planedata);
         ExtractPlane(odata[dir], plane, planeN, planevorticity);
+
         ShiftArray<double>(dx, 2-dir);
         ShiftArray<double>(range, 2*(2-dir));
         ShiftArray<int>(N, 2-dir);
         ShiftArray<int>(padding, 2-dir);
         ShiftArray<int>(intcenter, 2-dir);
+
         std::vector<double> newcenter;
         std::vector<int> Nslice = {N[0], N[1]};
         ExtractCore2Dplane(Nslice, intcenter, padding, planedata, newcenter);
@@ -137,6 +136,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         physcenter.push_back(range[4] + (plane.second)*dx[2]);
         intcenter.push_back(plane.second);
         ExtractVortexParam2Dplane(Nslice, dx, intcenter, planevorticity, tmpradius, tmpcirculation);
+
         ShiftArray<double>(dx, dir-2);
         ShiftArray<double>(physcenter, dir-2);
         ShiftArray<double>(range, 2*(dir-2));
@@ -144,25 +144,26 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         ShiftArray<int>(padding, dir-2);
         ShiftArray<int>(intcenter, dir-2);
         ShiftArray<int>(padding, dir-2);
+
         cores.push_back(physcenter);
         radius.push_back(tmpradius);
         circulation.push_back(std::fabs(tmpcirculation));
-        searched.insert(plane);
-        //printf("location %d, %d, %d\n", intcenter[0], intcenter[1], intcenter[2]);
+        int centerindex = Index(m_N, intcenter);
+        if(searched.find(centerindex)!=searched.end()) {
+            searched.insert(centerindex);
+            break;
+        }
+        searched.insert(centerindex);
+        printf("location %d, %d, %d\n", intcenter[0], intcenter[1], intcenter[2]);
         if(m_body.IsInBody(physcenter, m_dx[1])) {
             break;
         }
-        if(count) {
-            std::pair<int, int> incplane = GetProceedDirection(paddingsize, cores);
-            plane.first = incplane.first;
-            plane.second = intcenter[incplane.first] + incplane.second;
-        } else {
-            plane.second += 1;
-        }
-        //printf("next plane %d, %d\n", plane.first, plane.second);
-        if(searched.find(plane)!=searched.end()) {
-            break;
-        }
+
+        std::vector<double> vor = {odata[0][centerindex], odata[1][centerindex], odata[2][centerindex]};
+        incplane = GetProceedDirection(vor, vorticitysign);
+        plane.first = incplane.first;
+        plane.second = intcenter[incplane.first] + incplane.second;
+        printf("next plane %d, %d\n", plane.first, plane.second);
         ++count;
     }
     return count;
