@@ -134,20 +134,24 @@ int main(int argc, char *argv[]) {
             vector<int> field = {0,1,2};
             sdata.Smoothing(sigma[0], field);
             sdata.CalculateVorticity();
-            field = {7};
-            sdata.Smoothing(sigma[0], field);
             //vortex
             std::vector<std::vector<double> > cores;
-            sdata.ExtractCore(3, sigma[0], cores, 2);
+            std::vector<double> radius;
+            std::vector<double> circulation;
+            sdata.ExtractCore(sigma[0], cores, radius, circulation, 2);
             filename += "core.dat";
             ofstream ofile(filename.c_str());
-            ofile << "variables = x,y,z" << endl;
+            ofile << "variables = x,y,z,radius,Gamma" << endl;
             for(int i=0; i<cores.size(); ++i) {
                 ofile << cores[i][0] << " "
                     << cores[i][1] << " "
-                    << cores[i][2] << "\n";
+                    << cores[i][2] << " "
+                    << radius[i] << " "
+                    << circulation[i] << "\n";
             }
             ofile.close();
+            field = {7};
+            sdata.Smoothing(sigma[0], field);
         }
         if(0==string("maskbound").compare(argv[c])) {
             parserDouble(argv[c+1], value);
