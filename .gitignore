@@ -12,7 +12,6 @@
 *msh
 mesh-g
 mesh
-test*
 ~*
 *png
 *bmp
@@ -23,3 +22,5 @@ test*
 a.out
 .vscode
 process
+.swap.center
+test
