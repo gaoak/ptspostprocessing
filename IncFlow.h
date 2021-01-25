@@ -14,10 +14,9 @@ public:
     int ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
         std::vector<double> &planevorticity, double &radius, double &circulation);
     int ExtractCore2Dplane(const std::vector<int> &N, const std::vector<int> &initial,
-        const std::vector<int> &padding, std::vector<double> &data,
-        std::vector<double> &core, bool ismin = true);
+        std::vector<double> &data, std::vector<double> &core, bool ismin = true);
     int CalculateVorticity(int order = 2);
-    std::pair<int, int> GetProceedDirection(const std::vector<double> &vor, double sign);
+    std::pair<int, std::vector<int> > GetProceedDirection(const std::vector<double> &vor, double sign);
     int PurgeDifferentSign(const std::vector<int> &N, const std::vector<double> &v, std::vector<double> &data, double sign);
 protected:
     Body m_body;

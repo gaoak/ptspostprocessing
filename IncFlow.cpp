@@ -57,15 +57,21 @@ int IncFlow::TransformCoord(const std::vector<double> &x0) {
     }
 }
 
-std::pair<int, int> IncFlow::GetProceedDirection(const std::vector<double> &vor, double sign) {
-    std::pair<int, int> res;
+std::pair<int, std::vector<int> > IncFlow::GetProceedDirection(const std::vector<double> &vor, double sign) {
+    std::pair<int, std::vector<int>> res;
     res.first = FindAbsMax(3, vor.data());
+    std::vector<int> inc(3);
+    double ds = 0.;
     if(sign * vor[res.first] > 0) {
-        res.second = 1;
+        ds = m_dx[res.first]/vor[res.first];
     } else {
-        res.second = -1;
+        ds = -m_dx[res.first]/vor[res.first];
     }
-    //printf("direction %d, %d\n", res.first, res.second);
+    for(int i=0; i<3; ++i) {
+        inc[i] = myRound<double>(vor[i] * ds / m_dx[i]);
+    }
+    res.second = inc;
+    printf("direction %d, (%d,%d,%d)\n", res.first, res.second[0], res.second[1], res.second[2]);
     return res;
 }
 
@@ -80,10 +86,9 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     odata.push_back(m_phys[5]);
     odata.push_back(m_phys[6]);
     odata.push_back(m_phys[std::abs(f)]);
+    bool ismin = true;
     if(f<0) {
-        for(int i=0; i<m_Np; ++i) {
-            odata[3][i] = -odata[3][i];
-        }
+        ismin = false;
     }
     //Smoothing(sigma, odata);
     double vorticityproceedsign = 1.;
@@ -95,15 +100,6 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     std::vector<int> N = m_N;
     std::vector<double> dx = m_dx;
     std::vector<double> range = m_range;
-    std::vector<int> padding(3);
-    double paddingsize = 6.*sigma;
-    for(int i=0; i<3; ++i) {
-        if(N[i]>1) {
-            padding[i] = myRound<double>(paddingsize/dx[i]);
-        } else {
-            padding[i] = 0;
-        }
-    }
 
     int Trymax = m_N[0] + m_N[1] + m_N[2];
     std::set<int> searched;
@@ -120,22 +116,22 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     int count = 0;
     double tmpradius, tmpcirculation;
     std::vector<double> planevorticity;
-    std::pair<int, int> incplane;
+    std::pair<int, std::vector<int> > incplane;
     incplane.first = dir;
-    incplane.second = 1;
+    incplane.second = {0, 0, 0};
+    incplane.second[dir] = 1;
     while(count<Trymax) {
         if(plane.second<0 || plane.second>=N[plane.first]) {
             break;
         }
         dir = plane.first;
-        //printf("search plane %d, %d\n", dir, plane.second);
+        printf("search plane %d, %d\n", dir, plane.second);
         ExtractPlane(odata[3], plane, planeN, planedata);
         ExtractPlane(odata[dir], plane, planeN, planevorticity);
 
         ShiftArray<double>(dx, 2-dir);
         ShiftArray<double>(range, 2*(2-dir));
         ShiftArray<int>(N, 2-dir);
-        ShiftArray<int>(padding, 2-dir);
         ShiftArray<int>(intcenter, 2-dir);
 
         std::vector<double> newcenter;
@@ -145,7 +141,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
             tmpsign = planevorticity[Index(Nslice, intcenter)];
         }
         PurgeDifferentSign(Nslice, planevorticity, planedata, tmpsign);
-        ExtractCore2Dplane(Nslice, intcenter, padding, planedata, newcenter);
+        ExtractCore2Dplane(Nslice, intcenter, planedata, newcenter, ismin);
         std::vector<double> physcenter = newcenter;
         intcenter.resize(2);
         for(int k=0; k<2; ++k) {
@@ -160,9 +156,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         ShiftArray<double>(physcenter, dir-2);
         ShiftArray<double>(range, 2*(dir-2));
         ShiftArray<int>(N, dir-2);
-        ShiftArray<int>(padding, dir-2);
         ShiftArray<int>(intcenter, dir-2);
-        ShiftArray<int>(padding, dir-2);
 
         cores.push_back(physcenter);
         radius.push_back(tmpradius);
@@ -176,7 +170,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
             break;
         }
         searched.insert(centerindex);
-        //printf("location %d, %d, %d\n", intcenter[0], intcenter[1], intcenter[2]);
+        printf("location %f, %f, %f\n", physcenter[0], physcenter[1], physcenter[2]);
         if(m_body.IsInBody(physcenter, m_dx[1])) {
             break;
         }
@@ -184,31 +178,63 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         std::vector<double> vor = {odata[0][centerindex], odata[1][centerindex], odata[2][centerindex]};
         incplane = GetProceedDirection(vor, vorticityproceedsign);
         plane.first = incplane.first;
-        plane.second = intcenter[incplane.first] + incplane.second;
-        //printf("next plane %d, %d\n", plane.first, plane.second);
+        plane.second = intcenter[incplane.first] + incplane.second[incplane.first];
+        intcenter[0] += incplane.second[0];
+        intcenter[1] += incplane.second[1];
+        intcenter[2] += incplane.second[2];
+        printf("next plane %d, %d\n", plane.first, plane.second);
         ++count;
     }
     return count;
 }
 
 int IncFlow::ExtractCore2Dplane(const std::vector<int> &N, const std::vector<int> &initial,
-    const std::vector<int> &padding, std::vector<double> &data, std::vector<double> &core, bool ismin) {
+    std::vector<double> &data, std::vector<double> &core, bool ismin) {
     if(!ismin) {
         for(int i=0; i<N[0]*N[1]; ++i) {
             data[i] = -data[i];
         }
     }
-    if(initial.size()>=2) {
-        DoMask<double>(N, data.data(), initial, padding, false);
-    }
     int Np = N[0] * N[1];
-    int imin = FindMin<double>(Np, data.data());
-    double pmin = data[imin];
-    double thresh = 0.98 * pmin;
-    std::vector<double> center;
-    DoMaskShift<double>(Np, thresh, -1, data.data());
-    core.clear();
-    WeightedCenter<double>(N, data.data(), core);
+    if(initial.size()<2) {
+        int imin = FindMin<double>(Np, data.data());
+        double pmin = data[imin];
+        double thresh = 0.98 * pmin;
+        std::vector<double> center;
+        DoMaskShift<double>(Np, thresh, -1, data.data());
+        core.clear();
+        WeightedCenter<double>(N, data.data(), core);
+    } else {
+        std::vector<int> p = initial;
+        double minv = data[Index(N, p)];
+        bool proceed = true;
+        while(proceed) {
+            proceed = false;
+            if(p[0]>0 && data[Index(N, {p[0]-1, p[1]})] < minv) {
+                minv = data[Index(N, {p[0]-1, p[1]})];
+                p[0] -= 1;
+                proceed = true;
+            }
+            if(p[0]<N[0]-1 && data[Index(N, {p[0]+1, p[1]})] < minv) {
+                minv = data[Index(N, {p[0]+1, p[1]})];
+                p[0] += 1;
+                proceed = true;
+            }
+            if(p[1]>0 && data[Index(N, {p[0], p[1]-1})] < minv) {
+                minv = data[Index(N, {p[0], p[1]-1})];
+                p[1] -= 1;
+                proceed = true;
+            }
+            if(p[1]<N[1]-1 && data[Index(N, {p[0], p[1]+1})] < minv) {
+                minv = data[Index(N, {p[0], p[1]+1})];
+                p[1] += 1;
+                proceed = true;
+            }
+        }
+        core.resize(2);
+        core[0] = p[0];
+        core[1] = p[1];
+    }
     return core.size();
 }
 

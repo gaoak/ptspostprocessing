@@ -204,6 +204,10 @@ void ShiftArray(std::vector<T> &a, int dir) {
 
 template<typename T>
 int myRound(T x) {
-    return (int) (x + 0.5);
+    if(x>0) {
+        return (int) (x + 0.5);
+    } else {
+        return -(int) (-x + 0.5);
+    }
 }
 #endif
