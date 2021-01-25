@@ -7,7 +7,7 @@ public:
     int ProcessFlowData();
     int Dumppoints();
     double GetFilePhase(int n);
-    double plungingvelocity(double phase, double phi);
+    double PlungingVelocity(double phase, double phi);
     std::string GetInFileName(int n);
     std::string GetOutFileName(int n);
 protected:

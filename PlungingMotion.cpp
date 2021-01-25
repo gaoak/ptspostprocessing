@@ -80,8 +80,8 @@ std::string PlungingMotion::GetOutFileName(int n) {
     return res;
 }
 
-double PlungingMotion::plungingvelocity(double phase, double phi) {
-    return 0.5*m_A*std::sin(phase + phi);
+double PlungingMotion::PlungingVelocity(double phase, double phi) {
+    return 0.5*m_A*std::sin(phase*2.*M_PI + phi);
 }
 
 int PlungingMotion::Dumppoints() {
@@ -100,6 +100,8 @@ int PlungingMotion::ProcessFlowData() {
     for(int n=m_file[0]; n<m_file[2]; n+=m_file[1]) {
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
         flow.LoadCSV(GetInFileName(n)+".csv");
+        double v0 = PlungingVelocity(GetFilePhase(n), m_phi);
+        flow.OverWriteBodyPoint({0., v0, 0.}, {0., 0., 0.}, {0., 0., 0.});
         //vorticity Q
         //u, v, w, p, W_x, W_y, W_z, Q
         std::vector<int> field = {0,1,2};
