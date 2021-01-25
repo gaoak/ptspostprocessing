@@ -21,7 +21,7 @@ double Distance(const std::vector<double> &a, const std::vector<double> &b);
 template<typename T>
 std::vector<T> AddVect(const T a1, const std::vector<T> &a, const T b1, const std::vector<T> &b);
 std::vector<double> transform(const std::vector<double> &p, double AoA);
-
+int Fill2DGraph(const std::vector<int> &rawN, std::vector<double> &value, const std::vector<int> &init, const double &eps);
 template<typename T>
 std::vector<T> AddVect(const T a1, const std::vector<T> &a, const T b1, const std::vector<T> &b) {
     std::vector<T> res(a.size());

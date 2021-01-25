@@ -190,3 +190,64 @@ void invIndex(const std::vector<int> &N, int index, std::vector<int> & res) {
     }
     res[0] = index;
 }
+
+int Fill2DGraph(const std::vector<int> &rawN, std::vector<double> &value, const std::vector<int> &init, const double &eps)
+{
+    std::vector<int> N(2);
+    N[0] = rawN[0];
+    N[1] = rawN[1];
+	std::vector<int> val(N[0]*N[1], 0);
+	std::vector<int> res(N[0]*N[1], 0);
+    if(eps>=1. || eps <= 0.) {
+        printf("error: threshold value %f should be in (0, 1)\n", eps);
+        return -1;
+    }
+    double sign = 1.;
+    if(value[Index(N, init)] < 0.) {
+        sign = -1.;
+    }
+    double threshold = value[Index(N, init)] * eps * sign;
+    for(int j=0; j<N[1]; ++j) {
+        for(int i=0; i<N[0]; ++i) {
+            int ind = Index(N, {i, j});
+            if(value[ind] * sign > threshold) {
+                val[ind] = 1;
+            }
+        }
+    }
+    //start fill
+    res[Index(N, init)] = 1;
+    bool proceed = true;
+    while(proceed) {
+        proceed = false;
+        for(int j=0; j<N[1]; ++j) {
+            for(int i=0; i<N[0]; ++i) {
+                int ind = Index(N, {i, j});
+                if(res[ind]) continue;
+                if((i>0      && res[Index(N, {i-1, j  })]) ||
+                   (i<N[0]-1 && res[Index(N, {i+1, j  })]) ||
+                   (j>0      && res[Index(N, {i  , j-1})]) ||
+                   (j<N[1]-1 && res[Index(N, {i  , j+1})])
+                ) {
+                    if(val[ind]) {
+                        res[ind] = 1;
+                        proceed = true;
+                    }
+                }
+            }
+        }
+    }
+
+    int count = 0;
+    for(int j=0; j<N[1]; ++j) {
+        for(int i=0; i<N[0]; ++i) {
+            int ind = Index(N, {i, j});
+            if(res[ind] == 0) {
+                value[ind] = 0.;
+            } else {
+                ++count;
+            }
+        }
+    }
+	return count;
+}

@@ -252,69 +252,27 @@ int IncFlow::PurgeDifferentSign(const std::vector<int> &N, const std::vector<dou
 
 int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
     std::vector<double> &v, double &radius, double &circulation) {
-    int indcore = Index(N, core);
-    double sign = v[indcore] / std::fabs(v[indcore]);
-    double thresh = 0.01 * sign * v[indcore];
-    int ixmax, ixmin, iymax, iymin;
-    for(ixmax=core[0]; ixmax<N[0]; ++ixmax) {
-        int ind1 = Index(N, {ixmax, core[1]});
-        if(sign * v[ind1] < thresh) {
-            break;
+    Fill2DGraph(N, v, core, 0.05);
+    double sum0 = 0., sum2 = 0., sum1x = 0., sum1y = 0.;
+    for(int j=0; j<N[1]; ++j) {
+        for(int i=0; i<N[0]; ++i) {
+            int ind = Index(N, {i, j});
+            sum0  += v[ind];
+            sum1x += v[ind] * i;
+            sum1y += v[ind] * j;
         }
-    }
-    for(ixmin=core[0]; ixmin>=0; --ixmin) {
-        int ind1 = Index(N, {ixmin, core[1]});
-        if(sign * v[ind1] < thresh) {
-            break;
-        }
-    }
-    for(iymax = core[1]; iymax<N[1]; ++iymax) {
-        int ind1 = Index(N, {core[0], iymax});
-        if(sign * v[ind1] < thresh) {
-            break;
-        }
-    }
-    for(iymin = core[1]; iymin>=0; --iymin) {
-        int ind1 = Index(N, {core[0], iymin});
-        if(sign * v[ind1] < thresh) {
-            break;
-        }
-    }
-    ixmax = std::max(0, std::min(ixmax, N[0]-1));
-    ixmin = std::max(0, std::min(ixmin, N[0]-1));
-    iymax = std::max(0, std::min(iymax, N[1]-1));
-    iymin = std::max(0, std::min(iymin, N[1]-1));
-    int tmpmax = -1;
-    double tmpvalue = -1E8;
-    for(int j=iymin; j<=iymax; ++j) {
-        for(int i=ixmin; i<=ixmax; ++i) {
-            int n = Index(N, {i,j});
-            double value = v[n]*sign;
-            if(value < thresh) {
-                v[n] = 0;
-            } else {
-                if(value > tmpvalue) {
-                    tmpmax = n;
-                    tmpvalue = value;
-                }
-            }
-        }
-    }
-    if(tmpmax>0) {
-        invIndex(N, tmpmax, core);
     }
 
-    double sum0 = 0., sum2 = 0.;
-    for(int j=iymin; j<=iymax; ++j) {
-        for(int i=ixmin; i<=ixmax; ++i) {
-            int n = Index(N, {i,j});
-            double x = (i - core[0])*dx[0];
-            double y = (j - core[1])*dx[1];
-            sum0 += v[n];
-            sum2 += v[n] * (x*x + y*y);
+    sum1x /= sum0;
+    sum1y /= sum0;
+    for(int j=0; j<N[1]; ++j) {
+        for(int i=0; i<N[0]; ++i) {
+            int ind = Index(N, {i, j});
+            sum2 += v[ind] * ( (i - sum1x) * (i - sum1x) * dx[0] * dx[0] 
+                             + (j - sum1y) * (j - sum1y) * dx[1] * dx[1] );
         }
     }
-    radius = std::sqrt(sum2/sum0);
+    radius = 1.584 * std::sqrt(sum2/sum0);
     circulation = sum0 * dx[0] * dx[1];
     return 2;
 }
