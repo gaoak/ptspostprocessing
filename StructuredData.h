@@ -29,7 +29,7 @@ public:
     int GetNumPhys();
     std::vector<std::vector<double> > m_x; // i first, then j, k last
     std::vector<std::vector<double> > m_phys; //physics fields
-    std::string m_varList;
+    std::vector<std::string> m_vars;
 protected:
     int GenPoints();
     int ParserCSVHeader(const char * header);

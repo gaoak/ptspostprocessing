@@ -27,7 +27,9 @@ StructuredData::StructuredData(const std::vector<int> &N, const std::vector<doub
     for(int i=0; i<3; ++i) {
         m_x.push_back(std::vector<double>(m_Np, 0.));
     }
-    m_varList = "x, y, z";
+    m_vars.push_back("x");
+    m_vars.push_back("y");
+    m_vars.push_back("z");
     GenPoints();
 }
 
@@ -41,7 +43,15 @@ int StructuredData::GetNumPhys() {
 
 int StructuredData::OutputCSV(std::string filename) {
     std::ofstream file(filename.c_str());
-    file << "# " << m_varList << "\n";
+    file << "# ";
+    for(int i=0; i<m_vars.size(); ++i) {
+        file << m_vars[i];
+        if(i!=m_vars.size()-1) {
+            file << ",";
+        } else {
+            file << "\n";
+        }
+    }
     file << std::scientific << std::setprecision(16);
     for(int index=0; index<m_Np; ++index) {
         file << m_x[0][index] << "," << m_x[1][index] << "," << m_x[2][index];
@@ -56,17 +66,14 @@ int StructuredData::OutputCSV(std::string filename) {
 int StructuredData::ParserCSVHeader(const char * header) {
     int i = 0;
     for(; header[i]=='#' || header[i]==' '; ++i);
-    m_varList = header + i;
-    int vcount = -2;
-    for(;header[i];++i) {
-        vcount += header[i]==',';
-    }
-    return vcount;
+    std::string varList = header + i;
+    parserString(varList.c_str(), m_vars, ',');
+    return m_vars.size() - 3;
 }
 
 int StructuredData::AddPhysics(std::string var, void * func) {
     double(*physfun)(std::vector<double>) = (double(*)(std::vector<double>))func;
-    m_varList += "," + var;
+    m_vars.push_back(var);
     m_phys.push_back(std::vector<double>(m_Np));
     for(int i=0; i<m_Np; ++i) {
         std::vector<double> p;
@@ -168,7 +175,7 @@ int StructuredData::OutputTec360(std::string filename) {
     for(int i=0; i<m_phys.size(); ++i) {
         data.push_back((void*) (m_phys[i].data()) );
     }
-    ::OutputTec360(filename, m_varList, m_N[0], m_N[1], m_N[2], data, isdouble);
+    OutputTec360_calllib(filename, m_vars, m_N, data, isdouble);
     return m_x.size() + m_phys.size();
 }
 
@@ -242,10 +249,10 @@ int StructuredData::Smoothing(double sigma, std::vector<int> &field, bool inplac
     }
     Smoothing(sigma, data);
     if(!inplace) {
-        char buffer[100];
         for(int i=0; i<field.size(); ++i) {
-            sprintf(buffer, ",Sv%d", field[i]);
-            m_varList += buffer;
+            std::string var("S(");
+            var += m_vars[i+3] + ")";
+            m_vars.push_back(var);
             m_phys.push_back(data[i]);
         }
     } else {
@@ -255,7 +262,6 @@ int StructuredData::Smoothing(double sigma, std::vector<int> &field, bool inplac
     }
 }
 int StructuredData::Diff(std::vector<int > &field, int dir, int order) {
-    char buffer[100];
     std::vector<std::vector<double> > u;
     std::vector<std::vector<double> > du;
     for(int i=0; i<field.size(); ++i) {
@@ -264,8 +270,9 @@ int StructuredData::Diff(std::vector<int > &field, int dir, int order) {
     }
     Diff(u, du, dir, order);
     for(int i=0; i<field.size(); ++i) {
-        sprintf(buffer, ",v%d_%d", field[i], dir);
-        m_varList += buffer;
+        std::string var = m_vars[i+3] + "_";
+        var += 'x' + dir;
+        m_vars.push_back(var);
         m_phys.push_back(du[i]);
     }
 }

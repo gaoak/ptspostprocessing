@@ -13,7 +13,7 @@ Body::Body()
 }
 
 bool Body::IsInBody(std::vector<double> p, double tol) {
-    transform(p, -m_AoA);
+    p = transform(p, -m_AoA);
     if(p[0]<=0. || p[0]>=1.) return false;
     std::vector<double> foilup =  m_airfoil.up(p[0]);
     if(std::fabs(foilup[0] - p[0]) > 1E-6) {

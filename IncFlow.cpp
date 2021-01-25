@@ -3,8 +3,9 @@
 #include "IncFlow.h"
 #include "Util.h"
 
-IncFlow::IncFlow(const std::vector<int> &N, const std::vector<double> &range) 
-        :StructuredData(N, range) {
+IncFlow::IncFlow(const std::vector<int> &N, const std::vector<double> &range,
+        std::string bodyname, std::vector<double> param)
+        :StructuredData(N, range), m_body(bodyname, param[0]) {
 }
 
 int IncFlow::CalculateVorticity(int order) {
@@ -22,7 +23,9 @@ int IncFlow::CalculateVorticity(int order) {
     Diff(u, uz, 2, order);
     int id;
     //W_x
-    m_varList += ",W_x,W_y,W_z";
+    m_vars.push_back("W_x");
+    m_vars.push_back("W_y");
+    m_vars.push_back("W_z");
     id = m_phys.size();
     m_phys.push_back(std::vector<double>(m_Np, 0.));
     m_phys.push_back(std::vector<double>(m_Np, 0.));
@@ -34,7 +37,7 @@ int IncFlow::CalculateVorticity(int order) {
     }
 
     // Q Criterion
-    m_varList += ",Q";
+    m_vars.push_back("Q");
     id = m_phys.size();
     m_phys.push_back(std::vector<double>(m_Np, 0.));
     for(int i=0; i<m_Np; ++i) {
@@ -44,10 +47,6 @@ int IncFlow::CalculateVorticity(int order) {
             uz[0][i]*ux[2][i] + uz[1][i]*uy[2][i] + uz[2][i]*uz[2][i]
         );
     }
-}
-
-void IncFlow::SetBody(std::string bodyname, std::vector<double> param) {
-    m_body = Body(bodyname, param[0]);
 }
 
 std::pair<int, int> IncFlow::GetProceedDirection(const std::vector<double> &vor, double sign) {
@@ -211,69 +210,81 @@ int IncFlow::PurgeDifferentSign(const std::vector<int> &N, const std::vector<dou
 
 int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
     std::vector<double> &v, double &radius, double &circulation) {
-        int indcore = Index(N, core);
-        double sign = v[indcore] / std::fabs(v[indcore]);
-        double thresh = 0.01 * sign * v[indcore];
-        int ixmax, ixmin, iymax, iymin;
-        for(ixmax=core[0]; ixmax<N[0]; ++ixmax) {
-            int ind1 = Index(N, {ixmax, core[1]});
-            if(sign * v[ind1] < thresh) {
-                break;
-            }
+    int indcore = Index(N, core);
+    double sign = v[indcore] / std::fabs(v[indcore]);
+    double thresh = 0.01 * sign * v[indcore];
+    int ixmax, ixmin, iymax, iymin;
+    for(ixmax=core[0]; ixmax<N[0]; ++ixmax) {
+        int ind1 = Index(N, {ixmax, core[1]});
+        if(sign * v[ind1] < thresh) {
+            break;
         }
-        for(ixmin=core[0]; ixmin>=0; --ixmin) {
-            int ind1 = Index(N, {ixmin, core[1]});
-            if(sign * v[ind1] < thresh) {
-                break;
-            }
+    }
+    for(ixmin=core[0]; ixmin>=0; --ixmin) {
+        int ind1 = Index(N, {ixmin, core[1]});
+        if(sign * v[ind1] < thresh) {
+            break;
         }
-        for(iymax = core[1]; iymax<N[1]; ++iymax) {
-            int ind1 = Index(N, {core[0], iymax});
-            if(sign * v[ind1] < thresh) {
-                break;
-            }
+    }
+    for(iymax = core[1]; iymax<N[1]; ++iymax) {
+        int ind1 = Index(N, {core[0], iymax});
+        if(sign * v[ind1] < thresh) {
+            break;
         }
-        for(iymin = core[1]; iymin>=0; --iymin) {
-            int ind1 = Index(N, {core[0], iymin});
-            if(sign * v[ind1] < thresh) {
-                break;
-            }
+    }
+    for(iymin = core[1]; iymin>=0; --iymin) {
+        int ind1 = Index(N, {core[0], iymin});
+        if(sign * v[ind1] < thresh) {
+            break;
         }
-        ixmax = std::max(0, std::min(ixmax, N[0]-1));
-        ixmin = std::max(0, std::min(ixmin, N[0]-1));
-        iymax = std::max(0, std::min(iymax, N[1]-1));
-        iymin = std::max(0, std::min(iymin, N[1]-1));
-        int tmpmax = -1;
-        double tmpvalue = -1E8;
-        for(int j=iymin; j<=iymax; ++j) {
-            for(int i=ixmin; i<=ixmax; ++i) {
-                int n = Index(N, {i,j});
-                double value = v[n]*sign;
-                if(value < thresh) {
-                    v[n] = 0;
-                } else {
-                    if(value > tmpvalue) {
-                        tmpmax = n;
-                        tmpvalue = value;
-                    }
+    }
+    ixmax = std::max(0, std::min(ixmax, N[0]-1));
+    ixmin = std::max(0, std::min(ixmin, N[0]-1));
+    iymax = std::max(0, std::min(iymax, N[1]-1));
+    iymin = std::max(0, std::min(iymin, N[1]-1));
+    int tmpmax = -1;
+    double tmpvalue = -1E8;
+    for(int j=iymin; j<=iymax; ++j) {
+        for(int i=ixmin; i<=ixmax; ++i) {
+            int n = Index(N, {i,j});
+            double value = v[n]*sign;
+            if(value < thresh) {
+                v[n] = 0;
+            } else {
+                if(value > tmpvalue) {
+                    tmpmax = n;
+                    tmpvalue = value;
                 }
             }
         }
-        if(tmpmax>0) {
-            invIndex(N, tmpmax, core);
-        }
-
-        double sum0 = 0., sum2 = 0.;
-        for(int j=iymin; j<=iymax; ++j) {
-            for(int i=ixmin; i<=ixmax; ++i) {
-                int n = Index(N, {i,j});
-                double x = (i - core[0])*dx[0];
-                double y = (j - core[1])*dx[1];
-                sum0 += v[n];
-                sum2 += v[n] * (x*x + y*y);
-            }
-        }
-        radius = std::sqrt(sum2/sum0);
-        circulation = sum0 * dx[0] * dx[1];
-        return 2;
     }
+    if(tmpmax>0) {
+        invIndex(N, tmpmax, core);
+    }
+
+    double sum0 = 0., sum2 = 0.;
+    for(int j=iymin; j<=iymax; ++j) {
+        for(int i=ixmin; i<=ixmax; ++i) {
+            int n = Index(N, {i,j});
+            double x = (i - core[0])*dx[0];
+            double y = (j - core[1])*dx[1];
+            sum0 += v[n];
+            sum2 += v[n] * (x*x + y*y);
+        }
+    }
+    radius = std::sqrt(sum2/sum0);
+    circulation = sum0 * dx[0] * dx[1];
+    return 2;
+}
+
+int IncFlow::OverWriteBodyPoint(const std::vector<double> &u0, const std::vector<double> &pivot, const std::vector<double> &omega) {
+    for(int i=0; i<m_Np; ++i) {
+        std::vector<double> x = {m_x[0][i], m_x[1][i], m_x[2][i]};
+        if(m_body.IsInBody(x, 0.)) {
+            std::vector<double> vel = AddVect<double>(1., crossproduct<double>(omega, AddVect<double>(1., x, -1., pivot)), 1., u0);
+            m_phys[0][i] = vel[0];
+            m_phys[1][i] = vel[1];
+            m_phys[2][i] = vel[2];
+        }
+    }
+}

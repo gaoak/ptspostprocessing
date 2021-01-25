@@ -1,8 +1,11 @@
 #ifndef UTIL_H
 #define UTIL_H
+#include<string>
 #include<vector>
+double StringToDouble(std::string str);
 void parserUInt(const char * cstr, std::vector<int> & value);
 void parserDouble(const char * cstr, std::vector<double> & value);
+void parserString(const char * cstr, std::vector<std::string> & value, char sep = ' ');
 int Index(const std::vector<int> &N, const std::vector<int> & index);
 void invIndex(const std::vector<int> &N, int index, std::vector<int> & res);
 bool NeedShift(std::vector<int> N, int dir);
@@ -15,8 +18,18 @@ void ShiftArray(std::vector<T> &a, int dir);
 template<typename T>
 int ShiftIndex(std::vector<int> &N, std::vector<std::vector<T> > &odata, int dir);
 double Distance(const std::vector<double> &a, const std::vector<double> &b);
-int AddVect(const double a1, const std::vector<double> &a, const double b1, const std::vector<double> &b, std::vector<double> & res);
-void transform(std::vector<double> &p, double AoA);
+template<typename T>
+std::vector<T> AddVect(const T a1, const std::vector<T> &a, const T b1, const std::vector<T> &b);
+std::vector<double> transform(const std::vector<double> &p, double AoA);
+
+template<typename T>
+std::vector<T> AddVect(const T a1, const std::vector<T> &a, const T b1, const std::vector<T> &b) {
+    std::vector<T> res(a.size());
+    for(int i=0; i<a.size(); ++i) {
+        res[i] = a1*a[i] + b1*b[i];
+    }
+    return res;
+}
 
 template<typename T>
 int FindMax(int N, const T* data) {
@@ -44,6 +57,16 @@ int FindMin(int N, const T* data) {
         }
     }
     return ind;
+}
+
+template<typename T>
+std::vector<T> crossproduct(std::vector<T> v1, std::vector<T> v2)
+{
+    std::vector<T> res(3, 0.);
+    res[0] = v1[1]*v2[2] - v1[2]*v2[1];
+    res[1] = v1[2]*v2[0] - v1[0]*v2[2];
+    res[2] = v1[0]*v2[1] - v1[1]*v2[0];
+    return res;
 }
 
 template <typename T>

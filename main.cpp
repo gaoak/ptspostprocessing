@@ -5,7 +5,7 @@
 #include "Dataprocessing.h"
 #include "Util.h"
 #include "StructuredData.h"
-#include "IncFlow.h"
+#include "plungingdata.h"
 using namespace std;
 std::map<bool, std::string> testresults = {{true, "pass"},{false, "fail"}};
 
@@ -103,82 +103,22 @@ int TestSummary() {
 }
 
 int main(int argc, char *argv[]) {
-    std::vector<int> N(3, 1);
-    std::vector<double> range(6, 0.);
+    string dataconfigue("dataconfigue");
     for(int c=1; c<argc; ++c) {
-        if(0==string("range").compare(argv[c])) {
-            parserDouble(argv[c+1], range);
-        }
-        if(0==string("num").compare(argv[c])) {
-            parserUInt(argv[c+1], N);
+        if(0==string("data").compare(argv[c])) {
+            dataconfigue = argv[c+1];
         }
     }
-
-    IncFlow sdata(N, range);
-    sdata.SetBody("0012", {15./180.*M_PI});
-    string filename;
+    PlungingMotion plungdata(dataconfigue);
     std::vector<double> sigma, value;
     for(int c=1; c<argc; ++c) {
         if(0==string("dump").compare(argv[c])) {
-            filename = argv[c+1];
-            sdata.OutputCSV(filename + ".csv");
-        }
-        if(0==string("load").compare(argv[c])) {
-            filename = argv[c+1];
-            sdata.LoadCSV(filename + ".csv");
+            plungdata.Dumppoints();
         }
         if(0==string("process").compare(argv[c])) {
-            parserDouble(argv[c+1], sigma);
-            //vorticity Q
-            //u, v, w, p, W_x, W_y, W_z, Q
-            vector<int> field = {0,1,2};
-            sdata.Smoothing(sigma[0], field);
-            sdata.CalculateVorticity();
-            //vortex
-            std::vector<std::vector<double> > cores;
-            std::vector<double> radius;
-            std::vector<double> circulation;
-            std::vector<int> intcenter;
-            ifstream ifilecenter(".swap.center");
-            if(ifilecenter.is_open()) {
-                printf("read swap data\n");
-                intcenter.resize(3);
-                ifilecenter >> intcenter[0] >> intcenter[1] >> intcenter[2];
-                ifilecenter.close();
-            }
-            sdata.ExtractCore(sigma[0], cores, radius, circulation, intcenter, -2, 3);
-            ofstream ofilecenter(".swap.center");
-            ofilecenter << intcenter[0] << " " << intcenter[1] << " " << intcenter[2];
-            ofilecenter.close();
-            filename += "core.dat";
-            ofstream ofile(filename.c_str());
-            ofile << "variables = x,y,z,radius,Gamma" << endl;
-            for(int i=0; i<cores.size(); ++i) {
-                ofile << cores[i][0] << " "
-                    << cores[i][1] << " "
-                    << cores[i][2] << " "
-                    << radius[i] << " "
-                    << circulation[i] << "\n";
-            }
-            ofile.close();
-            field = {7};
-            sdata.Smoothing(sigma[0], field);
-        }
-        if(0==string("maskbound").compare(argv[c])) {
-            parserDouble(argv[c+1], value);
-            std::vector<int> field;
-            map<int, double> def;
-            for(int i=0; i<sdata.GetNumPhys(); ++i) {
-                field.push_back(i);
-                def[i] = value[i];
-            }
-            sdata.MaskBoundary(3.*sigma[0], field, def);
-        }
-        if(0==string("output").compare(argv[c])) {
-            filename = argv[c+1];
-            sdata.OutputTec360(filename + ".plt");
+            plungdata.ProcessFlowData();
         }
     }
-    printf("finished %s\n", filename.c_str());
+    printf("finished\n");
     return 0;
 }

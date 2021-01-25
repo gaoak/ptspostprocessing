@@ -3,14 +3,17 @@
 #include<string>
 #include<vector>
 #include "Tecplotwraper.h"
-
-int OutputTec360(std::string filename, std::string variables,
-                 int i, int j, int k, std::vector<void*> data,
+int OutputTec360_calllib(const std::string filename, const std::vector<std::string> &variables,
+                 const std::vector<int> &N, const std::vector<void*> data,
                  int isdouble,
                  int debug,
                  int filetype,
                  int fileformat)
 {
+    std::string varlist = variables[0];
+    for(int i=1; i<variables.size(); ++i) {
+        varlist += "," + variables[i];
+    }
     INTEGER4 Debug = debug;
     INTEGER4 VIsDouble = isdouble;
     INTEGER4 FileType = filetype;
@@ -21,7 +24,7 @@ int OutputTec360(std::string filename, std::string variables,
     * header information
     */
     I = TECINI142((char*)"OutputTec360", // dataset title, seems not important
-                (char*)variables.c_str(),  // variables list
+                (char*)varlist.c_str(),  // variables list
                 (char*)filename.c_str(), // output filename
                 (char*)".", // Scratch Directory
                 &FileFormat,
@@ -31,9 +34,9 @@ int OutputTec360(std::string filename, std::string variables,
     if(I) return -1;
 
     /*Ordered Zone Parameters*/
-    INTEGER4 IMax = i;
-    INTEGER4 JMax = j;
-    INTEGER4 KMax = k;
+    INTEGER4 IMax = N[0];
+    INTEGER4 JMax = N[1];
+    INTEGER4 KMax = N[2];
     INTEGER4 ZoneType = 0;
     INTEGER4 ICellMax = 0;
     INTEGER4 JCellMax = 0;

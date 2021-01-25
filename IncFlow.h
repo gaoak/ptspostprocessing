@@ -4,8 +4,9 @@
 #include "Body.h"
 class IncFlow : public StructuredData {
 public:
-    IncFlow(const std::vector<int> &N, const std::vector<double> &range);
-    void SetBody(std::string bodyname, std::vector<double> param);
+    IncFlow(const std::vector<int> &N, const std::vector<double> &range,
+            std::string bodyname, std::vector<double> param);
+    int OverWriteBodyPoint(const std::vector<double> &u0, const std::vector<double> &pivot, const std::vector<double> &omega);
     int ExtractCore(double sigma, std::vector<std::vector<double> > & cores,
         std::vector<double> & radius, std::vector<double> &circulation,
         std::vector<int> &intcenter, int dir = 2, int f = 3);
@@ -19,5 +20,6 @@ public:
     int PurgeDifferentSign(const std::vector<int> &N, const std::vector<double> &v, std::vector<double> &data, double sign);
 protected:
     Body m_body;
+    int m_dim;
 };
 #endif

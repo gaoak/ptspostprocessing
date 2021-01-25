@@ -23,17 +23,11 @@ int FindAbsMax(int N, const double* data) {
     return ind;
 }
 
-int AddVect(const double a1, const std::vector<double> &a, const double b1, const std::vector<double> &b, std::vector<double> & res) {
-    for(int i=0; i<a.size(); ++i) {
-        res[i] = a1*a[i] + b1*b[i];
-    }
-    return a.size();
-}
-
-void transform(std::vector<double> &p, double AoA) {
-    double x = p[0], y = p[1];
-    p[0] = x*cos(AoA) + y*sin(AoA);
-    p[1] =-x*sin(AoA) + y*cos(AoA);
+std::vector<double> transform(const std::vector<double> &p, double AoA) {
+    std::vector<double> res = p;
+    res[0] = p[0]*cos(AoA) + p[1]*sin(AoA);
+    res[1] =-p[0]*sin(AoA) + p[1]*cos(AoA);
+    return res;
 }
 
 void parserUInt(const char * cstr, std::vector<int> & value) {
@@ -72,6 +66,34 @@ void parserUInt(const char * cstr, std::vector<int> & value) {
     }
 }
 
+void parserString(const char * cstr, std::vector<std::string> & value, char sep) {
+    value.clear();
+    std::vector<int> digs;
+    std::vector<int> dige;
+    int i=0;
+    int flag = 0; //digit chunk
+    while(1) {
+        if(cstr[i]!=sep && cstr[i]!=0) {
+            if(flag==0) {
+                digs.push_back(i);
+            }
+            flag = 1;
+        } else {
+            if(flag==1) {
+                dige.push_back(i);
+            }
+            flag =  0;
+        }
+        if(cstr[i]==0) break;
+        ++i;
+    }
+    double k;
+    for(int i=0; i<digs.size(); ++i) {
+        std::string cuts(cstr+digs[i], dige[i]-digs[i]);
+        value.push_back(cuts);
+    }
+}
+
 void parserDouble(const char * cstr, std::vector<double> & value) {
     value.clear();
     std::vector<int> digs;
@@ -104,6 +126,14 @@ void parserDouble(const char * cstr, std::vector<double> & value) {
         }
         value.push_back(k);
     }
+}
+
+double StringToDouble(std::string str) {
+    double k;
+    if(sscanf(str.c_str(), "%lf", &k)<1) {
+        printf("error: parser double %s\n", str.c_str());
+    }
+    return k;
 }
 
 bool CompactArray(std::vector<int> &N) {
