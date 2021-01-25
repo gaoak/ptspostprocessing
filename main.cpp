@@ -5,7 +5,7 @@
 #include "Dataprocessing.h"
 #include "Util.h"
 #include "StructuredData.h"
-#include "plungingdata.h"
+#include "PlungingMotion.h"
 using namespace std;
 std::map<bool, std::string> testresults = {{true, "pass"},{false, "fail"}};
 

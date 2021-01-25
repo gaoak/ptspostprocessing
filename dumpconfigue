@@ -3,4 +3,4 @@ range -0.2,1.2,-0.2,1,0,5.3
 body 0012
 AoA 15.
 filesnumber 48,1,49
-output dumpdata%d.csv
+output dumpdata%d

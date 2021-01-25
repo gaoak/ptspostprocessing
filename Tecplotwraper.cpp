@@ -1,9 +1,11 @@
-#include<TECIO.h>
-#include<MASTER.h>
 #include<string>
 #include<vector>
 #include "Tecplotwraper.h"
-int OutputTec360_calllib(const std::string filename, const std::vector<std::string> &variables,
+
+#ifdef __linux__
+#include<TECIO.h>
+#include<MASTER.h>
+int OutputTec360(const std::string filename, const std::vector<std::string> &variables,
                  const std::vector<int> &N, const std::vector<void*> data,
                  int isdouble,
                  int debug,
@@ -84,3 +86,31 @@ int OutputTec360_calllib(const std::string filename, const std::vector<std::stri
     
     return 0;
 }
+
+#else
+
+int OutputTec360(const std::string filename, const std::vector<std::string> &variables,
+                 const std::vector<int> &N, const std::vector<void*> data,
+                 int isdouble,
+                 int debug,
+                 int filetype,
+                 int fileformat)
+{
+    std::string varlist = variables[0];
+    for(int i=1; i<variables.size(); ++i) {
+        varlist += "," + variables[i];
+    }
+    std::ofstream ofile(filename.c_str());
+    ofile << "variables = " << varlist << std::endl;
+    ofile << "zone I = " << N[0] << ", J = " << N[1] << ", K = " << N[2] << std::endl;
+    int Np = N[0] * N[1] * N[2];
+    for(int i=0; i<Np; ++i) {
+        for(int j=0; j<data.size(); ++j) {
+            ofile << ((double*)data[j])[i] << " ";
+        }
+        ofile << "\n";
+    }
+    ofile.close();
+    return 0;
+}
+#endif

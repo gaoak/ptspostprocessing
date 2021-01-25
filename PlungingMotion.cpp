@@ -2,7 +2,7 @@
 #include<map>
 #include<cmath>
 #include "Util.h"
-#include"plungingdata.h"
+#include "PlungingMotion.h"
 #include "IncFlow.h"
 
 PlungingMotion::PlungingMotion(std::string dataconfigue) {
@@ -88,7 +88,7 @@ int PlungingMotion::Dumppoints() {
     int count  = 0;
     for(int n=m_file[0]; n<m_file[2]; n+=m_file[1]) {
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
-        flow.OutputCSV(GetOutFileName(n));
+        flow.OutputCSV(GetOutFileName(n)+".csv");
         ++count;
     }
     return count;
@@ -99,7 +99,7 @@ int PlungingMotion::ProcessFlowData() {
     std::vector<int> intcenter;
     for(int n=m_file[0]; n<m_file[2]; n+=m_file[1]) {
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
-        flow.LoadCSV(GetInFileName(n));
+        flow.LoadCSV(GetInFileName(n)+".csv");
         //vorticity Q
         //u, v, w, p, W_x, W_y, W_z, Q
         std::vector<int> field = {0,1,2};
@@ -110,7 +110,7 @@ int PlungingMotion::ProcessFlowData() {
         std::vector<double> radius;
         std::vector<double> circulation;
         flow.ExtractCore(m_sigma, cores, radius, circulation, intcenter, -2, 3);
-        std::string filename = "core" + GetOutFileName(n);
+        std::string filename = "core" + GetOutFileName(n) + TECPLOTEXT;
         std::ofstream ofile(filename.c_str());
         ofile << "variables = x,y,z,radius,Gamma" << std::endl;
         for(int i=0; i<cores.size(); ++i) {
@@ -123,7 +123,7 @@ int PlungingMotion::ProcessFlowData() {
         ofile.close();
         field = {7};
         flow.Smoothing(m_sigma, field);
-        flow.OutputTec360(GetOutFileName(n));
+        flow.OutputTec360(GetOutFileName(n) + TECPLOTEXT);
     }
     return count;
 }

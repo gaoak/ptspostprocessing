@@ -2,8 +2,12 @@
 #define TECPLOTWRAPER_H
 #include<string>
 #include<vector>
-
-int OutputTec360_calllib(const std::string filename, const std::vector<std::string> &variables,
+#ifdef __linux__
+#define TECPLOTEXT ".plt"
+#else
+#define TECPLOTEXT ".dat"
+#endif
+int OutputTec360(const std::string filename, const std::vector<std::string> &variables,
                  const std::vector<int> &N, const std::vector<void*> data,
                  int isdouble,
                  int debug = 0,

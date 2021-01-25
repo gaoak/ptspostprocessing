@@ -175,7 +175,7 @@ int StructuredData::OutputTec360(std::string filename) {
     for(int i=0; i<m_phys.size(); ++i) {
         data.push_back((void*) (m_phys[i].data()) );
     }
-    OutputTec360_calllib(filename, m_vars, m_N, data, isdouble);
+    ::OutputTec360(filename, m_vars, m_N, data, isdouble);
     return m_x.size() + m_phys.size();
 }
 
