@@ -49,6 +49,14 @@ int IncFlow::CalculateVorticity(int order) {
     }
 }
 
+int IncFlow::TransformCoord(const std::vector<double> &x0) {
+    for(int k=0; k<3; ++k) {
+        for(int i=0; i<m_Np; ++i) {
+            m_x[k][i] += x0[k];
+        }
+    }
+}
+
 std::pair<int, int> IncFlow::GetProceedDirection(const std::vector<double> &vor, double sign) {
     std::pair<int, int> res;
     res.first = FindAbsMax(3, vor.data());
@@ -63,7 +71,7 @@ std::pair<int, int> IncFlow::GetProceedDirection(const std::vector<double> &vor,
 
 int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores,
     std::vector<double> & radius, std::vector<double> &circulation,
-    std::vector<int> &inputcenter, int dir, int f) {
+    std::vector<double> &inputcenter, int dir, int f) {
     cores.clear();
     std::vector<std::vector<double> > odata;
     //u, v, w, p, W_x, W_y, W_z, Q
@@ -77,7 +85,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
             odata[3][i] = -odata[3][i];
         }
     }
-    Smoothing(sigma, odata);
+    //Smoothing(sigma, odata);
     double vorticityproceedsign = 1.;
     if(dir<0) {
         dir = -dir;
@@ -99,7 +107,13 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
 
     int Trymax = m_N[0] + m_N[1] + m_N[2];
     std::set<int> searched;
-    std::vector<int> intcenter = inputcenter;
+    std::vector<int> intcenter;
+    if(inputcenter.size()>2) {
+        intcenter.resize(3);
+        for(int i=0; i<3; ++i) {
+            intcenter[i] = myRound<double>((inputcenter[i] - m_range[2*i]) / m_dx[i]);
+        }
+    }
     std::pair<int, int> plane(dir, 0);
     std::vector<int> planeN;
     std::vector<double> planedata;
@@ -154,7 +168,9 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         radius.push_back(tmpradius);
         circulation.push_back(std::fabs(tmpcirculation));
         int centerindex = Index(m_N, intcenter);
-        if(count==0) inputcenter = intcenter;
+        if(count==0) {
+            inputcenter = physcenter;
+        }
         if(searched.find(centerindex)!=searched.end()) {
             searched.insert(centerindex);
             break;

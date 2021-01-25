@@ -8,6 +8,7 @@ public:
     int Dumppoints();
     double GetFilePhase(int n);
     double PlungingVelocity(double phase, double phi);
+    double PlungingLocation(double phase, double phi);
     std::string GetInFileName(int n);
     std::string GetOutFileName(int n);
 protected:
@@ -23,5 +24,6 @@ protected:
     std::string m_airfoil;
     double m_AoA;
     double m_sigma;
+    int m_vortexcoreVar;
 };
 #endif

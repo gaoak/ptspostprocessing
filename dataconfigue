@@ -1,7 +1,7 @@
 N 65,65,65   
 range -0.2,1.2,-0.2,1,0,5.3  
 k 2.
-a 0.25
+A 0.5
 phi 0.
 filesnumber 52,1,53
 phase       0.25,0.0625
@@ -9,4 +9,5 @@ input  data%d
 output sdata%d  
 body 0012
 AoA 15.
-sigma 0.03
+sigma 0.1
+vortexcorevar -7

@@ -24,8 +24,8 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     if(param.count("k")) {
         m_k = StringToDouble(param["k"]);
     }
-    if(param.count("a")) {
-        m_A = StringToDouble(param["a"]);
+    if(param.count("A")) {
+        m_A = StringToDouble(param["A"]);
     }
     if(param.count("phi")) {
         m_phi = StringToDouble(param["phi"]);
@@ -50,6 +50,10 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     }
     if(param.count("AoA")) {
         m_AoA = StringToDouble(param["AoA"].c_str());
+        m_AoA = m_AoA / 180. * M_PI;
+    }
+    if(param.count("vortexcorevar")) {
+        m_vortexcoreVar = StringToDouble(param["vortexcorevar"].c_str());
     }
     if(param.count("N")) {
         parserUInt(param["N"].c_str(), m_N);
@@ -81,7 +85,12 @@ std::string PlungingMotion::GetOutFileName(int n) {
 }
 
 double PlungingMotion::PlungingVelocity(double phase, double phi) {
-    return 0.5*m_A*std::sin(phase*2.*M_PI + phi);
+    return -m_k*m_A*sin(phase*2.*M_PI + phi);
+}
+
+double PlungingMotion::PlungingLocation(double phase, double phi) {
+    return 0.5*m_A*cos(phase*2.*M_PI + phi);
+    //0.5 A cos(2 k t + phi)
 }
 
 int PlungingMotion::Dumppoints() {
@@ -96,7 +105,7 @@ int PlungingMotion::Dumppoints() {
 
 int PlungingMotion::ProcessFlowData() {
     int count  = 0;
-    std::vector<int> intcenter;
+    std::vector<double> center = {0.938612885677002184, 0.290809322370750745, 0.};
     for(int n=m_file[0]; n<m_file[2]; n+=m_file[1]) {
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
         flow.LoadCSV(GetInFileName(n)+".csv");
@@ -111,7 +120,7 @@ int PlungingMotion::ProcessFlowData() {
         std::vector<std::vector<double> > cores;
         std::vector<double> radius;
         std::vector<double> circulation;
-        flow.ExtractCore(m_sigma, cores, radius, circulation, intcenter, -2, 3);
+        flow.ExtractCore(m_sigma, cores, radius, circulation, center, -2, m_vortexcoreVar);
         std::string filename = "core" + GetOutFileName(n) + TECPLOTEXT;
         std::ofstream ofile(filename.c_str());
         ofile << "variables = x,y,z,radius,Gamma" << std::endl;
