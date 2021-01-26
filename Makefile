@@ -2,7 +2,7 @@ CC=c++
 UNAME_S := $(shell uname -s)
 CFLAGS=-std=c++11 -Og -g
 ifeq ($(UNAME_S),Linux)
-    CFLAGS += -I $TECINCLUDE
+    CFLAGS += -I $(TECINCLUDE)
 	LIBS += libtecio.a libadkutil.a -lstdc++ -pthread
 else
 	LIBS += -lstdc++ -pthread
