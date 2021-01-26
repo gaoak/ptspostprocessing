@@ -1,15 +1,25 @@
+#meshinfomation, N points, range box
 N 65,65,65   
 range -0.2,1.2,-0.2,1,0,5.3  
+#plunging motion
 k 2.
 A 0.5
 phi 0.
+#airfoil shapt and AoA (in degree)
+body 0012
+AoA 15.
+#input output file infomation
 filesnumber 52,1,53
 phase       0.25,0.0625
 input  data%d
 output sdata%d  
-body 0012
-AoA 15.
-sigma 0.06
-vortexcorevar 7
-initcenter 0.938612885677002184,0.290809322370750745,0.
+#standard deviation of Gauss smoother
+sigma 0.1
+#parameter for vortex core extraction
+#which variable to use p(-3), Q(7)
+vortexcorevar -3
+threshold -3
+#negative is vorticity sign different from axis
+intialdirection -2
+initcenter 0.,0.,0.
 stoponwall 1

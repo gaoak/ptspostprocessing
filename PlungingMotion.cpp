@@ -52,11 +52,17 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
         m_AoA = StringToDouble(param["AoA"].c_str());
         m_AoA = m_AoA / 180. * M_PI;
     }
+    if(param.count("threshold")) {
+        m_threshold = StringToDouble(param["threshold"].c_str());
+    }
     if(param.count("vortexcorevar")) {
         m_vortexcoreVar = myRound<double>(StringToDouble(param["vortexcorevar"].c_str()));
     }
     if(param.count("stoponwall")) {
         m_stoponwall = myRound<double>(StringToDouble(param["stoponwall"].c_str()));
+    }
+    if(param.count("intialdirection")) {
+        m_initDirection = myRound<double>(StringToDouble(param["intialdirection"].c_str()));
     }
     if(param.count("N")) {
         parserUInt(param["N"].c_str(), m_N);
@@ -125,7 +131,7 @@ int PlungingMotion::ProcessFlowData() {
         std::vector<std::vector<double> > cores;
         std::vector<std::vector<double> > radius;
         std::vector<double> circulation;
-        flow.ExtractCore(m_sigma, cores, radius, circulation, m_initcenter, -2, m_vortexcoreVar, m_stoponwall);
+        flow.ExtractCore(m_sigma, cores, radius, circulation, m_initcenter, m_initDirection, m_vortexcoreVar, m_stoponwall, m_threshold);
         std::string filename = "core" + GetOutFileName(n) + ".dat";
         std::ofstream ofile(filename.c_str());
         ofile << "variables = x,y,z,radius1,radius2,Gamma" << std::endl;

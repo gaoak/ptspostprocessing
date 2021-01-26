@@ -77,7 +77,7 @@ std::pair<int, std::vector<int> > IncFlow::GetProceedDirection(const std::vector
 
 int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores,
     std::vector<std::vector<double> > & radius, std::vector<double> &circulation,
-    std::vector<double> &inputcenter, int dir, int f, bool stoponwall) {
+    std::vector<double> &inputcenter, int dir, int f, bool stoponwall, double threshold) {
     cores.clear();
     std::vector<std::vector<double> > odata;
     //u, v, w, p, W_x, W_y, W_z, Q
@@ -168,10 +168,13 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         ShiftArray<int>(N, dir-2);
         ShiftArray<int>(intcenter, dir-2);
 
+        int centerindex = Index(m_N, intcenter);
+        if((ismax && odata[3][centerindex]<threshold) || (!ismax && odata[3][centerindex]>threshold) ) {
+            break;
+        }
         cores.push_back(physcenter);
         radius.push_back(tmpradius);
         circulation.push_back(std::fabs(tmpcirculation));
-        int centerindex = Index(m_N, intcenter);
         if(count==0) {
             inputcenter = physcenter;
         }
