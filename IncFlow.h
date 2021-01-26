@@ -9,10 +9,10 @@ public:
     int OverWriteBodyPoint(const std::vector<double> &u0, const std::vector<double> &pivot, const std::vector<double> &omega);
     int TransformCoord(const std::vector<double> &x0);
     int ExtractCore(double sigma, std::vector<std::vector<double> > & cores,
-        std::vector<double> & radius, std::vector<double> &circulation,
+        std::vector<std::vector<double> > & radius, std::vector<double> &circulation,
         std::vector<double> &intcenter, int dir = 2, int f = 3);
     int ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
-        std::vector<double> &planevorticity, double &radius, double &circulation);
+        std::vector<double> &planevorticity, std::vector<double> &radius, double &circulation);
     int ExtractCore2Dplane(const std::vector<int> &N, const std::vector<int> &initial,
         std::vector<double> &data, std::vector<double> &core, bool ismax = true);
     int CalculateVorticity(int order = 2);

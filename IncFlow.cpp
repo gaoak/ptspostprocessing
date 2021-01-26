@@ -76,7 +76,7 @@ std::pair<int, std::vector<int> > IncFlow::GetProceedDirection(const std::vector
 }
 
 int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores,
-    std::vector<double> & radius, std::vector<double> &circulation,
+    std::vector<std::vector<double> > & radius, std::vector<double> &circulation,
     std::vector<double> &inputcenter, int dir, int f) {
     cores.clear();
     std::vector<std::vector<double> > odata;
@@ -114,7 +114,8 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     std::vector<int> planeN;
     std::vector<double> planedata;
     int count = 0;
-    double tmpradius, tmpcirculation;
+    double tmpcirculation;
+    std::vector<double> tmpradius;
     std::vector<double> planevorticity;
     std::pair<int, std::vector<int> > incplane;
     incplane.first = dir;
@@ -151,6 +152,8 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         physcenter.push_back(range[4] + (plane.second)*dx[2]);
         intcenter.push_back(plane.second);
         ExtractVortexParam2Dplane(Nslice, dx, intcenter, planevorticity, tmpradius, tmpcirculation);
+        tmpradius[0] = std::sqrt(tmpradius[0] * tmpradius[0] - 0. * sigma * sigma);
+        tmpradius[1] = std::sqrt(tmpradius[1] * tmpradius[1] - 0. * sigma * sigma);
         
         {
             //StructuredData tmp(Nslice, range);
@@ -213,9 +216,9 @@ int IncFlow::PurgeDifferentSign(const std::vector<int> &N, const std::vector<dou
 }
 
 int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
-    std::vector<double> &v, double &radius, double &circulation) {
+    std::vector<double> &v, std::vector<double> &radius, double &circulation) {
     Fill2DGraph(N, v, core, 0.05, true);
-    double sum0 = 0., sum2 = 0., sum1x = 0., sum1y = 0.;
+    double sum0 = 0., sum1x = 0., sum1y = 0.;
     for(int j=0; j<N[1]; ++j) {
         for(int i=0; i<N[0]; ++i) {
             int ind = Index(N, {i, j});
@@ -227,14 +230,25 @@ int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vec
 
     sum1x /= sum0;
     sum1y /= sum0;
+    double sumxx = 0., sumxy = 0., sumyy = 0.;
     for(int j=0; j<N[1]; ++j) {
         for(int i=0; i<N[0]; ++i) {
             int ind = Index(N, {i, j});
-            sum2 += v[ind] * ( (i - sum1x) * (i - sum1x) * dx[0] * dx[0] 
-                             + (j - sum1y) * (j - sum1y) * dx[1] * dx[1] );
+            sumxx += v[ind] * (i - sum1x) * (i - sum1x) * dx[0] * dx[0];
+            sumxy += v[ind] * (i - sum1x) * (j - sum1y) * dx[0] * dx[1];
+            sumyy += v[ind] * (j - sum1y) * (j - sum1y) * dx[1] * dx[1];
         }
     }
-    radius = 1.584 * std::sqrt(sum2/sum0);
+    sumxx /= sum0;
+    sumxy /= sum0;
+    sumyy /= sum0;
+    // l^2 - (xx + yy) l + xx yy -xy xy = 0
+    double b = - sumxx - sumyy;
+    double c = sumxx*sumyy - sumxy*sumxy;
+    double det = std::sqrt(b*b - 4.*c);
+    radius.clear();
+    radius.push_back(std::sqrt(0.5*(-b - det)));
+    radius.push_back(std::sqrt(0.5*(-b + det)));
     circulation = sum0 * dx[0] * dx[1];
     return 2;
 }

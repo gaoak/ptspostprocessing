@@ -9,5 +9,5 @@ input  data%d
 output sdata%d  
 body 0012
 AoA 15.
-sigma 0.1
+sigma 0.06
 vortexcorevar 7

@@ -118,17 +118,18 @@ int PlungingMotion::ProcessFlowData() {
         flow.CalculateVorticity();
         //vortex
         std::vector<std::vector<double> > cores;
-        std::vector<double> radius;
+        std::vector<std::vector<double> > radius;
         std::vector<double> circulation;
         flow.ExtractCore(m_sigma, cores, radius, circulation, center, -2, m_vortexcoreVar);
         std::string filename = "core" + GetOutFileName(n) + TECPLOTEXT;
         std::ofstream ofile(filename.c_str());
-        ofile << "variables = x,y,z,radius,Gamma" << std::endl;
+        ofile << "variables = x,y,z,radius1,radius2,Gamma" << std::endl;
         for(int i=0; i<cores.size(); ++i) {
             ofile << cores[i][0] << " "
                 << cores[i][1] << " "
                 << cores[i][2] << " "
-                << radius[i] << " "
+                << radius[i][0] << " "
+                << radius[i][1] << " "
                 << circulation[i] << "\n";
         }
         ofile.close();
