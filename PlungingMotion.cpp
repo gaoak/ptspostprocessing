@@ -133,7 +133,7 @@ int PlungingMotion::ProcessFlowData(int dir) {
         flow.OverWriteBodyPoint({0., v0, 0.}, {0., 0., 0.}, {0., 0., 0.});
         //vorticity Q
         //u, v, w, p, W_x, W_y, W_z, Q
-        std::vector<int> field = {0,1,2};
+        std::vector<int> field = {0,1,2,3};
         flow.Smoothing(m_sigma, field);
         flow.CalculateVorticity();
         //vortex
@@ -153,8 +153,6 @@ int PlungingMotion::ProcessFlowData(int dir) {
                 << circulation[i] << "\n";
         }
         ofile.close();
-        field = {7};
-        flow.Smoothing(m_sigma, field);
         flow.OutputTec360(GetOutFileName(n) + TECPLOTEXT);
     }
     return count;
