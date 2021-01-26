@@ -188,6 +188,7 @@ int StructuredData::OutputTec360(std::string filename) {
         data.push_back((void*) (m_phys[i].data()) );
     }
     ::OutputTec360(filename, m_vars, m_N, data, isdouble);
+    printf("output file %s\n", filename.c_str());
     return m_x.size() + m_phys.size();
 }
 
