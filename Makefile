@@ -1,18 +1,20 @@
 CC=c++
 UNAME_S := $(shell uname -s)
+CFLAGS=-std=c++11 -Og -g
 ifeq ($(UNAME_S),Linux)
-    CCFLAGS += -I $TECINCLUDE -Og -g
-	LIB += libtecio.a libadkutil.a -lstdc++ -pthread
+    CFLAGS += -I $TECINCLUDE
+	LIBS += libtecio.a libadkutil.a -lstdc++ -pthread
 else
-    CCFLAGS += -Og -g
-	LIB += -lstdc++ -pthread
+	LIBS += -lstdc++ -pthread
 endif
-CFLAGS=-I.
 DEPS = %.h
-OBJ = main.o airfoil.o Dataprocessing.o PlungingMotion.o Tecplotwraper.o Body.o IncFlow.o Util.o StructuredData.o
+OBJ =  CAD2D/airfoil.o Dataprocessing.o PlungingMotion.o Tecplotwraper.o Body.o IncFlow.o Util.o StructuredData.o main.o
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+main.o: main.cpp
+	${CC} $(CFLAGS) -c $<
+
+%.o: %.cpp $(DEPS)
+	$(CC) $(CFLAGS) -c $<  -o $@
 
 process: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIB)
+	$(CC)  -o $@ $^ $(CFLAGS) $(LIBS)
