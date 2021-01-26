@@ -21,7 +21,9 @@ double Distance(const std::vector<double> &a, const std::vector<double> &b);
 template<typename T>
 std::vector<T> AddVect(const T a1, const std::vector<T> &a, const T b1, const std::vector<T> &b);
 std::vector<double> transform(const std::vector<double> &p, double AoA);
-int Fill2DGraph(const std::vector<int> &rawN, std::vector<double> &value, const std::vector<int> &init, const double &eps);
+int Fill2DGraph(const std::vector<int> &rawN, std::vector<double> &value, const std::vector<int> &init, const double &eps, bool monotone);
+int FindLocMaxIn2DGraph(const std::vector<int> &N, const std::vector<int> &initial,
+    std::vector<double> &data, std::vector<double> &core, bool ismax);
 template<typename T>
 std::vector<T> AddVect(const T a1, const std::vector<T> &a, const T b1, const std::vector<T> &b) {
     std::vector<T> res(a.size());

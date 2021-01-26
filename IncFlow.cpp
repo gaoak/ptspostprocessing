@@ -86,9 +86,9 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     odata.push_back(m_phys[5]);
     odata.push_back(m_phys[6]);
     odata.push_back(m_phys[std::abs(f)]);
-    bool ismin = true;
+    bool ismax = true;
     if(f<0) {
-        ismin = false;
+        ismax = false;
     }
     //Smoothing(sigma, odata);
     double vorticityproceedsign = 1.;
@@ -141,7 +141,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
             tmpsign = planevorticity[Index(Nslice, intcenter)];
         }
         PurgeDifferentSign(Nslice, planevorticity, planedata, tmpsign);
-        ExtractCore2Dplane(Nslice, intcenter, planedata, newcenter, ismin);
+        ExtractCore2Dplane(Nslice, intcenter, planedata, newcenter, ismax);
         std::vector<double> physcenter = newcenter;
         intcenter.resize(2);
         for(int k=0; k<2; ++k) {
@@ -151,6 +151,13 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         physcenter.push_back(range[4] + (plane.second)*dx[2]);
         intcenter.push_back(plane.second);
         ExtractVortexParam2Dplane(Nslice, dx, intcenter, planevorticity, tmpradius, tmpcirculation);
+        
+        {
+            //StructuredData tmp(Nslice, range);
+            //tmp.AddPhysics("vor", planevorticity);
+            //tmp.OutputTec360("vor.plt");
+            //exit(0);
+        }
 
         ShiftArray<double>(dx, dir-2);
         ShiftArray<double>(physcenter, dir-2);
@@ -189,53 +196,8 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
 }
 
 int IncFlow::ExtractCore2Dplane(const std::vector<int> &N, const std::vector<int> &initial,
-    std::vector<double> &data, std::vector<double> &core, bool ismin) {
-    if(!ismin) {
-        for(int i=0; i<N[0]*N[1]; ++i) {
-            data[i] = -data[i];
-        }
-    }
-    int Np = N[0] * N[1];
-    if(initial.size()<2) {
-        int imin = FindMin<double>(Np, data.data());
-        double pmin = data[imin];
-        double thresh = 0.98 * pmin;
-        std::vector<double> center;
-        DoMaskShift<double>(Np, thresh, -1, data.data());
-        core.clear();
-        WeightedCenter<double>(N, data.data(), core);
-    } else {
-        std::vector<int> p = initial;
-        double minv = data[Index(N, p)];
-        bool proceed = true;
-        while(proceed) {
-            proceed = false;
-            if(p[0]>0 && data[Index(N, {p[0]-1, p[1]})] < minv) {
-                minv = data[Index(N, {p[0]-1, p[1]})];
-                p[0] -= 1;
-                proceed = true;
-            }
-            if(p[0]<N[0]-1 && data[Index(N, {p[0]+1, p[1]})] < minv) {
-                minv = data[Index(N, {p[0]+1, p[1]})];
-                p[0] += 1;
-                proceed = true;
-            }
-            if(p[1]>0 && data[Index(N, {p[0], p[1]-1})] < minv) {
-                minv = data[Index(N, {p[0], p[1]-1})];
-                p[1] -= 1;
-                proceed = true;
-            }
-            if(p[1]<N[1]-1 && data[Index(N, {p[0], p[1]+1})] < minv) {
-                minv = data[Index(N, {p[0], p[1]+1})];
-                p[1] += 1;
-                proceed = true;
-            }
-        }
-        core.resize(2);
-        core[0] = p[0];
-        core[1] = p[1];
-    }
-    return core.size();
+    std::vector<double> &data, std::vector<double> &core, bool ismax) {
+    return FindLocMaxIn2DGraph(N, initial, data, core, ismax);
 }
 
 int IncFlow::PurgeDifferentSign(const std::vector<int> &N, const std::vector<double> &v, std::vector<double> &data, double sign) {
@@ -252,7 +214,7 @@ int IncFlow::PurgeDifferentSign(const std::vector<int> &N, const std::vector<dou
 
 int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
     std::vector<double> &v, double &radius, double &circulation) {
-    Fill2DGraph(N, v, core, 0.1);
+    Fill2DGraph(N, v, core, 0.05, true);
     double sum0 = 0., sum2 = 0., sum1x = 0., sum1y = 0.;
     for(int j=0; j<N[1]; ++j) {
         for(int i=0; i<N[0]; ++i) {

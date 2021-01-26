@@ -191,32 +191,42 @@ void invIndex(const std::vector<int> &N, int index, std::vector<int> & res) {
     res[0] = index;
 }
 
-int Fill2DGraph(const std::vector<int> &rawN, std::vector<double> &value, const std::vector<int> &init, const double &eps)
+int Fill2DGraph(const std::vector<int> &rawN, std::vector<double> &value, const std::vector<int> &init, const double &eps, bool monotone)
 {
-    std::vector<int> N(2);
-    N[0] = rawN[0];
-    N[1] = rawN[1];
-	std::vector<int> val(N[0]*N[1], 0);
-	std::vector<int> res(N[0]*N[1], 0);
     if(eps>=1. || eps <= 0.) {
         printf("error: threshold value %f should be in (0, 1)\n", eps);
         return -1;
     }
+    std::vector<int> N(2);
+    std::vector<double> core;
+    N[0] = rawN[0];
+    N[1] = rawN[1];
     double sign = 1.;
     if(value[Index(N, init)] < 0.) {
         sign = -1.;
+        FindLocMaxIn2DGraph(N, init, value, core, false);
+    } else {
+        FindLocMaxIn2DGraph(N, init, value, core, true);
     }
-    double threshold = value[Index(N, init)] * eps * sign;
+    std::vector<int> intcore(2);
+    intcore[0] = myRound(core[0]);
+    intcore[1] = myRound(core[1]);
+    double threshold = value[Index(N, intcore)] * eps * sign;
+    //prepare memory
+	std::vector<double> val(N[0]*N[1], 0);
+	std::vector<int> res(N[0]*N[1], 0);
     for(int j=0; j<N[1]; ++j) {
         for(int i=0; i<N[0]; ++i) {
             int ind = Index(N, {i, j});
             if(value[ind] * sign > threshold) {
-                val[ind] = 1;
+                val[ind] = value[ind] * sign;
+            } else {
+                val[ind] = -1.;
             }
         }
     }
     //start fill
-    res[Index(N, init)] = 1;
+    res[Index(N, intcore)] = 1;
     bool proceed = true;
     while(proceed) {
         proceed = false;
@@ -224,14 +234,26 @@ int Fill2DGraph(const std::vector<int> &rawN, std::vector<double> &value, const 
             for(int i=0; i<N[0]; ++i) {
                 int ind = Index(N, {i, j});
                 if(res[ind]) continue;
-                if((i>0      && res[Index(N, {i-1, j  })]) ||
-                   (i<N[0]-1 && res[Index(N, {i+1, j  })]) ||
-                   (j>0      && res[Index(N, {i  , j-1})]) ||
-                   (j<N[1]-1 && res[Index(N, {i  , j+1})])
-                ) {
-                    if(val[ind]) {
+                std::vector<int> p;
+                if(i>0) {
+                    p.push_back(Index(N, {i-1, j}));
+                }
+                if(i<N[0]-1) {
+                    p.push_back(Index(N, {i+1, j}));
+                }
+                if(j>0) {
+                    p.push_back(Index(N, {i, j-1}));
+                }
+                if(j<N[1]-1) {
+                    p.push_back(Index(N, {i, j+1}));
+                }
+                for(int n=0; n<p.size(); ++n) {
+                    int indt = p[n];
+                    bool checkmono = !monotone || val[ind] <= val[indt];
+                    if( res[indt] && val[ind]>0. && checkmono) {
                         res[ind] = 1;
                         proceed = true;
+                        break;
                     }
                 }
             }
@@ -250,4 +272,59 @@ int Fill2DGraph(const std::vector<int> &rawN, std::vector<double> &value, const 
         }
     }
 	return count;
+}
+
+int FindLocMaxIn2DGraph(const std::vector<int> &N, const std::vector<int> &initial,
+    std::vector<double> &data, std::vector<double> &core, bool ismax) {
+    if(!ismax) {
+        for(int i=0; i<N[0]*N[1]; ++i) {
+            data[i] = -data[i];
+        }
+    }
+    int Np = N[0] * N[1];
+    if(initial.size()<2) {
+        int imin = FindMin<double>(Np, data.data());
+        double pmin = data[imin];
+        double thresh = 0.98 * pmin;
+        std::vector<double> center;
+        DoMaskShift<double>(Np, thresh, -1, data.data());
+        core.clear();
+        WeightedCenter<double>(N, data.data(), core);
+    } else {
+        std::vector<int> p = initial;
+        double maxv = data[Index(N, p)];
+        bool proceed = true;
+        while(proceed) {
+            proceed = false;
+            if(p[0]>0 && data[Index(N, {p[0]-1, p[1]})] > maxv) {
+                maxv = data[Index(N, {p[0]-1, p[1]})];
+                p[0] -= 1;
+                proceed = true;
+            }
+            if(p[0]<N[0]-1 && data[Index(N, {p[0]+1, p[1]})] > maxv) {
+                maxv = data[Index(N, {p[0]+1, p[1]})];
+                p[0] += 1;
+                proceed = true;
+            }
+            if(p[1]>0 && data[Index(N, {p[0], p[1]-1})] > maxv) {
+                maxv = data[Index(N, {p[0], p[1]-1})];
+                p[1] -= 1;
+                proceed = true;
+            }
+            if(p[1]<N[1]-1 && data[Index(N, {p[0], p[1]+1})] > maxv) {
+                maxv = data[Index(N, {p[0], p[1]+1})];
+                p[1] += 1;
+                proceed = true;
+            }
+        }
+        core.resize(2);
+        core[0] = p[0];
+        core[1] = p[1];
+    }
+    if(!ismax) {
+        for(int i=0; i<N[0]*N[1]; ++i) {
+            data[i] = -data[i];
+        }
+    }
+    return core.size();
 }

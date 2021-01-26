@@ -88,6 +88,15 @@ int StructuredData::AddPhysics(std::string var, void * func) {
     return m_Np;
 }
 
+int StructuredData::AddPhysics(std::string var, const std::vector<double> &data) {
+    m_vars.push_back(var);
+    m_phys.push_back(data);
+    if(data.size() != m_Np) {
+        m_phys[m_phys.size()-1].resize(m_Np);
+    }
+    return data.size();
+}
+
 double StructuredData::GetPhysNorm(int f, int p) {
     double sum = 0.;
     for(int i=0; i<m_Np; ++i) {

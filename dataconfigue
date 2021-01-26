@@ -10,4 +10,4 @@ output sdata%d
 body 0012
 AoA 15.
 sigma 0.1
-vortexcorevar -7
+vortexcorevar 7

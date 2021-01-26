@@ -18,6 +18,7 @@ public:
     int LoadCSV(std::string filename);
     int GetTotPoints();
     int AddPhysics(std::string var, void * func);
+    int AddPhysics(std::string var, const std::vector<double> &data);
     int Smoothing(double sigma, std::vector<int> &field, bool inplace = true);
     int Smoothing(double sigma, std::vector<std::vector<double> > &odata);
     int MaskBoundary(double sigma, std::vector<int> &field, std::map<int, double> def);
