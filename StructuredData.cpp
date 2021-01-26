@@ -119,6 +119,9 @@ double StructuredData::GetCoordValue(int f, int i) {
 
 int StructuredData::LoadCSV(std::string filename) {
     std::ifstream file(filename.c_str());
+    if(!file.is_open()) {
+        printf("error: unable to open file %s\n", filename.c_str());
+    }
     char buffer[1000];
     std::vector<double> value;
     file.getline(buffer, sizeof(buffer));

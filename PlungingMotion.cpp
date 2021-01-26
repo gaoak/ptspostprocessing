@@ -124,7 +124,7 @@ int PlungingMotion::ProcessFlowData() {
         std::vector<std::vector<double> > radius;
         std::vector<double> circulation;
         flow.ExtractCore(m_sigma, cores, radius, circulation, center, -2, m_vortexcoreVar);
-        std::string filename = "core" + GetOutFileName(n) + TECPLOTEXT;
+        std::string filename = "core" + GetOutFileName(n) + ".dat";
         std::ofstream ofile(filename.c_str());
         ofile << "variables = x,y,z,radius1,radius2,Gamma" << std::endl;
         for(int i=0; i<cores.size(); ++i) {
