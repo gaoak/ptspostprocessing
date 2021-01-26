@@ -71,7 +71,7 @@ std::pair<int, std::vector<int> > IncFlow::GetProceedDirection(const std::vector
         inc[i] = myRound<double>(vor[i] * ds / m_dx[i]);
     }
     res.second = inc;
-    printf("direction %d, (%d,%d,%d)\n", res.first, res.second[0], res.second[1], res.second[2]);
+    //printf("direction %d, (%d,%d,%d)\n", res.first, res.second[0], res.second[1], res.second[2]);
     return res;
 }
 
@@ -125,7 +125,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
             break;
         }
         dir = plane.first;
-        printf("search plane %d, %d\n", dir, plane.second);
+        //printf("search plane %d, %d\n", dir, plane.second);
         ExtractPlane(odata[3], plane, planeN, planedata);
         ExtractPlane(odata[dir], plane, planeN, planevorticity);
 
@@ -170,7 +170,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
             break;
         }
         searched.insert(centerindex);
-        printf("location %f, %f, %f\n", physcenter[0], physcenter[1], physcenter[2]);
+        //printf("location %f, %f, %f\n", physcenter[0], physcenter[1], physcenter[2]);
         if(m_body.IsInBody(physcenter, m_dx[1])) {
             break;
         }
@@ -182,7 +182,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         intcenter[0] += incplane.second[0];
         intcenter[1] += incplane.second[1];
         intcenter[2] += incplane.second[2];
-        printf("next plane %d, %d\n", plane.first, plane.second);
+        //printf("next plane %d, %d\n", plane.first, plane.second);
         ++count;
     }
     return count;
@@ -252,7 +252,7 @@ int IncFlow::PurgeDifferentSign(const std::vector<int> &N, const std::vector<dou
 
 int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
     std::vector<double> &v, double &radius, double &circulation) {
-    Fill2DGraph(N, v, core, 0.05);
+    Fill2DGraph(N, v, core, 0.1);
     double sum0 = 0., sum2 = 0., sum1x = 0., sum1y = 0.;
     for(int j=0; j<N[1]; ++j) {
         for(int i=0; i<N[0]; ++i) {
