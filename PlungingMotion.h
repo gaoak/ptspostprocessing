@@ -4,7 +4,7 @@
 class PlungingMotion {
 public:
     PlungingMotion(std::string dataconfigue);
-    int ProcessFlowData();
+    int ProcessFlowData(int dir = 1);
     int Dumppoints();
     double GetFilePhase(int n);
     double PlungingVelocity(double phase, double phi);

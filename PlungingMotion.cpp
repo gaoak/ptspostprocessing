@@ -1,6 +1,7 @@
 #include<fstream>
 #include<map>
 #include<cmath>
+#include<algorithm>
 #include "Util.h"
 #include "PlungingMotion.h"
 #include "IncFlow.h"
@@ -115,9 +116,17 @@ int PlungingMotion::Dumppoints() {
     return count;
 }
 
-int PlungingMotion::ProcessFlowData() {
-    int count  = 0;
+int PlungingMotion::ProcessFlowData(int dir) {
+    std::vector<int> filen;
     for(int n=m_file[0]; n<m_file[2]; n+=m_file[1]) {
+        filen.push_back(n);
+    }
+    if(dir<0) {
+        std::reverse(filen.begin(), filen.end());
+    }
+    int count  = 0;
+    for(int k=0; k<filen.size(); ++k) {
+        int n = filen[k];
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
         flow.LoadCSV(GetInFileName(n)+".csv");
         double v0 = PlungingVelocity(GetFilePhase(n), m_phi);

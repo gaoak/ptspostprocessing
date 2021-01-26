@@ -116,7 +116,10 @@ int main(int argc, char *argv[]) {
             plungdata.Dumppoints();
         }
         if(0==string("process").compare(argv[c])) {
-            plungdata.ProcessFlowData();
+            plungdata.ProcessFlowData(1);
+        }
+        if(0==string("processinverse").compare(argv[c])) {
+            plungdata.ProcessFlowData(-1);
         }
     }
     printf("finished\n");
