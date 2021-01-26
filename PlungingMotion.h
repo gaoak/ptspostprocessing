@@ -26,5 +26,6 @@ protected:
     double m_sigma;
     int m_vortexcoreVar;
     std::vector<double> m_initcenter;
+    int m_stoponwall;
 };
 #endif

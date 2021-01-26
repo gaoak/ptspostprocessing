@@ -53,7 +53,10 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
         m_AoA = m_AoA / 180. * M_PI;
     }
     if(param.count("vortexcorevar")) {
-        m_vortexcoreVar = StringToDouble(param["vortexcorevar"].c_str());
+        m_vortexcoreVar = myRound<double>(StringToDouble(param["vortexcorevar"].c_str()));
+    }
+    if(param.count("stoponwall")) {
+        m_stoponwall = myRound<double>(StringToDouble(param["stoponwall"].c_str()));
     }
     if(param.count("N")) {
         parserUInt(param["N"].c_str(), m_N);
@@ -108,7 +111,6 @@ int PlungingMotion::Dumppoints() {
 
 int PlungingMotion::ProcessFlowData() {
     int count  = 0;
-    std::vector<double> center = m_initcenter;
     for(int n=m_file[0]; n<m_file[2]; n+=m_file[1]) {
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
         flow.LoadCSV(GetInFileName(n)+".csv");
@@ -123,7 +125,7 @@ int PlungingMotion::ProcessFlowData() {
         std::vector<std::vector<double> > cores;
         std::vector<std::vector<double> > radius;
         std::vector<double> circulation;
-        flow.ExtractCore(m_sigma, cores, radius, circulation, center, -2, m_vortexcoreVar);
+        flow.ExtractCore(m_sigma, cores, radius, circulation, m_initcenter, -2, m_vortexcoreVar, m_stoponwall);
         std::string filename = "core" + GetOutFileName(n) + ".dat";
         std::ofstream ofile(filename.c_str());
         ofile << "variables = x,y,z,radius1,radius2,Gamma" << std::endl;

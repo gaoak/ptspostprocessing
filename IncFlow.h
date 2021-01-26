@@ -10,7 +10,7 @@ public:
     int TransformCoord(const std::vector<double> &x0);
     int ExtractCore(double sigma, std::vector<std::vector<double> > & cores,
         std::vector<std::vector<double> > & radius, std::vector<double> &circulation,
-        std::vector<double> &intcenter, int dir = 2, int f = 3);
+        std::vector<double> &intcenter, int direction = 2, int field = -3, bool stoponwall = true);
     int ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
         std::vector<double> &planevorticity, std::vector<double> &radius, double &circulation);
     int ExtractCore2Dplane(const std::vector<int> &N, const std::vector<int> &initial,

@@ -12,3 +12,4 @@ AoA 15.
 sigma 0.06
 vortexcorevar 7
 initcenter 0.938612885677002184,0.290809322370750745,0.
+stoponwall 1

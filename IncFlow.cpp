@@ -77,7 +77,7 @@ std::pair<int, std::vector<int> > IncFlow::GetProceedDirection(const std::vector
 
 int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores,
     std::vector<std::vector<double> > & radius, std::vector<double> &circulation,
-    std::vector<double> &inputcenter, int dir, int f) {
+    std::vector<double> &inputcenter, int dir, int f, bool stoponwall) {
     cores.clear();
     std::vector<std::vector<double> > odata;
     //u, v, w, p, W_x, W_y, W_z, Q
@@ -181,7 +181,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         }
         searched.insert(centerindex);
         //printf("location %f, %f, %f\n", physcenter[0], physcenter[1], physcenter[2]);
-        if(m_body.IsInBody(physcenter, m_dx[1])) {
+        if(stoponwall && m_body.IsInBody(physcenter, m_dx[1])) {
             break;
         }
 
@@ -189,9 +189,15 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         incplane = GetProceedDirection(vor, vorticityproceedsign);
         plane.first = incplane.first;
         plane.second = intcenter[incplane.first] + incplane.second[incplane.first];
-        intcenter[0] += incplane.second[0];
-        intcenter[1] += incplane.second[1];
-        intcenter[2] += incplane.second[2];
+        for(int i=0; i<3; ++i) {
+            intcenter[i] += incplane.second[i];
+            if(intcenter[i]<0) {
+                intcenter[i] = 0;
+            }
+            if(intcenter[i]>=m_N[i]) {
+                intcenter[i] = m_N[i] - 1;
+            }
+        }
         //printf("next plane %d, %d\n", plane.first, plane.second);
         ++count;
     }
