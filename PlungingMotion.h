@@ -25,5 +25,6 @@ protected:
     double m_AoA;
     double m_sigma;
     int m_vortexcoreVar;
+    std::vector<double> m_initcenter;
 };
 #endif

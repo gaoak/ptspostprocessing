@@ -64,6 +64,9 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     if(param.count("sigma")) {
         m_sigma = StringToDouble(param["sigma"].c_str());
     }
+    if(param.count("initcenter")) {
+        parserDouble(param["initcenter"].c_str(), m_initcenter);
+    }
 }
 
 double PlungingMotion::GetFilePhase(int n) {
@@ -105,7 +108,7 @@ int PlungingMotion::Dumppoints() {
 
 int PlungingMotion::ProcessFlowData() {
     int count  = 0;
-    std::vector<double> center = {0.938612885677002184, 0.290809322370750745, 0.};
+    std::vector<double> center = m_initcenter;
     for(int n=m_file[0]; n<m_file[2]; n+=m_file[1]) {
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
         flow.LoadCSV(GetInFileName(n)+".csv");

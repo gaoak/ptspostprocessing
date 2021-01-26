@@ -18,3 +18,6 @@ main.o: main.cpp
 
 process: $(OBJ)
 	$(CC)  -o $@ $^ $(CFLAGS) $(LIBS)
+
+clean:
+	rm *.o process 
