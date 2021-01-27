@@ -24,7 +24,7 @@ Body::Body()
 }
 
 bool Body::IsInBody(std::vector<double> p, double tol) {
-    if(p[3]+tol<=m_span[0] || p[3]-tol>=m_span[1]) {
+    if(p[2]+tol<=m_span[0] || p[2]-tol>=m_span[1]) {
         return false;
     }
     p = transform(p, -m_AoA);
