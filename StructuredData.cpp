@@ -41,36 +41,6 @@ int StructuredData::GetNumPhys() {
     return m_phys.size();
 }
 
-int StructuredData::OutputCSV(std::string filename) {
-    std::ofstream file(filename.c_str());
-    file << "# ";
-    for(int i=0; i<m_vars.size(); ++i) {
-        file << m_vars[i];
-        if(i!=m_vars.size()-1) {
-            file << ",";
-        } else {
-            file << "\n";
-        }
-    }
-    file << std::scientific << std::setprecision(16);
-    for(int index=0; index<m_Np; ++index) {
-        file << m_x[0][index] << "," << m_x[1][index] << "," << m_x[2][index];
-        for(int v=0; v<m_phys.size(); ++v) {
-            file << "," << m_phys[v][index];
-        }
-        file << "\n";
-    }
-    return m_Np + 1;
-}
-
-int StructuredData::ParserCSVHeader(const char * header) {
-    int i = 0;
-    for(; header[i]=='#' || header[i]==' '; ++i);
-    std::string varList = header + i;
-    parserString(varList.c_str(), m_vars, ',');
-    return m_vars.size() - 3;
-}
-
 int StructuredData::AddPhysics(std::string var, void * func) {
     double(*physfun)(std::vector<double>) = (double(*)(std::vector<double>))func;
     m_vars.push_back(var);
@@ -117,33 +87,6 @@ double StructuredData::GetCoordValue(int f, int i) {
     return m_x[f][i];
 }
 
-int StructuredData::LoadCSV(std::string filename) {
-    std::ifstream file(filename.c_str());
-    if(!file.is_open()) {
-        printf("error: unable to open file %s\n", filename.c_str());
-    }
-    char buffer[1000];
-    std::vector<double> value;
-    file.getline(buffer, sizeof(buffer));
-    int vcount = ParserCSVHeader(buffer);
-    m_phys.clear();
-    for(int i=0; i<vcount; ++i) {
-        m_phys.push_back(std::vector<double>(m_Np, 0.));
-    }
-
-    file.getline(buffer, sizeof(buffer));
-    int index = 0;
-    while(!file.eof()) {
-        parserDouble(buffer, value);
-        for(int i=0; i<vcount; ++i) {
-            m_phys[i][index] = value[3+i];
-        }
-        ++index;
-        file.getline(buffer, sizeof(buffer));
-    }
-    return index;
-}
-
 int StructuredData::GenPoints() {
     for(int k=0; k<m_N[2]; ++k) {
         for(int j=0; j<m_N[1]; ++j) {
@@ -180,14 +123,22 @@ int StructuredData::GenPoints() {
 
 int StructuredData::OutputTec360(std::string filename) {
     int isdouble = 1;
-    std::vector<void*> data;
+    std::vector<std::vector<double> > data;
     for(int i=0; i<m_x.size(); ++i) {
-        data.push_back((void*) (m_x[i].data()) );
+        data.push_back(m_x[i]);
     }
     for(int i=0; i<m_phys.size(); ++i) {
-        data.push_back((void*) (m_phys[i].data()) );
+        data.push_back(m_phys[i]);
     }
-    ::OutputTec360(filename, m_vars, m_N, data, isdouble);
+    std::string extend = filename.substr(filename.size()-4, 4);
+    if(0 == extend.compare(".plt")) {
+        OutputTec360_ascii(filename, m_vars, m_N, data, isdouble);
+    } else if(0 == extend.compare(".dat")) {
+        OutputTec360_binary(filename, m_vars, m_N, data, isdouble);
+    } else {
+        printf("error: unsupported tecplot file type %s\n", filename.c_str());
+        return -1;
+    }
     printf("output file %s\n", filename.c_str());
     return m_x.size() + m_phys.size();
 }

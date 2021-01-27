@@ -13,9 +13,8 @@
 class StructuredData {
 public:
     StructuredData(const std::vector<int> &N, const std::vector<double> &range);
-    int OutputCSV(std::string filename);
-    int OutputTec360(std::string filename);
-    int LoadCSV(std::string filename);
+    int OutputData(std::string filename);
+    int LoadData(std::string filename);
     int GetTotPoints();
     int AddPhysics(std::string var, void * func);
     int AddPhysics(std::string var, const std::vector<double> &data);

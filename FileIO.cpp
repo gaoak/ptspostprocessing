@@ -1,12 +1,83 @@
 #include<iostream>
-#include "Tecplotwraper.h"
+#include "FileIO.h"
+#include "Util.h"
+
+int OutputCSV(const std::string filename, const std::vector<std::string> &variables,
+                 const std::vector<int> &N, const std::vector<std::vector<double> > data) {
+    std::ofstream file(filename.c_str());
+    file << "# ";
+    for(int i=0; i<variables.size(); ++i) {
+        file << variables[i];
+        if(i!=variables.size()-1) {
+            file << ",";
+        } else {
+            file << "\n";
+        }
+    }
+    file << std::scientific << std::setprecision(16);
+    int Np = 1;
+    for(int i=0; i<N.size(); ++i) {
+        Np *= N[i];
+    }
+    for(int index=0; index<Np; ++index) {
+        for(int v=0; v<data.size(); ++v) {
+            file << data[v][index];
+            if(v!=data.size()-1) {
+                file << ",";
+            } else {
+                file << "\n";
+            }
+        }
+        file << "\n";
+    }
+    return Np;
+}
+
+int ParserCSVHeader(const char * header, std::vector<std::string> &vars) {
+    int i = 0;
+    for(; header[i]=='#' || header[i]==' '; ++i);
+    std::string varList = header + i;
+    parserString(varList.c_str(), vars, ',');
+    return vars.size();
+}
+
+int InputCSV(const std::string filename, std::vector<std::string> &variables,
+                 std::vector<int> &N, std::vector<std::vector<double> > data,
+                 int &isdouble) {
+    std::ifstream file(filename.c_str());
+    if(!file.is_open()) {
+        printf("error: unable to open file %s\n", filename.c_str());
+    }
+    int Np = 1;
+    for(int i=0; i<N.size(); ++i) {
+        Np *= N[i];
+    }
+    char buffer[1000];
+    std::vector<double> value;
+    file.getline(buffer, sizeof(buffer));
+    variables.clear();
+    int vcount = ParserCSVHeader(buffer, variables);
+    data.clear();
+    for(int i=0; i<vcount; ++i) {
+        data.push_back(std::vector<double>(Np, 0.));
+    }
+
+    file.getline(buffer, sizeof(buffer));
+    int index = 0;
+    while(!file.eof()) {
+        parserDouble(buffer, value);
+        for(int i=0; i<vcount; ++i) {
+            data[i][index] = value[i];
+        }
+        ++index;
+        file.getline(buffer, sizeof(buffer));
+    }
+    return index;
+}
 
 int OutputTec360_ascii(const std::string filename, const std::vector<std::string> &variables,
                  const std::vector<int> &N, const std::vector<std::vector<double> > data,
-                 int isdouble,
-                 int debug,
-                 int filetype,
-                 int fileformat)
+                 int isdouble)
 {
     std::string varlist = variables[0];
     for(int i=1; i<variables.size(); ++i) {
@@ -37,10 +108,7 @@ int BinaryWrite(std::ofstream &ofile, std::string str) {
 
 int OutputTec360_binary(const std::string filename, const std::vector<std::string> &variables,
                  const std::vector<int> &N, const std::vector<std::vector<double> > data,
-                 int isdouble,
-                 int debug,
-                 int filetype,
-                 int fileformat)
+                 int isdouble)
 {
     std::ofstream odata;
     odata.open(filename, std::ios::binary);
@@ -120,10 +188,7 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
 
 int InputTec360_binary(const std::string filename, std::vector<std::string> &variables,
                  std::vector<int> &N, std::vector<std::vector<double> > data,
-                 int &isdouble,
-                 int debug,
-                 int filetype,
-                 int fileformat) {
+                 int &isdouble) {
 	std::ifstream indata;
     indata.open(filename, std::ios::binary);
 	if(!indata.is_open())
