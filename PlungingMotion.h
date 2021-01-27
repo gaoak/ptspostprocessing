@@ -26,10 +26,11 @@ protected:
     std::string m_airfoil;
     double m_AoA;
     double m_sigma;
-    int m_vortexcoreVar;
+    std::vector<int> m_vortexcoreVar;
     std::vector<double> m_initcenter;
     int m_stoponwall;
     int m_initDirection;
     double m_threshold;
+    int m_calculateVorticityQ;
 };
 #endif

@@ -77,24 +77,30 @@ std::pair<int, std::vector<int> > IncFlow::GetProceedDirection(const std::vector
 
 int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores,
     std::vector<std::vector<double> > & radius, std::vector<double> &circulation,
-    std::vector<double> &inputcenter, int dir, int f, bool stoponwall, double threshold) {
+    std::vector<double> &inputcenter, std::vector<int> &vf, int field, int direction,
+    bool stoponwall, double threshold) {
+    if(vf.size()<3 || field==0 || direction==0 ||
+       vf[0]<=0 || vf[1]<=0 || vf[2]<=0) {
+        printf("error incorrect parameters for ExtractCore\n");
+        return -1;
+    }
     cores.clear();
     std::vector<std::vector<double> > odata;
-    //u, v, w, p, W_x, W_y, W_z, Q
-    //0, 1, 2, 3, 4,   5,   6,   7
-    odata.push_back(m_phys[4]);
-    odata.push_back(m_phys[5]);
-    odata.push_back(m_phys[6]);
-    odata.push_back(m_phys[std::abs(f)]);
+    odata.push_back(m_phys[vf[0]-1]);
+    odata.push_back(m_phys[vf[1]-1]);
+    odata.push_back(m_phys[vf[2]-1]);
+    odata.push_back(m_phys[std::abs(field)-1]);
     bool ismax = true;
-    if(f<0) {
+    if(field<0) {
         ismax = false;
     }
     //Smoothing(sigma, odata);
     double vorticityproceedsign = 1.;
-    if(dir<0) {
-        dir = -dir;
+    if(direction<0) {
+        direction = -direction - 1;
         vorticityproceedsign = -1.;
+    } else {
+        direction -= 1;
     }
 
     std::vector<int> N = m_N;
@@ -110,7 +116,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
             intcenter[i] = myRound<double>((inputcenter[i] - m_range[2*i]) / m_dx[i]);
         }
     }
-    std::pair<int, int> plane(dir, 0);
+    std::pair<int, int> plane(direction, intcenter[direction]);
     std::vector<int> planeN;
     std::vector<double> planedata;
     int count = 0;
@@ -118,14 +124,14 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     std::vector<double> tmpradius;
     std::vector<double> planevorticity;
     std::pair<int, std::vector<int> > incplane;
-    incplane.first = dir;
+    incplane.first = direction;
     incplane.second = {0, 0, 0};
-    incplane.second[dir] = 1;
+    incplane.second[direction] = 1;
     while(count<Trymax) {
         if(plane.second<0 || plane.second>=N[plane.first]) {
             break;
         }
-        dir = plane.first;
+        int dir = plane.first;
         //printf("search plane %d, %d\n", dir, plane.second);
         ExtractPlane(odata[3], plane, planeN, planedata);
         ExtractPlane(odata[dir], plane, planeN, planevorticity);

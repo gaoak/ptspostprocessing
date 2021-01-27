@@ -4,6 +4,7 @@
 #include<vector>
 double StringToDouble(std::string str);
 void parserUInt(const char * cstr, std::vector<int> & value);
+void parserInt(const char * cstr, std::vector<int> & value);
 void parserDouble(const char * cstr, std::vector<double> & value);
 void parserString(const char * cstr, std::vector<std::string> & value, char sep = ' ');
 int Index(const std::vector<int> &N, const std::vector<int> & index);

@@ -16,10 +16,12 @@ output sdata%d.plt
 #standard deviation of Gauss smoother
 sigma 0.07
 #parameter for vortex core extraction
-#which variable to use p(-3), Q(7)
-vortexcorevar -1
+#calculate vorticity and Q, u,v,w,p,W_x,W_y,W_z,Q
+calculateVorticityQ 1
+#which vector variable to use p(-4), Q(8), start from 1, should be 4 int
+vortexcorevar 5,6,7,8
 threshold 1
-#negative is vorticity sign different from axis
-intialdirection -2
+#negative is vorticity sign different from axis, start from 1
+intialdirection -3
 initcenter 0.0768,0.0107,0.
 stoponwall 0

@@ -241,13 +241,10 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
         }
         variables.push_back(vname);
 	}
-    float marker299I;
-	indata.read((char*)&marker299I, 4);
-	if(marker299I!=299.)
-	{
-		printf("error in reading file %s\n", filename.c_str());
-		return -1;
-	}
+    float marker299I=0.0f;
+    while(marker299I!=299.0f) {
+	    indata.read((char*)&marker299I, 4);
+    }
 	//zone title
     std::string zonentitle;
 	while(1)
@@ -274,15 +271,14 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
     N.resize(3);
 	indata.read((char*)N.data(), 3*4);
     indata.read((char*)&zero, 4);
-    float marker357;
-	indata.read((char*)&marker357, 4);
-    float marker299II;
-	indata.read((char*)&marker299II, 4);
-	if(marker357!=357.||marker299II!=299.)
-	{
-		printf("error in reading file %s\n", filename.c_str());
-		return -1;
-	}
+    float marker357=0.0f;
+    while(marker357!=357.0f) {
+	    indata.read((char*)&marker357, 4);
+    }
+    float marker299II = 0.0f;
+    while(marker299II!=299.0f) {
+	    indata.read((char*)&marker299II, 4);
+    }
 	std::vector<int> binarydatatype(nvar);
 	indata.read((char*)binarydatatype.data(), 4*nvar);
     isdouble = binarydatatype[0] == 2;
