@@ -60,9 +60,9 @@ int test_structuredData() {
     std::vector<double> range = {0., 1., 0., 1., 0., 1.};
     StructuredData sdata(N, range);
     //sdata.OutputCSV("coor.csv");
-    //sdata.OutputTec360("coor.plt");
+    //sdata.OutputData("coor.plt");
     sdata.AddPhysics("sin", (void*) sinfunc);
-    //sdata.OutputTec360("addphys.plt");
+    //sdata.OutputData("addphys.plt");
     std::vector<int> field = {0};
     //sdata.Smoothing(0.02, field, false);
 
@@ -76,7 +76,7 @@ int test_structuredData() {
     field = {2};
     def = {{2,0.}};
     sdata.MaskBoundary(0.1, field, def);
-    sdata.OutputTec360("smoothphys.plt");
+    sdata.OutputData("smoothphys.plt");
     printf("sum %g\n", sdata.GetPhysNorm(2, -1));
 }
 
@@ -102,7 +102,7 @@ int TestSummary() {
     test_index(N);
 }
 
-int main(int argc, char *argv[]) {
+int test3main(int argc, char *argv[]) {
     string dataconfigue("dataconfigue");
     for(int c=1; c<argc; ++c) {
         if(0==string("data").compare(argv[c])) {
@@ -124,4 +124,18 @@ int main(int argc, char *argv[]) {
     }
     printf("finished\n");
     return 0;
+}
+
+int main() {
+    StructuredData sdata({33,17,9},{-0.5,1.5,-0.5,1.5,0,5.5});
+    sdata.InputData("testfile.csv");
+    sdata.OutputData("plt.dat");
+    sdata.OutputData("plt.csv");
+    sdata.OutputData("plt.plt");
+    //
+    sdata.InputData("plt.csv");
+    sdata.OutputData("plt_csv.dat");
+    //
+    sdata.InputData("plt.plt");
+    sdata.OutputData("plt_plt.dat");
 }

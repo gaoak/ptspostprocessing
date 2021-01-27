@@ -110,7 +110,7 @@ int PlungingMotion::Dumppoints() {
     int count  = 0;
     for(int n=m_file[0]; n<m_file[2]; n+=m_file[1]) {
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
-        flow.OutputCSV(GetOutFileName(n)+".csv");
+        flow.OutputData(GetOutFileName(n));
         ++count;
     }
     return count;
@@ -128,7 +128,7 @@ int PlungingMotion::ProcessFlowData(int dir) {
     for(int k=0; k<filen.size(); ++k) {
         int n = filen[k];
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
-        flow.LoadCSV(GetInFileName(n)+".csv");
+        flow.InputData(GetInFileName(n));
         double v0 = PlungingVelocity(GetFilePhase(n), m_phi);
         flow.OverWriteBodyPoint({0., v0, 0.}, {0., 0., 0.}, {0., 0., 0.});
         //vorticity Q
@@ -153,7 +153,7 @@ int PlungingMotion::ProcessFlowData(int dir) {
                 << circulation[i] << "\n";
         }
         ofile.close();
-        flow.OutputTec360(GetOutFileName(n) + TECPLOTEXT);
+        flow.OutputData(GetOutFileName(n));
     }
     return count;
 }

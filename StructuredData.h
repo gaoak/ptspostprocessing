@@ -7,14 +7,13 @@
 #include<iomanip>
 #include<map>
 #include<tuple>
-#include "Tecplotwraper.h"
 #include "Util.h"
 
 class StructuredData {
 public:
     StructuredData(const std::vector<int> &N, const std::vector<double> &range);
     int OutputData(std::string filename);
-    int LoadData(std::string filename);
+    int InputData(std::string filename);
     int GetTotPoints();
     int AddPhysics(std::string var, void * func);
     int AddPhysics(std::string var, const std::vector<double> &data);

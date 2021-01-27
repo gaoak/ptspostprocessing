@@ -3,6 +3,7 @@
 #include<cmath>
 #include "StructuredData.h"
 #include "Dataprocessing.h"
+#include "FileIO.h"
 
 StructuredData::StructuredData(const std::vector<int> &N, const std::vector<double> &range) {
     m_N = N;
@@ -121,7 +122,7 @@ int StructuredData::GenPoints() {
     return m_Np;
 }
 
-int StructuredData::OutputTec360(std::string filename) {
+int StructuredData::OutputData(std::string filename) {
     int isdouble = 1;
     std::vector<std::vector<double> > data;
     for(int i=0; i<m_x.size(); ++i) {
@@ -130,16 +131,44 @@ int StructuredData::OutputTec360(std::string filename) {
     for(int i=0; i<m_phys.size(); ++i) {
         data.push_back(m_phys[i]);
     }
-    std::string extend = filename.substr(filename.size()-4, 4);
-    if(0 == extend.compare(".plt")) {
+    std::string ext = filename.substr(filename.size()-4, 4);
+    if(0 == ext.compare(".dat")) {
         OutputTec360_ascii(filename, m_vars, m_N, data, isdouble);
-    } else if(0 == extend.compare(".dat")) {
+    } else if(0 == ext.compare(".plt")) {
         OutputTec360_binary(filename, m_vars, m_N, data, isdouble);
+    } else if(0 == ext.compare(".csv")) {
+        OutputCSV(filename, m_vars, m_N, data);
     } else {
         printf("error: unsupported tecplot file type %s\n", filename.c_str());
         return -1;
     }
     printf("output file %s\n", filename.c_str());
+    return m_x.size() + m_phys.size();
+}
+
+int StructuredData::InputData(std::string filename) {
+    std::vector<int> N;
+    std::vector<std::vector<double> > data;
+    int isdouble;
+    std::string ext = filename.substr(filename.size()-4, 4);
+    if(0 == ext.compare(".plt")) {
+        InputTec360_binary(filename, m_vars, N, data, isdouble);
+    } else if(0 == ext.compare(".csv")) {
+        InputCSV(filename, m_vars, m_N, data, isdouble);
+    } else {
+        printf("error: unsupported tecplot file type %s\n", filename.c_str());
+        return -1;
+    }
+    m_x.clear();
+    m_phys.clear();
+    for(int i=0; i<m_vars.size(); ++i) {
+        if(i<3) {
+            m_x.push_back(data[i]);
+        } else {
+            m_phys.push_back(data[i]);
+        }
+    }
+    printf("Read file %s\n", filename.c_str());
     return m_x.size() + m_phys.size();
 }
 

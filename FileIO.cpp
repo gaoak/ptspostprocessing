@@ -1,9 +1,10 @@
 #include<iostream>
+#include<iomanip>
 #include "FileIO.h"
 #include "Util.h"
 
 int OutputCSV(const std::string filename, const std::vector<std::string> &variables,
-                 const std::vector<int> &N, const std::vector<std::vector<double> > data) {
+                 const std::vector<int> &N, const std::vector<std::vector<double> > &data) {
     std::ofstream file(filename.c_str());
     file << "# ";
     for(int i=0; i<variables.size(); ++i) {
@@ -28,8 +29,8 @@ int OutputCSV(const std::string filename, const std::vector<std::string> &variab
                 file << "\n";
             }
         }
-        file << "\n";
     }
+    file.close();
     return Np;
 }
 
@@ -42,7 +43,7 @@ int ParserCSVHeader(const char * header, std::vector<std::string> &vars) {
 }
 
 int InputCSV(const std::string filename, std::vector<std::string> &variables,
-                 std::vector<int> &N, std::vector<std::vector<double> > data,
+                 std::vector<int> &N, std::vector<std::vector<double> > &data,
                  int &isdouble) {
     std::ifstream file(filename.c_str());
     if(!file.is_open()) {
@@ -72,11 +73,12 @@ int InputCSV(const std::string filename, std::vector<std::string> &variables,
         ++index;
         file.getline(buffer, sizeof(buffer));
     }
+    file.close();
     return index;
 }
 
 int OutputTec360_ascii(const std::string filename, const std::vector<std::string> &variables,
-                 const std::vector<int> &N, const std::vector<std::vector<double> > data,
+                 const std::vector<int> &N, const std::vector<std::vector<double> > &data,
                  int isdouble)
 {
     std::string varlist = variables[0];
@@ -103,11 +105,12 @@ int BinaryWrite(std::ofstream &ofile, std::string str) {
         tmp = str[i];
         ofile.write((char*)&tmp, 4);
     }
+    tmp = 0;
     ofile.write((char*)&tmp, 4);
 }
 
 int OutputTec360_binary(const std::string filename, const std::vector<std::string> &variables,
-                 const std::vector<int> &N, const std::vector<std::vector<double> > data,
+                 const std::vector<int> &N, const std::vector<std::vector<double> > &data,
                  int isdouble)
 {
     std::ofstream odata;
@@ -130,7 +133,7 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
     int nvar = variables.size();
     odata.write((char*)&nvar, 4);//number of variables
     std::vector<std::string> vartitle;
-	for(int i=0; i<nvar; i++)
+	for(int i=0; i<nvar; ++i)
 	{
         BinaryWrite(odata, variables[i]);
 	}
@@ -163,31 +166,42 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
 	odata.write((char*)&marker357, 4);
     float marker299II = 299.0f;
 	odata.write((char*)&marker299II, 4);
-	std::vector<int> binarydatatype(nvar, 2);
+	std::vector<int> binarydatatype(nvar, 1 + (isdouble>0));
 	odata.write((char*)binarydatatype.data(), 4*nvar);
     odata.write((char*)&zero, 4);
     odata.write((char*)&zero, 4);
     int minus1 = -1;
     odata.write((char*)&minus1, 4);
-
+    
+    int datanumber, datasize;
+	datanumber = N[0] * N[1] * N[2];
+	datasize = N[0] * N[1] * N[2] * 8;
     for(int i=0; i<nvar; ++i) {
         double minv = 0., maxv=1.;
+        maxv = data[i][FindMax<double>(datanumber, data[i].data())];
+        minv = data[i][FindMin<double>(datanumber, data[i].data())];
         odata.write((char*)&minv, 8);
         odata.write((char*)&maxv, 8);
     }
 
-    int datanumber, datasize;
-	datanumber = N[0] * N[1] * N[2];
-	datasize = N[0] * N[1] * N[2] * 8;
     std::vector<float> vardata(datanumber);
     for(int i=0; i<nvar; ++i) {
-        odata.write((char*)data[i].data(), datasize);
+        if(isdouble) {
+            odata.write((char*)data[i].data(), datasize);
+        } else {
+            std::vector<float> fdata(datanumber);
+            for(int j=0; j<datanumber; ++j) {
+                fdata[j] = data[i][j];
+            }
+            odata.write((char*)fdata.data(), datasize);
+        }
     }
+    odata.close();
     return 0;
 }
 
 int InputTec360_binary(const std::string filename, std::vector<std::string> &variables,
-                 std::vector<int> &N, std::vector<std::vector<double> > data,
+                 std::vector<int> &N, std::vector<std::vector<double> > &data,
                  int &isdouble) {
 	std::ifstream indata;
     indata.open(filename, std::ios::binary);
@@ -215,7 +229,7 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
     int nvar;
     indata.read((char*)&nvar, 4);//number of variables
     variables.clear();
-	for(int i=0; i<nvar; i++)
+	for(int i=0; i<nvar; ++i)
 	{
         std::string vname;
         while(1)
@@ -269,8 +283,8 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
 		printf("error in reading file %s\n", filename.c_str());
 		return -1;
 	}
-	int * binarydatatype = new int[nvar];
-	indata.read((char*)binarydatatype, 4*nvar);
+	std::vector<int> binarydatatype(nvar);
+	indata.read((char*)binarydatatype.data(), 4*nvar);
     isdouble = binarydatatype[0] == 2;
     indata.read((char*)&zero, 4);
     indata.read((char*)&zero, 4);
@@ -288,18 +302,21 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
 	datasize = N[0] * N[1] * N[2] * 4;
     for(int i=0; i<nvar; ++i) {
         if(isdouble) {
-            std::vector<double> vardata(datanumber);
-            indata.read((char*)vardata.data(), datasize * 2);
-            data.push_back(vardata);
+            int datasize = data.size();
+            data.resize(datasize+1);
+            data[datasize].resize(datanumber);
+            indata.read((char*)data[datasize].data(), datasize * 2);
         } else {
             std::vector<float> vardata(datanumber);
-            std::vector<double> doublevardata(datanumber);
             indata.read((char*)vardata.data(), datasize);
-            for(int i=0; i<datanumber; ++i) {
-                doublevardata[i] = vardata[i];
+            int datasize = data.size();
+            data.resize(datasize+1);
+            data[datasize].resize(datanumber);
+            for(int j=0; j<datanumber; ++j) {
+                data[datasize][j] = vardata[j];
             }
-            data.push_back(doublevardata);
         }
     }
+    indata.close();
     return 0;
 }

@@ -158,7 +158,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         {
             //StructuredData tmp(Nslice, range);
             //tmp.AddPhysics("vor", planevorticity);
-            //tmp.OutputTec360("vor.plt");
+            //tmp.OutputData("vor.plt");
             //exit(0);
         }
 

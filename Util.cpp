@@ -122,7 +122,7 @@ void parserDouble(const char * cstr, std::vector<double> & value) {
     for(int i=0; i<digs.size(); ++i) {
         std::string cuts(cstr+digs[i], dige[i]-digs[i]);
         if(sscanf(cuts.c_str(), "%lf", &k)<1) {
-            printf("error: parser double %s\n", cuts.c_str());
+            printf("error: parser double %s, in \n%s\n", cuts.c_str(), cstr);
         }
         value.push_back(k);
     }
