@@ -1,5 +1,6 @@
 #include<tuple>
 #include<set>
+#include<limits>
 #include "IncFlow.h"
 #include "Util.h"
 
@@ -241,6 +242,13 @@ int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vec
             sum1x += v[ind] * i;
             sum1y += v[ind] * j;
         }
+    }
+    if(std::fabs(sum0) < std::numeric_limits<double>::epsilon() ) {
+        radius.clear();
+        radius.push_back(0.);
+        radius.push_back(0.);
+        circulation = 0.;
+        return 0;
     }
 
     sum1x /= sum0;

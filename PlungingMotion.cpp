@@ -143,6 +143,10 @@ int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
     std::vector<double> circulation;
     flow.ExtractCore(m_sigma, cores, radius, circulation, m_initcenter, m_vortexcoreVar,
         m_vortexcoreVar[3], m_initDirection, m_stoponwall, m_threshold);
+    if(cores.size()==0) {
+        printf("no vortex core found with threshold %f\n", m_threshold);
+        return 0;
+    }
     std::ofstream ofile(filename.c_str());
     ofile << "variables = x,y,z,radius1,radius2,Gamma" << std::endl;
     for(int i=0; i<cores.size(); ++i) {
@@ -154,7 +158,7 @@ int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
                 << circulation[i] << "\n";
     }
     ofile.close();
-    return 0;
+    return cores.size();
 }
 
 int PlungingMotion::Dumppoints() {
