@@ -25,6 +25,7 @@ protected:
     std::string m_outputformat;
     std::string m_airfoil;
     double m_AoA;
+    std::vector<double> m_span;
     double m_sigma;
     std::vector<int> m_vortexcoreVar;
     std::vector<double> m_initcenter;

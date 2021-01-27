@@ -6,7 +6,7 @@
 
 IncFlow::IncFlow(const std::vector<int> &N, const std::vector<double> &range,
         std::string bodyname, std::vector<double> param)
-        :StructuredData(N, range), m_body(bodyname, param[0]) {
+        :StructuredData(N, range), m_body(bodyname, param) {
 }
 
 int IncFlow::CalculateVorticity(int order) {
@@ -191,7 +191,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         }
         searched.insert(centerindex);
         //printf("location %f, %f, %f\n", physcenter[0], physcenter[1], physcenter[2]);
-        if(stoponwall && m_body.IsInBody(physcenter, m_dx[1])) {
+        if(stoponwall && m_body.IsInBody(physcenter, sigma)) {
             break;
         }
 

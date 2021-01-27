@@ -8,6 +8,7 @@ phi 0.
 #airfoil shapt and AoA (in degree)
 body 0012
 AoA 15.
+span 0.,5.
 #input output file infomation
 filesnumber 48,4,65
 phase       0.,0.25

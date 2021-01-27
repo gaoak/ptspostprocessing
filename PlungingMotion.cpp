@@ -63,6 +63,12 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     } else {
         m_AoA = 0.;
     }
+    if(param.count("span")) {
+        parserDouble(param["span"].c_str(), m_span);
+    } else {
+        m_span.push_back(std::numeric_limits<double>::min());
+        m_span.push_back(std::numeric_limits<double>::max());
+    }
     if(param.count("threshold")) {
         m_threshold = StringToDouble(param["threshold"].c_str());
     } else {
@@ -182,7 +188,7 @@ int PlungingMotion::ProcessFlowData(int dir) {
     int count  = 0;
     for(int k=0; k<filen.size(); ++k) {
         int n = filen[k];
-        IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
+        IncFlow flow(m_N, m_range, m_airfoil, {m_AoA, m_span[0], m_span[1]});
         flow.InputData(GetInFileName(n));
         if(m_airfoil.compare("0000")!=0) {
             double v0 = PlungingVelocity(GetFilePhase(n), m_phi);
