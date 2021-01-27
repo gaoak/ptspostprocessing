@@ -1,6 +1,6 @@
 CC=c++
 CFLAGS=-std=c++11 -Og -g
-LIBS += -lstdc++ -pthread
+LIBS += -lstdc++
 DEPS = %.h
 OBJ =  CAD2D/airfoil.o Dataprocessing.o PlungingMotion.o FileIO.o Body.o IncFlow.o Util.o StructuredData.o main.o
 

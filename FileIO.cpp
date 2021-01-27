@@ -175,7 +175,7 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
     
     int datanumber, datasize;
 	datanumber = N[0] * N[1] * N[2];
-	datasize = N[0] * N[1] * N[2] * 8;
+	datasize = N[0] * N[1] * N[2] * 4;
     for(int i=0; i<nvar; ++i) {
         double minv = 0., maxv=1.;
         maxv = data[i][FindMax<double>(datanumber, data[i].data())];
@@ -187,7 +187,7 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
     std::vector<float> vardata(datanumber);
     for(int i=0; i<nvar; ++i) {
         if(isdouble) {
-            odata.write((char*)data[i].data(), datasize);
+            odata.write((char*)data[i].data(), datasize * 2);
         } else {
             std::vector<float> fdata(datanumber);
             for(int j=0; j<datanumber; ++j) {
@@ -301,19 +301,18 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
 	datanumber = N[0] * N[1] * N[2];
 	datasize = N[0] * N[1] * N[2] * 4;
     for(int i=0; i<nvar; ++i) {
+        int nd = data.size();
         if(isdouble) {
-            int datasize = data.size();
-            data.resize(datasize+1);
-            data[datasize].resize(datanumber);
-            indata.read((char*)data[datasize].data(), datasize * 2);
+            data.resize(nd+1);
+            data[nd].resize(datanumber);
+            indata.read((char*)data[nd].data(), datasize * 2);
         } else {
             std::vector<float> vardata(datanumber);
             indata.read((char*)vardata.data(), datasize);
-            int datasize = data.size();
-            data.resize(datasize+1);
-            data[datasize].resize(datanumber);
+            data.resize(nd+1);
+            data[nd].resize(datanumber);
             for(int j=0; j<datanumber; ++j) {
-                data[datasize][j] = vardata[j];
+                data[nd][j] = vardata[j];
             }
         }
     }

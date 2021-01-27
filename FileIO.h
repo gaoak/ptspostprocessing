@@ -3,7 +3,11 @@
 #include<string>
 #include<vector>
 #include<fstream>
-
+#ifndef TEC360USEDOUBLE
+#define TEC360USEDOUBLE 1
+#else
+#define TEC360USEDOUBLE 0
+#endif
 int BinaryWrite(std::ofstream &ofile, std::string str);
 
 int OutputTec360_ascii(const std::string filename, const std::vector<std::string> &variables,

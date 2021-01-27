@@ -123,7 +123,7 @@ int StructuredData::GenPoints() {
 }
 
 int StructuredData::OutputData(std::string filename) {
-    int isdouble = 1;
+    int isdouble = TEC360USEDOUBLE;
     std::vector<std::vector<double> > data;
     for(int i=0; i<m_x.size(); ++i) {
         data.push_back(m_x[i]);
