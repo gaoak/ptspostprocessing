@@ -108,7 +108,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     std::vector<double> dx = m_dx;
     std::vector<double> range = m_range;
 
-    int Trymax = m_N[0] + m_N[1] + m_N[2];
+    int Trymax = 2*(m_N[0] + m_N[1] + m_N[2]);
     std::set<int> searched;
     std::vector<int> intcenter;
     if(inputcenter.size()>2) {
