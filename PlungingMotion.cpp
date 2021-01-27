@@ -4,7 +4,6 @@
 #include<algorithm>
 #include "Util.h"
 #include "PlungingMotion.h"
-#include "IncFlow.h"
 
 PlungingMotion::PlungingMotion(std::string dataconfigue) {
     std::ifstream conf(dataconfigue.c_str());
@@ -58,6 +57,8 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     }
     if(param.count("vortexcorevar")) {
         m_vortexcoreVar = myRound<double>(StringToDouble(param["vortexcorevar"].c_str()));
+    } else {
+        m_vortexcoreVar = -1;
     }
     if(param.count("stoponwall")) {
         m_stoponwall = myRound<double>(StringToDouble(param["stoponwall"].c_str()));
@@ -106,6 +107,28 @@ double PlungingMotion::PlungingLocation(double phase, double phi) {
     //0.5 A cos(2 k t + phi)
 }
 
+int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
+    if(m_vortexcoreVar<0 || m_vortexcoreVar >= flow.GetNumPhys()) {
+        return -1;
+    }
+    std::vector<std::vector<double> > cores;
+    std::vector<std::vector<double> > radius;
+    std::vector<double> circulation;
+    flow.ExtractCore(m_sigma, cores, radius, circulation, m_initcenter, m_initDirection, m_vortexcoreVar, m_stoponwall, m_threshold);
+    std::ofstream ofile(filename.c_str());
+    ofile << "variables = x,y,z,radius1,radius2,Gamma" << std::endl;
+    for(int i=0; i<cores.size(); ++i) {
+            ofile << cores[i][0] << " "
+                << cores[i][1] << " "
+                << cores[i][2] << " "
+                << radius[i][0] << " "
+                << radius[i][1] << " "
+                << circulation[i] << "\n";
+    }
+    ofile.close();
+    return 0;
+}
+
 int PlungingMotion::Dumppoints() {
     int count  = 0;
     for(int n=m_file[0]; n<m_file[2]; n+=m_file[1]) {
@@ -137,22 +160,9 @@ int PlungingMotion::ProcessFlowData(int dir) {
         flow.Smoothing(m_sigma, field);
         flow.CalculateVorticity();
         //vortex
-        std::vector<std::vector<double> > cores;
-        std::vector<std::vector<double> > radius;
-        std::vector<double> circulation;
-        flow.ExtractCore(m_sigma, cores, radius, circulation, m_initcenter, m_initDirection, m_vortexcoreVar, m_stoponwall, m_threshold);
-        std::string filename = "core" + GetOutFileName(n) + ".dat";
-        std::ofstream ofile(filename.c_str());
-        ofile << "variables = x,y,z,radius1,radius2,Gamma" << std::endl;
-        for(int i=0; i<cores.size(); ++i) {
-            ofile << cores[i][0] << " "
-                << cores[i][1] << " "
-                << cores[i][2] << " "
-                << radius[i][0] << " "
-                << radius[i][1] << " "
-                << circulation[i] << "\n";
-        }
-        ofile.close();
+        std::string filename("vortexcore");
+        filename += std::to_string(n) + ".dat";
+        OutputVortexCore(filename, flow);
         flow.OutputData(GetOutFileName(n));
     }
     return count;

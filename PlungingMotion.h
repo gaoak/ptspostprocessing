@@ -1,12 +1,14 @@
 #ifndef PLUNGINGDATA_H
 #define PLUNGINGDATA_H
 #include<string>
+#include "IncFlow.h"
 class PlungingMotion {
 public:
     PlungingMotion(std::string dataconfigue);
     int ProcessFlowData(int dir = 1);
     int Dumppoints();
     double GetFilePhase(int n);
+    int OutputVortexCore(std::string filename, IncFlow &flow);
     double PlungingVelocity(double phase, double phi);
     double PlungingLocation(double phase, double phi);
     std::string GetInFileName(int n);
