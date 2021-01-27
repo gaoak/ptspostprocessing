@@ -14,4 +14,4 @@ process: $(OBJ)
 	$(CC)  -o $@ $^ $(CFLAGS) $(LIBS)
 
 clean:
-	rm *.o process 
+	rm *.o process CAD2D/airfoil.o
