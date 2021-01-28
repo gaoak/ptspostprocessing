@@ -52,6 +52,8 @@ int IncFlow::CalculateVorticity(int order) {
 
 int IncFlow::TransformCoord(const std::vector<double> &x0) {
     for(int k=0; k<3; ++k) {
+        m_range[2*k] += x0[k];
+        m_range[2*k+1] += x0[k];
         for(int i=0; i<m_Np; ++i) {
             m_x[k][i] += x0[k];
         }
@@ -279,7 +281,7 @@ int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vec
 int IncFlow::OverWriteBodyPoint(const std::vector<double> &u0, const std::vector<double> &pivot, const std::vector<double> &omega) {
     for(int i=0; i<m_Np; ++i) {
         std::vector<double> x = {m_x[0][i], m_x[1][i], m_x[2][i]};
-        if(m_body.IsInBody(x, 0.)) {
+        if(m_body.IsInBody(x, 10. * std::numeric_limits<double>::epsilon())) {
             std::vector<double> vel = AddVect<double>(1., crossproduct<double>(omega, AddVect<double>(1., x, -1., pivot)), 1., u0);
             m_phys[0][i] = vel[0];
             m_phys[1][i] = vel[1];

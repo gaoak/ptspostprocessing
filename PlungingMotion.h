@@ -33,5 +33,6 @@ protected:
     int m_initDirection;
     double m_threshold;
     int m_calculateVorticityQ;
+    int m_translation;
 };
 #endif

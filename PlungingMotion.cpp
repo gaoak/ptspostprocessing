@@ -84,6 +84,11 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     } else {
         m_stoponwall = 0;
     }
+    if(param.count("translation")) {
+        m_translation = myRound<double>(StringToDouble(param["translation"].c_str()));
+    } else {
+        m_translation = 0;
+    }
     if(param.count("calculateVorticityQ")) {
         m_calculateVorticityQ = myRound<double>(StringToDouble(param["calculateVorticityQ"].c_str()));
     } else {
@@ -193,6 +198,10 @@ int PlungingMotion::ProcessFlowData(int dir) {
         if(m_airfoil.compare("0000")!=0) {
             double v0 = PlungingVelocity(GetFilePhase(n), m_phi);
             flow.OverWriteBodyPoint({0., v0, 0.}, {0., 0., 0.}, {0., 0., 0.});
+        }
+        if(m_translation) {
+            double h0 = PlungingLocation(GetFilePhase(n), m_phi);
+            flow.TransformCoord({0., h0, 0.});
         }
         if(m_sigma>0.) {
             std::vector<int> field;
