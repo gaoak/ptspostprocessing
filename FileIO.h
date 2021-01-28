@@ -3,7 +3,7 @@
 #include<string>
 #include<vector>
 #include<fstream>
-#ifndef TEC360USEDOUBLE
+#ifdef TEC360USEDOUBLE
 #define TEC360USEDOUBLE 1
 #else
 #define TEC360USEDOUBLE 0
