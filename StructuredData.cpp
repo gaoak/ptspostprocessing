@@ -215,6 +215,7 @@ int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int,
             }
         }
     }
+    return N[0] * N[1];
 }
 
 int StructuredData::Diff(std::vector<std::vector<double> > &u, std::vector<std::vector<double> > &du, int dir, int order) {
@@ -227,12 +228,13 @@ int StructuredData::Diff(std::vector<std::vector<double> > &u, std::vector<std::
     if(dir) {
         ShiftIndex(N, u, -dir);
     }
-    der.Diff(N, u, du, m_dx[dir], order);
+    int res = der.Diff(N, u, du, m_dx[dir], order);
     if(dir) {
         std::vector<int> tN = N;
         ShiftIndex<double>(N, u, dir);
         ShiftIndex<double>(tN, du, dir);
     }
+    return res;
 }
 
 int StructuredData::Smoothing(double sigma, std::vector<int> &field, bool inplace) {
@@ -253,7 +255,9 @@ int StructuredData::Smoothing(double sigma, std::vector<int> &field, bool inplac
             m_phys[field[i]] = data[i];
         }
     }
+    return field.size() * m_Np;
 }
+
 int StructuredData::Diff(std::vector<int > &field, int dir, int order) {
     std::vector<std::vector<double> > u;
     std::vector<std::vector<double> > du;
@@ -268,6 +272,7 @@ int StructuredData::Diff(std::vector<int > &field, int dir, int order) {
         m_vars.push_back(var);
         m_phys.push_back(du[i]);
     }
+    return field.size() * m_Np;
 }
 
 int StructuredData::MaskBoundary(double sigma, std::vector<int> &field, std::map<int, double> def) {
@@ -290,4 +295,5 @@ int StructuredData::MaskBoundary(double sigma, std::vector<int> &field, std::map
             }
         }
     }
+    return field.size() * m_Np;
 }

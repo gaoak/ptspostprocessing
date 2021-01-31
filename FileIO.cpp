@@ -107,6 +107,7 @@ int BinaryWrite(std::ofstream &ofile, std::string str) {
     }
     tmp = 0;
     ofile.write((char*)&tmp, 4);
+    return 4;
 }
 
 int OutputTec360_binary(const std::string filename, const std::vector<std::string> &variables,

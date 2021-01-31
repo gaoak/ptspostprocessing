@@ -119,6 +119,7 @@ int KernelSmooth::DoSmooth(const std::vector<double> &sigmaintegerwidth, const s
     for(int d=0; d<sdata.size(); ++d) {
         sdata[d] = swap[d];
     }
+    return (int) sdata.size();
 }
 
 int KernelSmooth::GetIMax() {
@@ -164,4 +165,5 @@ int Derivative::Diff(const std::vector<int> &N, const std::vector<std::vector<do
             Diff(N[0], data[d].data() + p*N[0], ddata[d].data() + p*N[0], dx, order);
         }
     }
+    return Np;
 }

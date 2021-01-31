@@ -48,6 +48,7 @@ int IncFlow::CalculateVorticity(int order) {
             uz[0][i]*ux[2][i] + uz[1][i]*uy[2][i] + uz[2][i]*uz[2][i]
         );
     }
+    return m_Np;
 }
 
 int IncFlow::TransformCoord(const std::vector<double> &x0) {
@@ -58,6 +59,7 @@ int IncFlow::TransformCoord(const std::vector<double> &x0) {
             m_x[k][i] += x0[k];
         }
     }
+    return m_Np;
 }
 
 std::pair<int, std::vector<int> > IncFlow::GetProceedDirection(const std::vector<double> &vor, double sign) {
@@ -288,4 +290,5 @@ int IncFlow::OverWriteBodyPoint(const std::vector<double> &u0, const std::vector
             m_phys[2][i] = vel[2];
         }
     }
+    return m_Np;
 }

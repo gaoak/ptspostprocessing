@@ -19,6 +19,7 @@ int test_weight(int padding) {
         sum += tmp;
     }
     printf("\ntest weight: sum %g, %s\n", sum-1., testresults[fabs(sum-1.)<1E-14].c_str());
+    return 0;
 }
 
 int test_index(std::vector<int> &N) {
@@ -39,6 +40,7 @@ int test_index(std::vector<int> &N) {
         failcount += i != tmp;
     }
     printf("test index: %d, %s\n", failcount, testresults[!failcount].c_str());
+    return 0;
 }
 double highfreq(std::vector<double> p) {
     return 0.;
@@ -79,6 +81,7 @@ int test_structuredData() {
     sdata.MaskBoundary(0.1, field, def);
     sdata.OutputData("smoothphys.plt");
     printf("sum %g\n", sdata.GetPhysNorm(2, -1));
+    return 0;
 }
 
 int TestSummary() {
@@ -101,6 +104,7 @@ int TestSummary() {
     test_index(N);
     N={4,2,3,5};
     test_index(N);
+    return 0;
 }
 
 int test_fileiomain() {
@@ -115,4 +119,5 @@ int test_fileiomain() {
     //
     sdata.InputData("plt.plt");
     sdata.OutputData("plt_plt.dat");
+    return 0;
 }
