@@ -6,6 +6,7 @@ class NACAmpxx {
 public:
     NACAmpxx(double m, double p, double t);
     NACAmpxx(std::string name);
+    NACAmpxx(const NACAmpxx & a);
     std::vector<double> up(double x);
     std::vector<double> down(double x);
 	double findx(double s, int up = 1);

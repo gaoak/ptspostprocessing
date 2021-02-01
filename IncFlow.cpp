@@ -218,12 +218,24 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     return count;
 }
 
+IncFlow::IncFlow() {
+    ;
+}
+
+int IncFlow::CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> &Ne,
+                             const std::vector<int> &skip, const IncFlow & big) {
+    m_body = big.m_body;
+    m_dim = big.m_dim;
+    StructuredData::CopyAsSubDomain(Ns, Ne, skip, big);
+}
+
 int IncFlow::ExtractCore2Dplane(const std::vector<int> &N, const std::vector<int> &initial,
     std::vector<double> &data, std::vector<double> &core, bool ismax) {
     return FindLocMaxIn2DGraph(N, initial, data, core, ismax);
 }
 
-int IncFlow::PurgeDifferentSign(const std::vector<int> &N, const std::vector<double> &v, std::vector<double> &data, double sign) {
+int IncFlow::PurgeDifferentSign(const std::vector<int> &N, const std::vector<double> &v,
+                                std::vector<double> &data, double sign) {
     int Np = 1;
     for(int i=0; i<N.size(); ++i) Np *= N[i];
     if(Np>data.size()) Np = data.size();

@@ -181,7 +181,8 @@ int StructuredData::Smoothing(double sigma, std::vector<std::vector<double> > &o
     return kernel.DoSmooth(sigma_dx, m_N, odata);
 }
 
-int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int, int> plane, std::vector<int> & N, std::vector<double> &odata) {
+int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int, int> plane,
+                                 std::vector<int> & N, std::vector<double> &odata) {
     odata.clear();
     N.resize(2);
     int dir = plane.first;
@@ -241,6 +242,76 @@ int StructuredData::Diff(std::vector<std::vector<double> > &u, std::vector<std::
         ShiftIndex<double>(tN, du, dir);
     }
     return res;
+}
+
+StructuredData::StructuredData(){
+    ;
+}
+
+int StructuredData::CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> &rawNe,
+                                    const std::vector<int> &skip, const StructuredData & big) {
+    if(Ns.size()<big.m_N.size()) {
+        printf("error: subdomain have a different dimension\n");
+        return -1;
+    }
+    std::vector<int> Ne = rawNe;
+    m_Np = 1;
+    m_N.resize(big.m_N.size());
+    m_range.resize(big.m_range.size());
+    m_dx.resize(big.m_dx.size());
+    for(int i=0; i<big.m_N.size(); ++i) {
+        if(Ne[i] - Ns[i]<=0) {
+            printf("error: subdomain have zero elements in %d direction\n", i);
+        }
+        m_N[i] = (Ne[i] - Ns[i])/skip[i];
+        if((Ne[i] - Ns[i])%skip[i]) {
+            m_N[i] += 1;
+        }
+        m_Np *= m_N[i];
+        Ne[i] = Ns[i] + skip[i] * (m_N[i] - 1);
+        m_range[2*i] = big.m_range[2*i] + big.m_dx[i] * Ns[i];
+        m_range[2*i + 1] = big.m_range[2*i] + big.m_dx[i] * Ne[i];
+        if(m_N[i] == 1) {
+            m_dx[i] = std::nan("1");
+        } else {
+            m_dx[i] = big.m_dx[i] * skip[i];
+        }
+    }
+    m_vars = big.m_vars;
+    //copy data
+    m_x.resize(big.m_x.size());
+    m_phys.resize(big.m_phys.size());
+    for(int i=0; i<m_x.size(); ++i) {
+        m_x[i].resize(m_Np);
+    }
+    for(int i=0; i<m_phys.size(); ++i) {
+        m_phys[i].resize(m_Np);
+    }
+    for(int p=0; p<m_Np; ++p) {
+        std::vector<int> ind;
+        invIndex(m_N, p, ind);
+        for(int i=0; i<m_N.size(); ++i) {
+            ind[i] = Ns[i] + ind[i] * skip[i];
+        }
+        int pg = Index(big.m_N, ind);
+        for(int i=0; i<big.m_x.size(); ++i) {
+            m_x[i][p] = big.m_x[i][pg];
+        }
+        for(int i=0; i<big.m_phys.size(); ++i) {
+            m_phys[i][p] = big.m_phys[i][pg];
+        }
+    }
+    return m_Np;
+}
+
+void StructuredData::clear() {
+    m_x.clear();
+    m_phys.clear();
+    m_vars.clear();
+    m_N.clear();
+    m_range.clear();
+    m_dx.clear();
+    m_Np = 0;
 }
 
 int StructuredData::Smoothing(double sigma, std::vector<int> &field, bool inplace) {

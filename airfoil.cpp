@@ -15,6 +15,18 @@ NACAmpxx::NACAmpxx(double m, double p, double t) {
     m_rRoundTrailing = -1.;
 }
 
+NACAmpxx::NACAmpxx(const NACAmpxx & a) {
+    m_m = a.m_m;
+    m_p = a.m_p;
+    if(m_m<0.001) {
+        m_m = 0.;
+        m_p = 100.;
+    }
+    m_t = a.m_t;
+	calculateArcTable();
+    m_rRoundTrailing = -1.;
+}
+
 NACAmpxx::NACAmpxx(std::string name) {
     if(name.size()<4) {
         std::cout << "incorrect NACA 4-digit format" << std::endl;

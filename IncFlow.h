@@ -4,6 +4,7 @@
 #include "Body.h"
 class IncFlow : public StructuredData {
 public:
+    IncFlow();
     IncFlow(const std::vector<int> &N, const std::vector<double> &range,
             std::string bodyname, std::vector<double> param);
     int OverWriteBodyPoint(const std::vector<double> &u0, const std::vector<double> &pivot, const std::vector<double> &omega);
@@ -19,6 +20,8 @@ public:
     int CalculateVorticity(int order = 2);
     std::pair<int, std::vector<int> > GetProceedDirection(const std::vector<double> &vor, double sign);
     int PurgeDifferentSign(const std::vector<int> &N, const std::vector<double> &v, std::vector<double> &data, double sign);
+    int CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> &Ne,
+                        const std::vector<int> &skip, const IncFlow & big);
 protected:
     Body m_body;
     int m_dim;

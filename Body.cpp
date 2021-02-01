@@ -23,6 +23,12 @@ Body::Body()
     m_AoA = 0.;
 }
 
+ Body::Body(const Body & b2)
+     : m_airfoil(b2.m_airfoil) {
+     m_AoA = b2.m_AoA;
+     m_span = b2.m_span;
+ }
+
 bool Body::IsInBody(std::vector<double> p, double tol) {
     if(p[2]+tol<m_span[0] || p[2]-tol>m_span[1]) {
         return false;
