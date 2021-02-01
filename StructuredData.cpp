@@ -90,11 +90,11 @@ double StructuredData::GetCoordValue(int f, int i) {
 
 int StructuredData::GenPoints() {
     for(int k=0; k<m_N[2]; ++k) {
+        int tmp2 = k * m_N[0] * m_N[1];
         for(int j=0; j<m_N[1]; ++j) {
+            int tmp1 = j * m_N[0];
             for(int i=0; i<m_N[0]; ++i) {
-                std::vector<int> ind(3);
-                ind[0] = i; ind[1] = j; ind[2] = k;
-                int index = Index(m_N, ind);
+                int index = i + tmp1 + tmp2;
                 if(m_N[0]>1) {
                     m_dx[0] = (m_range[1] - m_range[0])/(m_N[0]-1);
                     m_x[0][index] = m_range[0] + i*m_dx[0];
@@ -189,29 +189,35 @@ int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int,
         N[0] = m_N[1];
         N[1] = m_N[2];
         for(int k=0; k<m_N[2]; ++k) {
+            int tmp2 = k * m_N[0] * m_N[1];
             for(int j=0; j<m_N[1]; ++j) {
-                std::vector<int> ind = {plane.second, j, k};
-                odata.push_back(data[Index(m_N, ind)]);
+                int tmp1 = j * m_N[0];
+                int ind = plane.second + tmp1 + tmp2;
+                odata.push_back(data[ind]);
             }
         }
     }
     if(dir%3==1) {
         N[0] = m_N[2];
         N[1] = m_N[0];
-        for(int i=0; i<m_N[0]; ++i) {
-            for(int k=0; k<m_N[2]; ++k) {
-                std::vector<int> ind = {i, plane.second, k};
-                odata.push_back(data[Index(m_N, ind)]);
+        int tmp1 = plane.second * m_N[0];
+        for(int k=0; k<m_N[2]; ++k) {
+            int tmp2 = k * m_N[0] * m_N[1];
+            for(int i=0; i<m_N[0]; ++i) {
+                int ind = i + tmp1 + tmp2;
+                odata.push_back(data[ind]);
             }
         }
     }
     if(dir%3==2) {
         N[0] = m_N[0];
         N[1] = m_N[1];
+        int tmp2 = plane.second * m_N[0] * m_N[1];
         for(int j=0; j<m_N[1]; ++j) {
+            int tmp1 = j * m_N[0];
             for(int i=0; i<m_N[0]; ++i) {
-                std::vector<int> ind = {i, j, plane.second};
-                odata.push_back(data[Index(m_N, ind)]);
+                int ind = i + tmp1 + tmp2;
+                odata.push_back(data[ind]);
             }
         }
     }

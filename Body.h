@@ -1,4 +1,4 @@
-#include "CAD2D/airfoil.h"
+#include "airfoil.h"
 
 class Body {
 public:

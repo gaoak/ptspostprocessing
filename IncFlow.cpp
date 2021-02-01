@@ -240,8 +240,9 @@ int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vec
     Fill2DGraph(N, v, core, 0.05, true);
     double sum0 = 0., sum1x = 0., sum1y = 0.;
     for(int j=0; j<N[1]; ++j) {
+        int tmp = j * N[0];
         for(int i=0; i<N[0]; ++i) {
-            int ind = Index(N, {i, j});
+            int ind = i + tmp;
             sum0  += v[ind];
             sum1x += v[ind] * i;
             sum1y += v[ind] * j;
@@ -259,8 +260,9 @@ int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vec
     sum1y /= sum0;
     double sumxx = 0., sumxy = 0., sumyy = 0.;
     for(int j=0; j<N[1]; ++j) {
+        int tmp = j * N[0];
         for(int i=0; i<N[0]; ++i) {
-            int ind = Index(N, {i, j});
+            int ind = i + tmp;
             sumxx += v[ind] * (i - sum1x) * (i - sum1x) * dx[0] * dx[0];
             sumxy += v[ind] * (i - sum1x) * (j - sum1y) * dx[0] * dx[1];
             sumyy += v[ind] * (j - sum1y) * (j - sum1y) * dx[1] * dx[1];
