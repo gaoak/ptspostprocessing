@@ -141,6 +141,7 @@ int test_subdomain() {
     sub2.OutputData("ssub2.plt");
 }
 
+#ifndef MAKEBASH
 int main() {
     TestSummary();
     test_structuredData();
@@ -148,3 +149,4 @@ int main() {
     test_subdomain();
     return 0;
 }
+#endif
