@@ -89,37 +89,37 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
     }
     std::ofstream odata;
     odata.open(filename, std::ios::binary);
-	if(!odata.is_open())
-	{
+    if(!odata.is_open())
+    {
         printf("error unable to open file %s\n", filename.c_str());
-		return -1;
-	}
+        return -1;
+    }
     char tecplotversion[] = "#!TDV112";
-	odata.write((char*)tecplotversion, 8);
+    odata.write((char*)tecplotversion, 8);
     int value1 = 1;
-	odata.write((char*)&value1, 4);
+    odata.write((char*)&value1, 4);
     int filetype = 0;
-	odata.write((char*)&filetype, 4);
-	//read file title and variable names
-	int tempi = 0;
+    odata.write((char*)&filetype, 4);
+    //read file title and variable names
+    int tempi = 0;
     std::string filetitle = "";
     BinaryWrite(odata, filetitle);
     int nvar = variables.size();
     odata.write((char*)&nvar, 4);//number of variables
     std::vector<std::string> vartitle;
-	for(int i=0; i<nvar; ++i)
-	{
+    for(int i=0; i<nvar; ++i)
+    {
         BinaryWrite(odata, variables[i]);
-	}
+    }
     float marker299I = 299.0f;
-	odata.write((char*)&marker299I, 4);
-	//zone title
+    odata.write((char*)&marker299I, 4);
+    //zone title
     std::string zonetitle("ZONE 0");
-	BinaryWrite(odata, zonetitle);
+    BinaryWrite(odata, zonetitle);
     int parentzone = -1;
-	odata.write((char*)&parentzone, 4);
+    odata.write((char*)&parentzone, 4);
     int strandid = -1;
-	odata.write((char*)&strandid, 4);
+    odata.write((char*)&strandid, 4);
     double soltime = 0.0;
     odata.write((char*)&soltime, 8);
     int unused = -1;
@@ -130,26 +130,26 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
     odata.write((char*)&zero, 4);
     odata.write((char*)&zero, 4);
     odata.write((char*)&zero, 4);
-	for(int i=0; i<3; ++i) {
+    for(int i=0; i<3; ++i) {
         int tmp = N[i];
         odata.write((char*)&tmp, 4);
     }
 
     odata.write((char*)&zero, 4);
     float marker357 = 357.0f;
-	odata.write((char*)&marker357, 4);
+    odata.write((char*)&marker357, 4);
     float marker299II = 299.0f;
-	odata.write((char*)&marker299II, 4);
-	std::vector<int> binarydatatype(nvar, 1 + (isdouble>0));
-	odata.write((char*)binarydatatype.data(), 4*nvar);
+    odata.write((char*)&marker299II, 4);
+    std::vector<int> binarydatatype(nvar, 1 + (isdouble>0));
+    odata.write((char*)binarydatatype.data(), 4*nvar);
     odata.write((char*)&zero, 4);
     odata.write((char*)&zero, 4);
     int minus1 = -1;
     odata.write((char*)&minus1, 4);
     
     int datanumber, datasize;
-	datanumber = N[0] * N[1] * N[2];
-	datasize = N[0] * N[1] * N[2] * 4;
+    datanumber = N[0] * N[1] * N[2];
+    datasize = N[0] * N[1] * N[2] * 4;
     for(int i=0; i<nvar; ++i) {
         double minv = 0., maxv=1.;
         maxv = data[i][FindMax<double>(datanumber, data[i].data())];
@@ -220,34 +220,34 @@ int InputCSV(const std::string filename, std::vector<std::string> &variables,
 int InputTec360_binary(const std::string filename, std::vector<std::string> &variables,
                  std::vector<int> &N, std::vector<double> &range,
                  std::vector<std::vector<double> > &data, int &isdouble) {
-	std::ifstream indata;
+    std::ifstream indata;
     indata.open(filename, std::ios::binary);
-	if(!indata.is_open())
-	{
+    if(!indata.is_open())
+    {
         printf("error unable to open file %s\n", filename.c_str());
-		return -1;
-	}
+        return -1;
+    }
     char tecplotversion[8];
-	indata.read((char*)tecplotversion, 8);
+    indata.read((char*)tecplotversion, 8);
     int value1;
-	indata.read((char*)&value1, 4);
+    indata.read((char*)&value1, 4);
     int filetype;
-	indata.read((char*)&filetype, 4);
-	//read file title and variable names
-	int tempi;
+    indata.read((char*)&filetype, 4);
+    //read file title and variable names
+    int tempi;
     std::string filetitle;
-	while(1)
-	{
+    while(1)
+    {
         indata.read((char*)&tempi, 4);
         if(tempi==0) break;
         char c = tempi;
         filetitle.push_back(c);
-	}
+    }
     int nvar;
     indata.read((char*)&nvar, 4);//number of variables
     variables.clear();
-	for(int i=0; i<nvar; ++i)
-	{
+    for(int i=0; i<nvar; ++i)
+    {
         std::string vname;
         while(1)
         {
@@ -257,24 +257,24 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
             vname.push_back(c);
         }
         variables.push_back(vname);
-	}
+    }
     float marker299I=0.0f;
     while(marker299I!=299.0f) {
-	    indata.read((char*)&marker299I, 4);
+        indata.read((char*)&marker299I, 4);
     }
-	//zone title
+    //zone title
     std::string zonentitle;
-	while(1)
-	{
+    while(1)
+    {
         indata.read((char*)&tempi, 4);
         if(tempi==0) break;
         char c = tempi;
         zonentitle.push_back(c);
-	}
+    }
     int parentzone;
-	indata.read((char*)&parentzone, 4);
+    indata.read((char*)&parentzone, 4);
     int strandid;
-	indata.read((char*)&strandid, 4);
+    indata.read((char*)&strandid, 4);
     double soltime;
     indata.read((char*)&soltime, 8);
     int unused;
@@ -286,18 +286,18 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
     indata.read((char*)&zero, 4);
     indata.read((char*)&zero, 4);
     N.resize(3);
-	indata.read((char*)N.data(), 3*4);
+    indata.read((char*)N.data(), 3*4);
     indata.read((char*)&zero, 4);
     float marker357=0.0f;
     while(marker357!=357.0f) {
-	    indata.read((char*)&marker357, 4);
+        indata.read((char*)&marker357, 4);
     }
     float marker299II = 0.0f;
     while(marker299II!=299.0f) {
-	    indata.read((char*)&marker299II, 4);
+        indata.read((char*)&marker299II, 4);
     }
-	std::vector<int> binarydatatype(nvar);
-	indata.read((char*)binarydatatype.data(), 4*nvar);
+    std::vector<int> binarydatatype(nvar);
+    indata.read((char*)binarydatatype.data(), 4*nvar);
     isdouble = binarydatatype[0] == 2;
     indata.read((char*)&zero, 4);
     indata.read((char*)&zero, 4);
@@ -311,8 +311,8 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
     }
     //copy data
     int Np, datasize;
-	Np = N[0] * N[1] * N[2];
-	datasize = Np * 4;
+    Np = N[0] * N[1] * N[2];
+    datasize = Np * 4;
     data.resize(nvar);
     for(int i=0; i<nvar; ++i) {
         data[i].resize(Np);
