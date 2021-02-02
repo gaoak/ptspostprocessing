@@ -225,7 +225,6 @@ IncFlow::IncFlow() {
 int IncFlow::CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> &Ne,
                              const std::vector<int> &skip, const IncFlow & big) {
     m_body = big.m_body;
-    m_dim = big.m_dim;
     StructuredData::CopyAsSubDomain(Ns, Ne, skip, big);
 }
 

@@ -13,8 +13,8 @@ class StructuredData {
 public:
     StructuredData(const std::vector<int> &N, const std::vector<double> &range);
     StructuredData();
-    int OutputData(std::string filename);
-    int InputData(std::string filename);
+    int OutputData(std::string filename, const bool info = true);
+    int InputData(std::string filename, const bool info = true);
     int GetTotPoints();
     int AddPhysics(std::string var, void * func);
     int AddPhysics(std::string var, const std::vector<double> &data);
@@ -35,13 +35,15 @@ public:
     std::vector<std::vector<double> > m_phys; //physics fields
     std::vector<std::string> m_vars;
 protected:
-    int GenPoints();
     int ParserCSVHeader(const char * header);
+    int GenPoints();
+    int ReSetDx();
+    int ReSetNp();
     int Diff(std::vector<std::vector<double> > &u,
              std::vector<std::vector<double> > &du, int dir, int order);
     std::vector<int> m_N;        //dimension 3
+    int m_Np;
     std::vector<double> m_range; //dimension 6
     std::vector<double> m_dx;    //dimension 3
-    int m_Np;
 };
 #endif

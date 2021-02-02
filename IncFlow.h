@@ -24,6 +24,5 @@ public:
                         const std::vector<int> &skip, const IncFlow & big);
 protected:
     Body m_body;
-    int m_dim;
 };
 #endif

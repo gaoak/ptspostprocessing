@@ -18,16 +18,16 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
                  const std::vector<int> &N, const std::vector<std::vector<double> > &data,
                  int isdouble);
 
-int InputTec360_binary(const std::string filename, std::vector<std::string> &variables,
-                 std::vector<int> &N, std::vector<std::vector<double> > &data,
-                 int &isdouble);
-
 int OutputCSV(const std::string filename, const std::vector<std::string> &variables,
                  const std::vector<int> &N, const std::vector<std::vector<double> > &data);
 
 int ParserCSVHeader(const char * header, std::vector<std::string> &vars);
 
+int InputTec360_binary(const std::string filename, std::vector<std::string> &variables,
+                 std::vector<int> &N, std::vector<double> &range, std::vector<std::vector<double> > &data,
+                 int &isdouble);
+
 int InputCSV(const std::string filename, std::vector<std::string> &variables,
-                 std::vector<int> &N, std::vector<std::vector<double> > &data,
+                 std::vector<int> &N, std::vector<double> &range, std::vector<std::vector<double> > &data,
                  int &isdouble);
 #endif

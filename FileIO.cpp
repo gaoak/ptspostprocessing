@@ -42,45 +42,14 @@ int ParserCSVHeader(const char * header, std::vector<std::string> &vars) {
     return vars.size();
 }
 
-int InputCSV(const std::string filename, std::vector<std::string> &variables,
-                 std::vector<int> &N, std::vector<std::vector<double> > &data,
-                 int &isdouble) {
-    std::ifstream file(filename.c_str());
-    if(!file.is_open()) {
-        printf("error: unable to open file %s\n", filename.c_str());
-    }
-    int Np = 1;
-    for(int i=0; i<N.size(); ++i) {
-        Np *= N[i];
-    }
-    char buffer[1000];
-    std::vector<double> value;
-    file.getline(buffer, sizeof(buffer));
-    variables.clear();
-    int vcount = ParserCSVHeader(buffer, variables);
-    data.clear();
-    for(int i=0; i<vcount; ++i) {
-        data.push_back(std::vector<double>(Np, 0.));
-    }
-
-    file.getline(buffer, sizeof(buffer));
-    int index = 0;
-    while(!file.eof()) {
-        parserDouble(buffer, value);
-        for(int i=0; i<vcount; ++i) {
-            data[i][index] = value[i];
-        }
-        ++index;
-        file.getline(buffer, sizeof(buffer));
-    }
-    file.close();
-    return index;
-}
-
 int OutputTec360_ascii(const std::string filename, const std::vector<std::string> &variables,
-                 const std::vector<int> &N, const std::vector<std::vector<double> > &data,
+                 const std::vector<int> &rawN, const std::vector<std::vector<double> > &data,
                  int isdouble)
 {
+    std::vector<int> N = rawN;
+    for(int i=N.size(); i<3; ++i) {
+        N.push_back(1);
+    }
     std::string varlist = variables[0];
     for(int i=1; i<variables.size(); ++i) {
         varlist += "," + variables[i];
@@ -111,9 +80,13 @@ int BinaryWrite(std::ofstream &ofile, std::string str) {
 }
 
 int OutputTec360_binary(const std::string filename, const std::vector<std::string> &variables,
-                 const std::vector<int> &N, const std::vector<std::vector<double> > &data,
+                 const std::vector<int> &rawN, const std::vector<std::vector<double> > &data,
                  int isdouble)
 {
+    std::vector<int> N = rawN;
+    for(int i=N.size(); i<3; ++i) {
+        N.push_back(1);
+    }
     std::ofstream odata;
     odata.open(filename, std::ios::binary);
 	if(!odata.is_open())
@@ -201,9 +174,52 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
     return 0;
 }
 
+int InputCSV(const std::string filename, std::vector<std::string> &variables,
+                 std::vector<int> &N, std::vector<double> &range,
+                 std::vector<std::vector<double> > &data, int &isdouble) {
+    std::ifstream file(filename.c_str());
+    if(!file.is_open()) {
+        printf("error: unable to open file %s\n", filename.c_str());
+    }
+    int Np = 1;
+    for(int i=0; i<N.size(); ++i) {
+        Np *= N[i];
+    }
+    char buffer[1000];
+    std::vector<double> value;
+    file.getline(buffer, sizeof(buffer));
+    variables.clear();
+    int vcount = ParserCSVHeader(buffer, variables);
+    data.resize(vcount);
+    for(int i=0; i<vcount; ++i) {
+        data[i].resize(Np);
+    }
+
+    file.getline(buffer, sizeof(buffer));
+    int index = 0;
+    while(!file.eof()) {
+        parserDouble(buffer, value);
+        for(int i=0; i<vcount; ++i) {
+            data[i][index] = value[i];
+        }
+        ++index;
+        file.getline(buffer, sizeof(buffer));
+    }
+    file.close();
+    //caculate coordinate range
+    range.resize(2*N.size());
+    for(int i=0; i<N.size(); ++i) {
+        int imax = FindMax<double>(Np, data[i].data());
+        int imin = FindMin<double>(Np, data[i].data());
+        range[2*i  ] = data[i][imin];
+        range[2*i+1] = data[i][imax];
+    }
+    return index;
+}
+
 int InputTec360_binary(const std::string filename, std::vector<std::string> &variables,
-                 std::vector<int> &N, std::vector<std::vector<double> > &data,
-                 int &isdouble) {
+                 std::vector<int> &N, std::vector<double> &range,
+                 std::vector<std::vector<double> > &data, int &isdouble) {
 	std::ifstream indata;
     indata.open(filename, std::ios::binary);
 	if(!indata.is_open())
@@ -293,26 +309,33 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
         indata.read((char*)&minv, 8);
         indata.read((char*)&maxv, 8);
     }
-
-    int datanumber, datasize;
-	datanumber = N[0] * N[1] * N[2];
-	datasize = N[0] * N[1] * N[2] * 4;
+    //copy data
+    int Np, datasize;
+	Np = N[0] * N[1] * N[2];
+	datasize = Np * 4;
+    data.resize(nvar);
     for(int i=0; i<nvar; ++i) {
-        int nd = data.size();
+        data[i].resize(Np);
+    }
+    for(int i=0; i<nvar; ++i) {
         if(isdouble) {
-            data.resize(nd+1);
-            data[nd].resize(datanumber);
-            indata.read((char*)data[nd].data(), datasize * 2);
+            indata.read((char*)data[i].data(), datasize * 2);
         } else {
-            std::vector<float> vardata(datanumber);
+            std::vector<float> vardata(Np);
             indata.read((char*)vardata.data(), datasize);
-            data.resize(nd+1);
-            data[nd].resize(datanumber);
-            for(int j=0; j<datanumber; ++j) {
-                data[nd][j] = vardata[j];
+            for(int j=0; j<Np; ++j) {
+                data[i][j] = vardata[j];
             }
         }
     }
     indata.close();
+    //caculate coordinate range
+    range.resize(2*N.size());
+    for(int i=0; i<N.size(); ++i) {
+        int imax = FindMax<double>(Np, data[i].data());
+        int imin = FindMin<double>(Np, data[i].data());
+        range[2*i  ] = data[i][imin];
+        range[2*i+1] = data[i][imax];
+    }
     return 0;
 }
