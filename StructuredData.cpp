@@ -225,10 +225,11 @@ int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int,
         N[0] = m_N[2];
         N[1] = m_N[0];
         int tmp1 = plane.second * m_N[0];
-        for(int k=0; k<m_N[2]; ++k) {
-            int tmp2 = k * m_N[0] * m_N[1];
-            for(int i=0; i<m_N[0]; ++i) {
-                int ind = i + tmp1 + tmp2;
+        int tmp2 = m_N[0] * m_N[1];
+        for(int i=0; i<m_N[0]; ++i) {
+            int ind = i + tmp1;
+            for(int k=0; k<m_N[2]; ++k) {
+                ind += k*tmp2;
                 odata.push_back(data[ind]);
             }
         }
