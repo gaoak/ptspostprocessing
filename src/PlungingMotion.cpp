@@ -202,8 +202,12 @@ int PlungingMotion::GenerateFileSeries() {
 }
 
 int PlungingMotion::ProcessFlowData(int dir) {
-    for(int k=0; k<m_fileseries.size(); ++k) {
-        int n = m_fileseries[k];
+    std::vector<int> filen = m_fileseries;
+    if(dir<0) {
+        std::reverse(filen.begin(), filen.end());;
+    }
+    for(int k=0; k<filen.size(); ++k) {
+        int n = filen[k];
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA, m_span[0], m_span[1]});
         flow.InputData(GetInFileName(n));
         if(m_airfoil.compare("0000")!=0) {
