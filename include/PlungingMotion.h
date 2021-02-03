@@ -13,6 +13,7 @@ public:
     double PlungingLocation(double phase, double phi);
     std::string GetInFileName(int n);
     std::string GetOutFileName(int n);
+    int GenerateFileSeries();
 protected:
     std::vector<int> m_N;
     std::vector<double> m_range;
@@ -20,6 +21,7 @@ protected:
     double m_A;
     double m_phi;
     std::vector<int> m_file;
+    std::vector<int> m_fileseries;
     std::vector<double> m_phase;
     std::string m_inputformat;
     std::string m_outputformat;

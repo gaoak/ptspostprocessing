@@ -47,8 +47,11 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
         m_outputformat = "unsetoutputfile%d";
     }
     if(param.count("filesnumber")) {
-        parserUInt(param["filesnumber"].c_str(), m_file);
+        parserInt(param["filesnumber"].c_str(), m_file);
+    } else {
+        m_file.resize(3, 0);
     }
+    GenerateFileSeries();
     if(param.count("phase")) {
         parserDouble(param["phase"].c_str(), m_phase);
     }
@@ -174,7 +177,7 @@ int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
 
 int PlungingMotion::Dumppoints() {
     int count  = 0;
-    for(int n=m_file[0]; n<m_file[2]; n+=m_file[1]) {
+    for(int n=m_file[0]; n!=m_file[2]; n+=m_file[1]) {
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
         flow.OutputData(GetOutFileName(n));
         ++count;
@@ -182,17 +185,26 @@ int PlungingMotion::Dumppoints() {
     return count;
 }
 
+int PlungingMotion::GenerateFileSeries() {
+    m_fileseries.clear();
+    if(m_file.size()<3 || m_file[1]==0) {
+        return 0;
+    }
+    if(m_file[1]>0) {
+        for(int i=m_file[0]; i<m_file[2]; i+=m_file[1]) {
+            m_fileseries.push_back(i);
+        }
+    } else {
+        for(int i=m_file[0]; i>m_file[2]; i+=m_file[1]) {
+            m_fileseries.push_back(i);
+        }
+    }
+    return m_fileseries.size();
+}
+
 int PlungingMotion::ProcessFlowData(int dir) {
-    std::vector<int> filen;
-    for(int n=m_file[0]; n<m_file[2]; n+=m_file[1]) {
-        filen.push_back(n);
-    }
-    if(dir<0) {
-        std::reverse(filen.begin(), filen.end());
-    }
-    int count  = 0;
-    for(int k=0; k<filen.size(); ++k) {
-        int n = filen[k];
+    for(int k=0; k<m_fileseries.size(); ++k) {
+        int n = m_fileseries[k];
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA, m_span[0], m_span[1]});
         flow.InputData(GetInFileName(n));
         if(m_airfoil.compare("0000")!=0) {
@@ -221,5 +233,5 @@ int PlungingMotion::ProcessFlowData(int dir) {
         OutputVortexCore(filename, flow);
         flow.OutputData(GetOutFileName(n));
     }
-    return count;
+    return m_fileseries.size();
 }
