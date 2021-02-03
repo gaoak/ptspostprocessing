@@ -225,7 +225,7 @@ IncFlow::IncFlow() {
 int IncFlow::CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> &Ne,
                              const std::vector<int> &skip, const IncFlow & big) {
     m_body = big.m_body;
-    StructuredData::CopyAsSubDomain(Ns, Ne, skip, big);
+    return StructuredData::CopyAsSubDomain(Ns, Ne, skip, big);
 }
 
 int IncFlow::ExtractCore2Dplane(const std::vector<int> &N, const std::vector<int> &initial,

@@ -11,14 +11,13 @@ int main(int argc, char *argv[]) {
         }
     }
     PlungingMotion plungdata(dataconfigue);
+    int dir = 1;
     for(int c=1; c<argc; ++c) {
-        if(0==string("process").compare(argv[c])) {
-            plungdata.ProcessFlowData(1);
-        }
         if(0==string("processinverse").compare(argv[c])) {
-            plungdata.ProcessFlowData(-1);
+            dir = -1;
         }
     }
+    plungdata.ProcessFlowData(dir);
     printf("finished\n");
     return 0;
 }

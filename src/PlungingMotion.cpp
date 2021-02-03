@@ -143,6 +143,7 @@ double PlungingMotion::PlungingLocation(double phase, double phi) {
 }
 
 int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
+    std::clock_t c_start = std::clock();
     if(m_vortexcoreVar.size()<4 || m_vortexcoreVar[3]==0) {
         return -1;
     }
@@ -156,9 +157,13 @@ int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
     std::vector<double> circulation;
     flow.ExtractCore(m_sigma, cores, radius, circulation, m_initcenter, m_vortexcoreVar,
         m_vortexcoreVar[3], m_initDirection, m_stoponwall, m_threshold);
+    std::clock_t c_end = std::clock();
+    long double time_elapsed_ms = (c_end-c_start) / CLOCKS_PER_SEC;
     if(cores.size()==0) {
-        printf("no vortex core found with threshold %f\n", m_threshold);
+        printf("no vortex core found with threshold %f, cpu time %Lfs\n", m_threshold, time_elapsed_ms);
         return 0;
+    } else {
+        printf("vortex core with %d points extracted, cpu time %Lfs\n", (int)cores.size(), time_elapsed_ms);
     }
     std::ofstream ofile(filename.c_str());
     ofile << "variables = x,y,z,radius1,radius2,Gamma" << std::endl;
@@ -207,6 +212,7 @@ int PlungingMotion::ProcessFlowData(int dir) {
         std::reverse(filen.begin(), filen.end());;
     }
     for(int k=0; k<filen.size(); ++k) {
+        std::clock_t c_start = std::clock();
         int n = filen[k];
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA, m_span[0], m_span[1]});
         flow.InputData(GetInFileName(n));
@@ -235,6 +241,9 @@ int PlungingMotion::ProcessFlowData(int dir) {
         filename += std::to_string(n) + ".dat";
         OutputVortexCore(filename, flow);
         flow.OutputData(GetOutFileName(n));
+        std::clock_t c_end = std::clock();
+        long double time_elapsed_ms = (c_end-c_start) / CLOCKS_PER_SEC;
+        printf("process file %d, cpu time %Lfs\n", n, time_elapsed_ms);
     }
     return m_fileseries.size();
 }

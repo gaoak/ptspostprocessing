@@ -11,9 +11,9 @@ AoA 15.
 span 0.,5.
 translation 1
 #input output file infomation
-filesnumber 48,4,65
+filesnumber 48,4,49
 phase       0.,0.25
-input   interpdata/interp%d.plt
+input   interp%d.plt
 output sdata%d.plt
 #standard deviation of Gauss smoother
 sigma 0.07

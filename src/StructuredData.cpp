@@ -137,9 +137,11 @@ int StructuredData::ReSetDx() {
             m_dx[i] = std::nan("1");
         }
     }
+    return m_N.size();
 }
 
 int StructuredData::OutputData(std::string filename, const bool info) {
+    std::clock_t c_start = std::clock();
     int isdouble = TEC360USEDOUBLE;
     std::vector<std::vector<double> > data;
     for(int i=0; i<m_x.size(); ++i) {
@@ -160,12 +162,15 @@ int StructuredData::OutputData(std::string filename, const bool info) {
         return -1;
     }
     if(info) {
-        printf("output file %s\n", filename.c_str());
+        std::clock_t c_end = std::clock();
+        long double time_elapsed_ms = (c_end-c_start) / CLOCKS_PER_SEC;
+        printf("output file %s, cpu time %Lfs\n", filename.c_str(), time_elapsed_ms);
     }
     return m_x.size() + m_phys.size();
 }
 
 int StructuredData::InputData(std::string filename, const bool info) {
+    std::clock_t c_start = std::clock();
     std::vector<std::vector<double> > data;
     int isdouble;
     std::string ext = filename.substr(filename.size()-4, 4);
@@ -190,7 +195,9 @@ int StructuredData::InputData(std::string filename, const bool info) {
         }
     }
     if(info) {
-        printf("Read file %s\n", filename.c_str());
+        std::clock_t c_end = std::clock();
+        long double time_elapsed_ms = (c_end-c_start) / CLOCKS_PER_SEC;
+        printf("Read file %s, cpu time %Lfs\n", filename.c_str(), time_elapsed_ms);
     }
     return m_x.size() + m_phys.size();
 }
