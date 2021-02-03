@@ -12,14 +12,13 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     }
     char buffer[1000];
     std::map<std::string, std::string> param;
-    conf.getline(buffer, sizeof(buffer));
     while(!conf.eof()) {
+        conf.getline(buffer, sizeof(buffer));
         std::vector<std::string> p;
         parserString(buffer, p);
         if(p.size()>1) {
             param[p[0]] = p[1];
         }
-        conf.getline(buffer, sizeof(buffer));
     }
     if(param.count("k")) {
         m_k = StringToDouble(param["k"]);
@@ -177,9 +176,9 @@ int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
 
 int PlungingMotion::Dumppoints() {
     int count  = 0;
-    for(int n=m_file[0]; n!=m_file[2]; n+=m_file[1]) {
+    for(auto f=m_fileseries.begin(); f!=m_fileseries.end(); ++f) {
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
-        flow.OutputData(GetOutFileName(n));
+        flow.OutputData(GetOutFileName(*f));
         ++count;
     }
     return count;
