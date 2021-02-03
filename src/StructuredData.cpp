@@ -311,19 +311,61 @@ int StructuredData::CopyAsSubDomain(const std::vector<int> &Ns, const std::vecto
     for(int i=0; i<m_phys.size(); ++i) {
         m_phys[i].resize(m_Np);
     }
-    for(int p=0; p<m_Np; ++p) {
-        std::vector<int> ind;
-        invIndex(m_N, p, ind);
-        for(int i=0; i<m_N.size(); ++i) {
-            ind[i] = Ns[i] + ind[i] * skip[i];
+    //copy data
+    if(Ns.size()==1) {
+        int count = 0;
+        for(int i=Ns[0]; i<=Ne[0]; i+=skip[0]) {
+            for(int p=0; p<big.m_x.size(); ++p) {
+                m_x[p][count] = big.m_x[p][i];
+            }
+            for(int p=0; p<big.m_phys.size(); ++p) {
+                m_phys[p][count] = big.m_phys[p][i];
+            }
+            ++count;
         }
-        int pg = Index(big.m_N, ind);
-        for(int i=0; i<big.m_x.size(); ++i) {
-            m_x[i][p] = big.m_x[i][pg];
+    } else if(Ns.size()==2) {
+        int count = 0;
+        int jstart = Ns[1] * big.m_N[0];
+        int jmax = Ne[1] * big.m_N[0];
+        int jskip = skip[1] * big.m_N[0];
+        for(int j=jstart; j<=jmax; j+=jskip) {
+            int imax = j + Ne[0];
+            for(int i=Ns[0]+j; i<=imax; i+=skip[0]) {
+                for(int p=0; p<big.m_x.size(); ++p) {
+                    m_x[p][count] = big.m_x[p][i];
+                }
+                for(int p=0; p<big.m_phys.size(); ++p) {
+                    m_phys[p][count] = big.m_phys[p][i];
+                }
+                ++count;
+            }
         }
-        for(int i=0; i<big.m_phys.size(); ++i) {
-            m_phys[i][p] = big.m_phys[i][pg];
+    } else if(Ns.size()==3) {
+        int count = 0;
+        int N01 = big.m_N[0] * big.m_N[1];
+        int kstart = Ns[2] * N01;
+        int kmax = Ne[2] * N01;
+        int kskip = skip[2] * N01;
+        for(int k=kstart; k<=kmax; k+=kskip) {
+            int jstart = Ns[1] * big.m_N[0];
+            int jmax = Ne[1] * big.m_N[0];
+            int jskip = skip[1] * big.m_N[0];
+            for(int j=jstart; j<=jmax; j+=jskip) {
+                int imax = k + j + Ne[0];
+                for(int i=Ns[0]+j + k; i<=imax; i+=skip[0]) {
+                    for(int p=0; p<big.m_x.size(); ++p) {
+                        m_x[p][count] = big.m_x[p][i];
+                    }
+                    for(int p=0; p<big.m_phys.size(); ++p) {
+                        m_phys[p][count] = big.m_phys[p][i];
+                    }
+                    ++count;
+                }
+            }
         }
+    } else {
+        printf("error unsupported dimension %d\n", (int)Ns.size());
+        return 0;
     }
     return m_Np;
 }
