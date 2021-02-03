@@ -10,6 +10,7 @@ void parserString(const char * cstr, std::vector<std::string> & value, char sep 
 int Index(const std::vector<int> &N, const std::vector<int> & index);
 void invIndex(const std::vector<int> &N, int index, std::vector<int> & res);
 bool NeedShift(std::vector<int> N, int dir);
+int myMod(int x, int N);
 template<typename T>
 int FindMax(int N, const T* data);
 template<typename T>
@@ -164,28 +165,58 @@ int ShiftIndex(std::vector<int> &N, std::vector<std::vector<T> > &odata, int dir
         return 0;
     }
 
-    size_t dim = sN.size();
-    int Np = 1;
-    for(int i=0; i<dim; ++i) {
-        Np *= sN[i];
-    }
-    std::vector<std::vector<double> > data;
+    int dim = sN.size();
+    dir = myMod(dir, dim);
+    std::vector<std::vector<double> > data(odata.size());
     for(int i=0; i<odata.size(); ++i) {
-        data.push_back(odata[i]);
+        data[i] = odata[i];
     }
-    
-    std::vector<int> ind(dim);
-    std::vector<int> indo(dim);
-    for(int i=0; i<Np; ++i) {
-        invIndex(sN, i, ind);
-        indo = ind;
-        ShiftArray<int>(indo, dir);
-        int it = Index(N, indo);
-        for(int n=0; n<data.size(); ++n) {
-            odata[n][it] = data[n][i];
+    if(dim==2) {
+        if(dir!=1) {
+            return 0;
         }
+        int Np = sN[0] * sN[1];
+        for(int d=0; d<odata.size(); ++d) {
+            int count = 0;
+            for(int i=0; i<sN[0]; ++i) {
+                for(int j=i; j<Np; j+=sN[0]) {
+                    odata[d][count++] = data[d][j];
+                }
+            }
+        }
+        return Np;
+    } else if(dim==3) {
+        int Np = sN[0] * sN[1] * sN[2];
+        int N01 = sN[0] * sN[1];
+        if(dir==2) {
+            for(int d=0; d<odata.size(); ++d) {
+                int count = 0;
+                for(int i=0; i<sN[0]; ++i) {
+                    for(int k=i; k<Np; k+=N01) {
+                        int jmax = k + N01;
+                        for(int j= k; j<jmax; j+=sN[0]) {
+                            odata[d][count++] = data[d][j];
+                        }
+                    }
+                }
+            }
+        } else if(dir==1) {
+            for(int d=0; d<odata.size(); ++d) {
+                int count = 0;
+                for(int j=0; j<N01; j+=sN[0]) {
+                    for(int i=0; i<sN[0]; ++i) {
+                        for(int k=i+j; k<Np; k+=N01) {
+                            odata[d][count++] = data[d][k];
+                        }
+                    }
+                }
+            }
+        }
+        return Np;
+    } else {
+        printf("error: unsupported space dimension %d\n", dim);
+        return 0;
     }
-    return Np;
 }
 
 template<typename T>
@@ -194,11 +225,7 @@ void ShiftArray(std::vector<T> &a, int dir) {
     if(N==0) {
         return;
     }
-    if(dir<0) {
-        dir = (N + dir % N ) % N;
-    } else {
-        dir = dir % N;
-    }
+    dir = myMod(dir, N);
     std::vector<T> tmp = a;
     for(int i=0; i<N; ++i) {
         a[(i+dir)%N] = tmp[i];

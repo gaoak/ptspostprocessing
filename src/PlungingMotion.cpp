@@ -158,12 +158,12 @@ int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
     flow.ExtractCore(m_sigma, cores, radius, circulation, m_initcenter, m_vortexcoreVar,
         m_vortexcoreVar[3], m_initDirection, m_stoponwall, m_threshold);
     std::clock_t c_end = std::clock();
-    long double time_elapsed_ms = (c_end-c_start) / CLOCKS_PER_SEC;
+    double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
     if(cores.size()==0) {
-        printf("no vortex core found with threshold %f, cpu time %Lfs\n", m_threshold, time_elapsed_ms);
+        printf("no vortex core found with threshold %f, cpu time %fs\n", m_threshold, time_elapsed_ms);
         return 0;
     } else {
-        printf("vortex core with %d points extracted, cpu time %Lfs\n", (int)cores.size(), time_elapsed_ms);
+        printf("vortex core with %d points extracted, cpu time %fs\n", (int)cores.size(), time_elapsed_ms);
     }
     std::ofstream ofile(filename.c_str());
     ofile << "variables = x,y,z,radius1,radius2,Gamma" << std::endl;
@@ -212,7 +212,6 @@ int PlungingMotion::ProcessFlowData(int dir) {
         std::reverse(filen.begin(), filen.end());;
     }
     for(int k=0; k<filen.size(); ++k) {
-        std::clock_t c_start = std::clock();
         int n = filen[k];
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA, m_span[0], m_span[1]});
         flow.InputData(GetInFileName(n));
@@ -225,25 +224,31 @@ int PlungingMotion::ProcessFlowData(int dir) {
             flow.TransformCoord({0., h0, 0.});
         }
         if(m_sigma>0.) {
+            std::clock_t c_start = std::clock();
             std::vector<int> field;
             for(int i=0; i<flow.GetNumPhys(); ++i) {
                 field.push_back(i);
             }
             flow.Smoothing(m_sigma, field);
+            std::clock_t c_end = std::clock();
+            double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
+            printf("do smooth, cpu time %fs\n", time_elapsed_ms);
         }
         //vorticity Q
         //u, v, w, p, W_x, W_y, W_z, Q
         if(m_calculateVorticityQ) {
+            std::clock_t c_start = std::clock();
             flow.CalculateVorticity();
+            std::clock_t c_end = std::clock();
+            double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
+            printf("calculate vorticity, cpu time %fs\n", time_elapsed_ms);
         }
-        //vortex
+        //vortex core
         std::string filename("vortexcore");
         filename += std::to_string(n) + ".dat";
         OutputVortexCore(filename, flow);
+        //output final data
         flow.OutputData(GetOutFileName(n));
-        std::clock_t c_end = std::clock();
-        long double time_elapsed_ms = (c_end-c_start) / CLOCKS_PER_SEC;
-        printf("process file %d, cpu time %Lfs\n", n, time_elapsed_ms);
     }
     return m_fileseries.size();
 }

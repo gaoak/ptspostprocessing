@@ -197,6 +197,17 @@ bool NeedShift(std::vector<int> N, int dir) {
     return false;
 }
 
+int myMod(int x, int N) {
+    if(N<=0 || x==0) {
+        return x;
+    }
+    if(x<0) {
+        return (N + x % N ) % N;
+    } else {
+        return x % N;
+    }
+}
+
 int Index(const std::vector<int> &N, const std::vector<int> & index) {
     int res = index[0];
     int Np = N[0];

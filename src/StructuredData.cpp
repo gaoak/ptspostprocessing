@@ -163,8 +163,8 @@ int StructuredData::OutputData(std::string filename, const bool info) {
     }
     if(info) {
         std::clock_t c_end = std::clock();
-        long double time_elapsed_ms = (c_end-c_start) / CLOCKS_PER_SEC;
-        printf("output file %s, cpu time %Lfs\n", filename.c_str(), time_elapsed_ms);
+        double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
+        printf("output file %s, cpu time %fs\n", filename.c_str(), time_elapsed_ms);
     }
     return m_x.size() + m_phys.size();
 }
@@ -196,8 +196,8 @@ int StructuredData::InputData(std::string filename, const bool info) {
     }
     if(info) {
         std::clock_t c_end = std::clock();
-        long double time_elapsed_ms = (c_end-c_start) / CLOCKS_PER_SEC;
-        printf("Read file %s, cpu time %Lfs\n", filename.c_str(), time_elapsed_ms);
+        double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
+        printf("Read file %s, cpu time %fs\n", filename.c_str(), time_elapsed_ms);
     }
     return m_x.size() + m_phys.size();
 }
@@ -213,41 +213,42 @@ int StructuredData::Smoothing(double sigma, std::vector<std::vector<double> > &o
 
 int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int, int> plane,
                                  std::vector<int> & N, std::vector<double> &odata) {
-    odata.clear();
     N.resize(2);
     int dir = plane.first;
+    int N01 = m_N[0] * m_N[1];
     if(dir%3==0) {
         N[0] = m_N[1];
         N[1] = m_N[2];
-        for(int k=0; k<m_N[2]; ++k) {
-            int tmp2 = k * m_N[0] * m_N[1];
-            for(int j=0; j<m_N[1]; ++j) {
-                int tmp1 = j * m_N[0];
-                odata.push_back(data[plane.second + tmp1 + tmp2]);
+        odata.resize(N[0]*N[1]);
+        int count = 0;
+        for(int k=plane.second; k<m_Np; k+=N01) {
+            int jmax = N01 + k;
+            for(int j=k; j<jmax; j+=m_N[0]) {
+                odata[count++] = data[j];
             }
         }
     }
     if(dir%3==1) {
         N[0] = m_N[2];
         N[1] = m_N[0];
+        odata.resize(N[0]*N[1]);
+        int count = 0;
         int tmp1 = plane.second * m_N[0];
-        int tmp2 = m_N[0] * m_N[1];
         for(int i=0; i<m_N[0]; ++i) {
-            int ind = i + tmp1;
-            for(int k=0; k<m_N[2]; ++k) {
-                odata.push_back(data[ind + k*tmp2]);
+            for(int k= i + tmp1; k<m_Np; k+=N01) {
+                odata[count++] = data[k];
             }
         }
     }
     if(dir%3==2) {
         N[0] = m_N[0];
         N[1] = m_N[1];
-        int tmp2 = plane.second * m_N[0] * m_N[1];
-        for(int j=0; j<m_N[1]; ++j) {
-            int tmp1 = j * m_N[0] + tmp2;
-            for(int i=0; i<m_N[0]; ++i) {
-                odata.push_back(data[i + tmp1]);
-            }
+        odata.resize(N[0]*N[1]);
+        int count = 0;
+        int tmp2 = plane.second * N01;
+        int imax = tmp2 + N01;
+        for(int i=tmp2; i<imax; ++i) {
+            odata[count++] = data[i];
         }
     }
     return N[0] * N[1];
