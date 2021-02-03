@@ -1,1 +1,7 @@
 this is a post processing code on uniform grid
+git clone https://github.com/gaoak/ptspostprocessing.git
+cd ptspostprocessing
+mkdir build
+cd build
+cmake ..
+make release
