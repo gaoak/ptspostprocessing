@@ -24,7 +24,8 @@ public:
     int Diff(std::vector<int > &field, int dir, int order = 2);
     double GetPhysNorm(int f, int p);
     int ExtractPlane(const std::vector<double> &data, std::pair<int, int> plane,
-                     std::vector<int> & N, std::vector<double> &odata);
+                     const std::vector<int> &range, std::vector<int> & N,
+                     std::vector<double> &odata);
     double GetPhysValue(int f, int i);
     double GetCoordValue(int f, int i);
     int GetNumPhys();

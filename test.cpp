@@ -114,32 +114,33 @@ int test_structuredData() {
     sum = sdata.GetPhysNorm(2, -1);
     printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-8.87644e-05)<1E-10].c_str());
     //extract plane
+    range = {-0.5,0.5,-0.5,0.5,0,2.75};
     std::vector<double> planedata;
     std::pair<int, int> plane = std::make_pair(0, 16);
     ShiftArray<double>(range, -2);
     std::vector<int> planeN;
-    sdata.ExtractPlane(sdata.m_phys[2], plane, planeN, planedata);
+    sdata.ExtractPlane(sdata.m_phys[2], plane, {0,16,0,32,0,16}, planeN, planedata);
     StructuredData tmp(planeN, range);
     tmp.AddPhysics("deriv", planedata);
     tmp.OutputData("plane0.plt");
     sum = tmp.GetPhysNorm(0,2);
-    printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-8.05956)<1E-5].c_str());
+    printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-8.48457)<1E-5].c_str());
     plane = std::make_pair(1, 32);
     ShiftArray<double>(range, -2);
-    sdata.ExtractPlane(sdata.m_phys[2], plane, planeN, planedata);
+    sdata.ExtractPlane(sdata.m_phys[2], plane, {0,16,0,32,0,16}, planeN, planedata);
     StructuredData tmp1(planeN, range);
     tmp1.AddPhysics("deriv", planedata);
     tmp1.OutputData("plane1.plt");
     sum = tmp1.GetPhysNorm(0,2);
-    printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-16.8209)<1E-4].c_str());
+    printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-17.4169)<1E-4].c_str());
     plane = std::make_pair(2, 16);
     ShiftArray<double>(range, -2);
-    sdata.ExtractPlane(sdata.m_phys[2], plane, planeN, planedata);
+    sdata.ExtractPlane(sdata.m_phys[2], plane, {0,16,0,32,0,16}, planeN, planedata);
     StructuredData tmp2(planeN, range);
     tmp2.AddPhysics("deriv", planedata);
     tmp2.OutputData("plane2.plt");
     sum = tmp2.GetPhysNorm(0,2);
-    printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-14.608)<1E-3].c_str());
+    printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-14.9728)<1E-4].c_str());
     return 0;
 }
 

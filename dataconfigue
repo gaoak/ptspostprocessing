@@ -25,5 +25,5 @@ vortexcorevar 5,6,7,8
 threshold 1
 #negative is vorticity sign different from axis, start from 1
 intialdirection -3
-initcenter 0.0768,0.0107,0.
-stoponwall 0
+initcenter 0.868,0.374,2.03
+stoponwall 1

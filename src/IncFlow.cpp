@@ -138,8 +138,8 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
         }
         int dir = plane.first;
         //printf("search plane %d, %d\n", dir, plane.second);
-        ExtractPlane(odata[3], plane, planeN, planedata);
-        ExtractPlane(odata[dir], plane, planeN, planevorticity);
+        ExtractPlane(odata[3], plane, {0,m_N[0]-1,0,m_N[1]-1,0,m_N[2]-1}, planeN, planedata);
+        ExtractPlane(odata[dir], plane, {0,m_N[0]-1,0,m_N[1]-1,0,m_N[2]-1}, planeN, planevorticity);
 
         ShiftArray<double>(dx, 2-dir);
         ShiftArray<double>(range, 2*(2-dir));

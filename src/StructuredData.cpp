@@ -212,43 +212,55 @@ int StructuredData::Smoothing(double sigma, std::vector<std::vector<double> > &o
 }
 
 int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int, int> plane,
-                                 std::vector<int> & N, std::vector<double> &odata) {
+                                 const std::vector<int> &range, std::vector<int> & N,
+                                 std::vector<double> &odata) {
+    //range = {imin, imax, jmin, jmax, kmin, kmax}
     N.resize(2);
     int dir = plane.first;
     int N01 = m_N[0] * m_N[1];
     if(dir%3==0) {
-        N[0] = m_N[1];
-        N[1] = m_N[2];
+        N[0] = range[3] - range[2] + 1;
+        N[1] = range[5] - range[4] + 1;
         odata.resize(N[0]*N[1]);
         int count = 0;
-        for(int k=plane.second; k<m_Np; k+=N01) {
-            int jmax = N01 + k;
-            for(int j=k; j<jmax; j+=m_N[0]) {
+        int kstart = range[4] * N01 + plane.second;
+        int kend = range[5] * N01 + plane.second;
+        int tmp2 = m_N[0] * range[2];
+        int tmp3 = m_N[0] * range[3];
+        for(int k=kstart; k<=kend; k+=N01) {
+            int jmax = tmp3 + k;
+            for(int j= tmp2 + k; j<=jmax; j+=m_N[0]) {
                 odata[count++] = data[j];
             }
         }
     }
     if(dir%3==1) {
-        N[0] = m_N[2];
-        N[1] = m_N[0];
+        N[0] = range[5] - range[4] + 1;
+        N[1] = range[1] - range[0] + 1;
         odata.resize(N[0]*N[1]);
         int count = 0;
-        int tmp1 = plane.second * m_N[0];
-        for(int i=0; i<m_N[0]; ++i) {
-            for(int k= i + tmp1; k<m_Np; k+=N01) {
+        int tmp4 = plane.second * m_N[0] + N01 * range[4];
+        int tmp5 = plane.second * m_N[0] + N01 * range[5];
+        for(int i=range[0]; i<=range[1]; ++i) {
+            int kmax = i + tmp5;
+            for(int k= i + tmp4; k<=kmax; k+=N01) {
                 odata[count++] = data[k];
             }
         }
     }
     if(dir%3==2) {
-        N[0] = m_N[0];
-        N[1] = m_N[1];
+        N[0] = range[1] - range[0] + 1;
+        N[1] = range[3] - range[2] + 1;
         odata.resize(N[0]*N[1]);
         int count = 0;
         int tmp2 = plane.second * N01;
-        int imax = tmp2 + N01;
-        for(int i=tmp2; i<imax; ++i) {
-            odata[count++] = data[i];
+        int jstart = range[2] * m_N[0] + tmp2;
+        int jend = range[3] * m_N[0] + tmp2;
+        for(int j=jstart; j<=jend; j+=m_N[0]) {
+            int imax = range[1] + j;
+            for(int i=range[0] + j; i<=imax; ++i) {
+                odata[count++] = data[i];
+            }
         }
     }
     return N[0] * N[1];
