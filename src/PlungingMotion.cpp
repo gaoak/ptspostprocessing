@@ -156,7 +156,7 @@ int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
     std::vector<std::vector<double> > radius;
     std::vector<double> circulation;
     flow.ExtractCore(m_sigma, cores, radius, circulation, m_initcenter, m_vortexcoreVar,
-        m_vortexcoreVar[3], m_initDirection, m_stoponwall, m_threshold);
+        m_vortexcoreVar[3], m_stoponwall>0, m_threshold);
     std::clock_t c_end = std::clock();
     double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
     if(cores.size()==0) {

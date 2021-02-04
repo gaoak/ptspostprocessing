@@ -98,16 +98,43 @@ int IncFlow::GetSubdomainRange(const std::vector<int> &center, double radius,
     return m_N.size();
 }
 
-int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores,
+int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > & cores,
+        std::vector<std::vector<double> > & radius, std::vector<double> &circulation,
+        std::vector<double> &inputcenter, const std::vector<int> &vf,
+        const int field, const bool stoponwall, const double threshold) {
+    std::vector<std::vector<double> > cores1, cores2, radius1, radius2;
+    std::vector<double> cir1, cir2;
+    std::vector<double> inputc = inputcenter;
+    ExtractCore(sigma, cores1, radius1, cir1, inputcenter, vf, field,  1, stoponwall, threshold);
+    ExtractCore(sigma, cores2, radius2, cir2, inputc     , vf, field, -1, stoponwall, threshold);
+    cores.clear();
+    radius.clear();
+    circulation.clear();
+    for(int i=cores2.size()-1; i>0; --i) {
+        cores.push_back(cores2[i]);
+        radius.push_back(radius2[i]);
+        circulation.push_back(cir2[i]);
+    }
+    for(int i=0; i<cores1.size()-1; ++i) {
+        cores.push_back(cores1[i]);
+        radius.push_back(radius1[i]);
+        circulation.push_back(cir1[i]);
+    }
+    return cores.size();
+}
+
+int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > & cores,
     std::vector<std::vector<double> > & radius, std::vector<double> &circulation,
-    std::vector<double> &inputcenter, std::vector<int> &vf, int field, int direction,
-    bool stoponwall, double threshold) {
+    std::vector<double> &inputcenter, const std::vector<int> &vf, const int field, const int direction,
+    const bool stoponwall, const double threshold) {
     if(vf.size()<3 || field==0 || direction==0 ||
        vf[0]<=0 || vf[1]<=0 || vf[2]<=0 || inputcenter.size()<3) {
         printf("error incorrect parameters for ExtractCore\n");
         return -1;
     }
     cores.clear();
+    radius.clear();
+    circulation.clear();
     // get parameter
     std::vector<std::vector<double> > odata;
     std::vector<int> v = {vf[0]-1, vf[1]-1, vf[2]-1};
@@ -118,10 +145,7 @@ int IncFlow::ExtractCore(double sigma, std::vector<std::vector<double> > & cores
     }
     double vorticityproceedsign = 1.;
     if(direction<0) {
-        direction = -direction - 1;
         vorticityproceedsign = -1.;
-    } else {
-        direction -= 1;
     }
     // set initial direction
     std::vector<int> intcenter(3);
