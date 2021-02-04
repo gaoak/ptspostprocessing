@@ -22,6 +22,7 @@ public:
     int PurgeDifferentSign(const std::vector<int> &N, const std::vector<double> &v, std::vector<double> &data, double sign);
     int CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> &Ne,
                         const std::vector<int> &skip, const IncFlow & big);
+    int GetSubdomainRange(const std::vector<int> &center, double radius, std::vector<int> &range);
 protected:
     Body m_body;
 };

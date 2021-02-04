@@ -212,9 +212,22 @@ int StructuredData::Smoothing(double sigma, std::vector<std::vector<double> > &o
 }
 
 int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int, int> plane,
-                                 const std::vector<int> &range, std::vector<int> & N,
+                                 const std::vector<int> &Range, std::vector<int> & N,
                                  std::vector<double> &odata) {
     //range = {imin, imax, jmin, jmax, kmin, kmax}
+    std::vector<int> range = Range;
+    for(int i=0; i<3; ++i) {
+        if(range[2*i] < 0) {
+            range[2*i] = 0;
+        }
+        if(range[2*i+1]>=m_N[i]) {
+            range[2*i+1] = m_N[i] - 1;
+        }
+        if(range[2*i]>range[2*i+1]) {
+            odata.clear();
+            return 0;
+        }
+    }
     N.resize(2);
     int dir = plane.first;
     int N01 = m_N[0] * m_N[1];
