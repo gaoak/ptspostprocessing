@@ -53,7 +53,7 @@ double NACAmpxx::findx(double s, int surf) {
 
 double NACAmpxx::findx(double s, std::vector<std::vector<double>> & arc) {
     s = fabs(s);
-	if(s>= arc[arc.size()-1][1]) return 1.;
+	if(s>= arc[(int)arc.size()-1][1]) return 1.;
     int i = 1;
 	while(arc[i][1]<s) ++i;
 	return arc[i-1][0] + (s-arc[i-1][1])*(arc[i][0]-arc[i-1][0])/(arc[i][1]-arc[i-1][1]);

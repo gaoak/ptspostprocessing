@@ -5,23 +5,75 @@
 #include "Dataprocessing.h"
 #include "FileIO.h"
 
-StructuredData::StructuredData(const std::vector<int> &N, const std::vector<double> &range) {
+CoordSystem::CoordSystem() {
+    m_o = {0.,0.,0.};
+    m_e.push_back({1., 0., 0.});
+    m_e.push_back({0., 1., 0.});
+    m_e.push_back({0., 0., 1.});
+}
+
+CoordSystem::CoordSystem(const std::vector<double> &o)
+    : CoordSystem() {
+    for(int i=0; i<o.size(); ++i) {
+        m_o[i] = o[i];
+    }
+}
+
+CoordSystem::CoordSystem(const std::vector<double> &o,
+    const std::vector<std::vector<double> > & axis)
+    : CoordSystem() {
+    for(int i=0; i<o.size(); ++i) {
+        m_o[i] = o[i];
+    }
+    for(int i=0; i<axis.size() && i<3; ++i) {
+        for(int j=0; j<axis[i].size() && j<3; ++j) {
+            m_e[i][j] = axis[i][j];
+        }
+        NormalizeVect(m_e[i]);
+    }
+}
+
+void CoordSystem::ToPhysCoord(std::vector<double> &x) const {
+    std::vector<double> tmp = x;
+    for(int i=tmp.size(); i<3; ++i) {
+        tmp.push_back(0.);
+    }
+    for(int i=0; i<x.size(); ++i) {
+        x[i] = m_o[i] + tmp[0] * m_e[0][i] + tmp[1] * m_e[1][i] + tmp[2] * m_e[2][i];
+    }
+}
+
+void CoordSystem::ToCompCoord(std::vector<double> &x) const {
+    std::vector<double> tmp(3, 0.);
+    for(int i=0; i<x.size(); ++i) {
+        tmp[i] = x[i] - m_o[i];
+    }
+    for(int i=0; i<x.size(); ++i) {
+        x[i] = DotVect(m_e[i], tmp);
+    }
+}
+
+StructuredData::StructuredData(const std::vector<int> &N, const std::vector<double> &range)
+    : StructuredData(N, range, std::vector<std::vector<double> >()) {
+}
+
+StructuredData::StructuredData(const std::vector<int> &N, const std::vector<double> &range,
+                   const std::vector<std::vector<double> > & axis) {
+    std::vector<double> tmp;
+    for(int i=0; i<range.size(); i+=2) {
+        tmp.push_back(range[i]);
+    }
+    m_axis = CoordSystem(tmp, axis);
     m_N = N;
-    m_range = range;
     ReSetNp();
-    ReSetDx();
-    GenPoints();
+    GenPoints(range);
 }
 
-StructuredData::StructuredData(){
-    m_N.clear();
-    m_range.clear();
-    ReSetNp();
-    ReSetDx();
-    GenPoints();
+StructuredData::StructuredData()
+    : m_axis() {
 }
 
-int StructuredData::GenPoints() {
+int StructuredData::GenPoints(const std::vector<double> &range) {
     m_x.resize(m_N.size());
     for(int i=0; i<m_N.size(); ++i) {
         m_x[i].resize(m_Np);
@@ -29,7 +81,16 @@ int StructuredData::GenPoints() {
     if(m_Np==0) {
         return 0;
     }
+    m_dx.resize(m_N.size());
+    for(int i=0; i<m_N.size(); ++i) {
+        if(m_N[i]>1) {
+            m_dx[i] = (range[2*i+1] - range[2*i])/(m_N[i]-1);
+        } else {
+            m_dx[i] = std::nan("1");
+        }
+    }
     std::vector<int> N = m_N;
+    std::vector<double> x(3, 0.);
     N.push_back(1);
     N.push_back(1);
     N.push_back(1);
@@ -42,10 +103,14 @@ int StructuredData::GenPoints() {
                 std::vector<int> tmpi = {i,j,k};
                 for(int d=0; d<m_N.size(); ++d) {
                     if(m_N[d]>1) {
-                        m_x[d][index] = m_range[2*d] + tmpi[d]*m_dx[d];
+                        x[d] = tmpi[d]*m_dx[d];
                     } else {
-                        m_x[d][index] = m_range[2*d];
+                        x[d] = 0.;
                     }
+                }
+                m_axis.ToPhysCoord(x);
+                for(int d=0; d<m_N.size(); ++d) {
+                    m_x[d][index] = x[d];
                 }
             }
         }
@@ -70,6 +135,11 @@ int StructuredData::GetNumPhys() {
     return m_phys.size();
 }
 
+int StructuredData::RemovePhysics(int i) {
+    m_phys.erase(m_phys.begin() + i);
+    m_vars.erase(m_vars.begin() + i);
+}
+
 int StructuredData::ReSetNp() {
     if(m_N.size()==0) {
         m_Np = 0;
@@ -85,7 +155,8 @@ int StructuredData::ReSetNp() {
 int StructuredData::AddPhysics(std::string var, void * func) {
     double(*physfun)(std::vector<double>) = (double(*)(std::vector<double>))func;
     m_vars.push_back(var);
-    m_phys.push_back(std::vector<double>(m_Np));
+    int nphys = m_phys.size();
+    m_phys.resize(nphys + 1); m_phys[nphys].resize(m_Np);
     for(int i=0; i<m_Np; ++i) {
         std::vector<double> p;
         for(int k=0; k<m_x.size(); ++k) {
@@ -103,20 +174,13 @@ int StructuredData::AddPhysics(std::string var, const std::vector<double> &data)
     m_vars.push_back(var);
     m_phys.push_back(data);
     if(data.size() != m_Np) {
-        m_phys[m_phys.size()-1].resize(m_Np);
+        m_phys[(int)m_phys.size()-1].resize(m_Np);
     }
     return data.size();
 }
 
 double StructuredData::GetPhysNorm(int f, int p) {
-    double sum = 0.;
-    for(int i=0; i<m_Np; ++i) {
-        if(p>0) {
-            sum += std::pow(std::fabs(m_phys[f][i]), p);
-        } else {
-            sum = std::max(sum, std::fabs(m_phys[f][i]));
-        }
-    }
+    double sum = NormVect(m_phys[f], p);
     return sum/m_Np;
 }
 
@@ -126,18 +190,6 @@ double StructuredData::GetPhysValue(int f, int i) {
 
 double StructuredData::GetCoordValue(int f, int i) {
     return m_x[f][i];
-}
-
-int StructuredData::ReSetDx() {
-    m_dx.resize(m_N.size());
-    for(int i=0; i<m_N.size(); ++i) {
-        if(m_N[i]>1) {
-            m_dx[i] = (m_range[2*i+1] - m_range[2*i])/(m_N[i]-1);
-        } else {
-            m_dx[i] = std::nan("1");
-        }
-    }
-    return m_N.size();
 }
 
 int StructuredData::OutputData(std::string filename, const bool info) {
@@ -169,31 +221,63 @@ int StructuredData::OutputData(std::string filename, const bool info) {
     return m_x.size() + m_phys.size();
 }
 
+int StructuredData::ResetAxis() {
+    std::vector<double> e0, e1, e2;
+    std::vector<double> x0 = {m_x[0][0], m_x[1][0], m_x[2][0]};
+    int i0 = 1;
+    e0 = {m_x[0][i0]-x0[0], m_x[1][i0]-x0[1], m_x[2][i0]-x0[2]};
+    if(m_N.size()>1) {
+        int i1 = Index(m_N, {0, 1, 0});
+        e1 = {m_x[0][i1]-x0[0], m_x[1][i1]-x0[1], m_x[2][i1]-x0[2]};
+    } else {
+        int imax = FindAbsMax(3, e0.data());
+        e1 = {0,0,0};
+        e1[imax] = 1.;
+    }
+    if(m_N.size()>2) {
+        int i2 = Index(m_N, {0, 0, 1});
+        e2 = {m_x[0][i2]-x0[0], m_x[1][i2]-x0[1], m_x[2][i2]-x0[2]};
+    } else {
+        e2 = CrossVect(e0, e1);
+    }
+    std::vector<std::vector<double> > e;
+    e.push_back(e0);
+    e.push_back(e1);
+    e.push_back(e2);
+    m_axis = CoordSystem(x0, e);
+    m_dx.resize(m_N.size());
+    for(int i=0; i<m_N.size(); ++i) {
+        m_dx[i] = std::sqrt(DotVect(e[i], e[i]));
+    }
+}
+
 int StructuredData::InputData(std::string filename, const bool info) {
     std::clock_t c_start = std::clock();
     std::vector<std::vector<double> > data;
     int isdouble;
     std::string ext = filename.substr(filename.size()-4, 4);
+    int ncoor = -1;
     if(0 == ext.compare(".plt")) {
-        InputTec360_binary(filename, m_vars, m_N, m_range, data, isdouble);
+        ncoor = InputTec360_binary(filename, m_vars, m_N, data, isdouble);
     } else if(0 == ext.compare(".csv")) {
-        InputCSV(filename, m_vars, m_N, m_range, data, isdouble);
+        ncoor = InputCSV(filename, m_vars, m_N, data, isdouble);
     } else {
         printf("error: unsupported tecplot file type %s\n", filename.c_str());
         return -1;
     }
     ReSetNp();
-    ReSetDx();
     //copy data
     m_x.clear();
     m_phys.clear();
     for(int i=0; i<m_vars.size(); ++i) {
-        if(i<3) {
+        if(i<ncoor) {
             m_x.push_back(data[i]);
         } else {
             m_phys.push_back(data[i]);
         }
     }
+    //reset axis
+    ResetAxis();
     if(info) {
         std::clock_t c_end = std::clock();
         double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
@@ -298,8 +382,117 @@ int StructuredData::Diff(std::vector<std::vector<double> > &u, std::vector<std::
     return res;
 }
 
+int StructuredData::GetInterpDimension() const {
+    int dim = m_N.size();
+    if(dim == 3 && m_N[2]==1) {
+        dim = 2;
+    }
+    if(dim==2 && m_N[1]==1) {
+        dim == 1;
+    }
+    return dim;
+ }
+
+int StructuredData::InterpolatePoint(const std::vector<double> & x, std::map<int, double> field,
+                                    std::map<int, double> &value) const {
+    value = field;
+    if(x.size() < m_N.size()) {
+        printf("error incorrect input for interpolation\n");
+        return 0;
+    }
+    int dim = GetInterpDimension();
+    for(int i=0; i<dim; ++i) {
+        if(m_N[i] <= 1) {
+            printf("error cannot do interpolation on boundary\n");
+        }
+    }
+    std::vector<int> index(m_N.size(), 0);
+    std::vector<double> xi = x;
+    m_axis.ToCompCoord(xi);
+    double geomtol = 1E-12;
+    for(int i=0; i<dim; ++i) {
+        xi[i] /= m_dx[i];
+        if(xi[i]>=m_N[i]-1.+geomtol || xi[i] < -geomtol) {
+            return 0;
+        }
+        index[i] = xi[i];
+        xi[i] -= index[i];
+        if(index[i]==m_N[i]-1) {
+            index[i] -= 1;
+            xi[i] += 1.;
+        }
+    }
+    std::vector<int> ind;
+    if(dim>=1) {
+        ind.push_back(Index(m_N, {index[0]+0,index[1]+0,index[2]+0}));
+        ind.push_back(Index(m_N, {index[0]+1,index[1]+0,index[2]+0}));
+    }
+    if(dim>=2) {
+        ind.push_back(Index(m_N, {index[0]+0,index[1]+1,index[2]+0}));
+        ind.push_back(Index(m_N, {index[0]+1,index[1]+1,index[2]+0}));
+    }
+    if(dim>=3) {
+        ind.push_back(Index(m_N, {index[0]+0,index[1]+0,index[2]+1}));
+        ind.push_back(Index(m_N, {index[0]+1,index[1]+0,index[2]+1}));
+        ind.push_back(Index(m_N, {index[0]+0,index[1]+1,index[2]+1}));
+        ind.push_back(Index(m_N, {index[0]+1,index[1]+1,index[2]+1}));
+    }
+    std::vector<double> w;
+    Interpolation::CalcWeight(xi, dim, w);
+    std::vector<double> stencil(w.size());
+    for(auto it=field.begin(); it!=field.end(); ++it) {
+        int f = it->first;
+        for(int i=0; i<w.size(); ++i) {
+            stencil[i] = m_phys[f][ind[i]];
+        }
+        value[f] = DotVect(stencil, w);
+    }
+    return value.size();
+}
+
+int StructuredData::CopyToSubDomain(const std::vector<int> &Ns, const std::vector<int> &Ne,
+                        const std::vector<int> &skip, std::map<int, double> &field,
+                        StructuredData & small) {
+    return small.CopyAsSubDomain(Ns, Ne, skip, field, *this);
+}
+
+int StructuredData::InterpolateFrom(const StructuredData & origin, std::map<int,double> rawfield) {
+    if(m_N.size() != origin.m_N.size()) {
+        printf("error dimension mismatch in interpolation\n");
+        return 0;
+    }
+    int ncoor = origin.m_x.size();
+    m_vars.resize(ncoor);
+    std::map<int,double> field;
+    for(auto it=rawfield.begin(); it!=rawfield.end(); ++it) {
+        if(it->first<origin.m_phys.size()) {
+            field[it->first] = it->second;
+            m_vars.push_back(origin.m_vars[ncoor + it->first]);
+        }
+    }
+    m_phys.resize(field.size());
+    for(int i=0; i<field.size(); ++i) {
+        m_phys[i].resize(m_Np);
+    }
+    std::map<int, double> value;
+    int count = 0;
+    for(int i=0; i<m_Np; ++i) {
+        std::vector<double> x;
+        for(int d=0; d<m_N.size(); ++d) {
+            x.push_back(m_x[d][i]);
+        }
+        count += origin.InterpolatePoint(x, field, value);
+        int v = 0;
+        for(auto it=value.begin(); it!=value.end(); ++it) {
+            m_phys[v++][i] = it->second;
+        }
+    }
+    return count;
+}
+
 int StructuredData::CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> &rawNe,
-                                    const std::vector<int> &skip, const StructuredData & big) {
+                                    const std::vector<int> &skip, std::map<int, double> &rawfield,
+                                    const StructuredData & big) {
     if(Ns.size()<big.m_N.size()) {
         printf("error: subdomain has a different dimension\n");
         return -1;
@@ -311,7 +504,6 @@ int StructuredData::CopyAsSubDomain(const std::vector<int> &Ns, const std::vecto
     }
     std::vector<int> Ne = rawNe;
     m_N.resize(big.m_N.size());
-    m_range.resize(big.m_range.size());
     for(int i=0; i<big.m_N.size(); ++i) {
         if(Ne[i] - Ns[i]<=0) {
             printf("error: subdomain have zero elements in %d direction\n", i);
@@ -321,15 +513,30 @@ int StructuredData::CopyAsSubDomain(const std::vector<int> &Ns, const std::vecto
             m_N[i] += 1;
         }
         Ne[i] = Ns[i] + skip[i] * (m_N[i] - 1);
-        m_range[2*i] = big.m_range[2*i] + big.m_dx[i] * Ns[i];
-        m_range[2*i + 1] = big.m_range[2*i] + big.m_dx[i] * Ne[i];
+        m_axis.m_o[i] = big.m_axis.m_o[i] + big.m_dx[i] * Ns[i];
     }
+    m_axis.m_e = big.m_axis.m_e;
     ReSetNp();
-    ReSetDx();
-    m_vars = big.m_vars;
+    m_vars.clear();
+    int ncoor = big.m_x.size();
+    for(int i=0; i<ncoor; ++i) {
+        m_vars.push_back(big.m_vars[i]);
+    }
+    std::map<int, double> field;
+    for(auto it=rawfield.begin(); it!=rawfield.end(); ++it) {
+        if(it->first < big.m_phys.size()) {
+            field[it->first] = it->second;
+            m_vars.push_back(big.m_vars[ncoor + it->first]);
+        }
+    }
     //copy data
+    std::map<int, int> fm;
+    int countf = 0;
+    for(auto it=field.begin(); it!=field.end(); ++it) {
+        fm[countf++] = it->first;
+    }
     m_x.resize(big.m_x.size());
-    m_phys.resize(big.m_phys.size());
+    m_phys.resize(fm.size());
     for(int i=0; i<m_x.size(); ++i) {
         m_x[i].resize(m_Np);
     }
@@ -343,8 +550,8 @@ int StructuredData::CopyAsSubDomain(const std::vector<int> &Ns, const std::vecto
             for(int p=0; p<big.m_x.size(); ++p) {
                 m_x[p][count] = big.m_x[p][i];
             }
-            for(int p=0; p<big.m_phys.size(); ++p) {
-                m_phys[p][count] = big.m_phys[p][i];
+            for(int p=0; p<m_phys.size(); ++p) {
+                m_phys[p][count] = big.m_phys[fm[p]][i];
             }
             ++count;
         }
@@ -359,8 +566,8 @@ int StructuredData::CopyAsSubDomain(const std::vector<int> &Ns, const std::vecto
                 for(int p=0; p<big.m_x.size(); ++p) {
                     m_x[p][count] = big.m_x[p][i];
                 }
-                for(int p=0; p<big.m_phys.size(); ++p) {
-                    m_phys[p][count] = big.m_phys[p][i];
+                for(int p=0; p<m_phys.size(); ++p) {
+                    m_phys[p][count] = big.m_phys[fm[p]][i];
                 }
                 ++count;
             }
@@ -381,8 +588,8 @@ int StructuredData::CopyAsSubDomain(const std::vector<int> &Ns, const std::vecto
                     for(int p=0; p<big.m_x.size(); ++p) {
                         m_x[p][count] = big.m_x[p][i];
                     }
-                    for(int p=0; p<big.m_phys.size(); ++p) {
-                        m_phys[p][count] = big.m_phys[p][i];
+                    for(int p=0; p<m_phys.size(); ++p) {
+                        m_phys[p][count] = big.m_phys[fm[p]][i];
                     }
                     ++count;
                 }
@@ -400,7 +607,6 @@ void StructuredData::clear() {
     m_phys.clear();
     m_vars.clear();
     m_N.clear();
-    m_range.clear();
     m_dx.clear();
     m_Np = 0;
 }

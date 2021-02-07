@@ -79,8 +79,14 @@ double deriv(std::vector<double> p) {
 double sinfunc(std::vector<double> p) {
      return highfreq(p) + lowfreq(p);
 }
+double sinfunc2d(std::vector<double> p) {
+     return sin(2.*M_PI*p[0]) * sin(2.*M_PI*p[1]);
+}
 double exact(std::vector<double> p) {
     return lowfreq(p);
+}
+double linear(std::vector<double> p) {
+    return p[2]*p[1]*p[0];
 }
 int test_structuredData() {
     std::vector<int> N = {33,65,33};
@@ -112,7 +118,7 @@ int test_structuredData() {
     sum = sdata.GetPhysNorm(2,2);
     printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-7.08265)<1E-5].c_str());
     sum = sdata.GetPhysNorm(2, -1);
-    printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-8.87644e-05)<1E-10].c_str());
+    printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-1.)<1E-10].c_str());
     //extract plane
     range = {0.0,0.5,-0.5,0.5,0,2.75};
     std::vector<double> planedata;
@@ -141,6 +147,32 @@ int test_structuredData() {
     tmp2.OutputData("plane2.plt");
     sum = tmp2.GetPhysNorm(0,2);
     printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-16.9691)<1E-4].c_str());
+    //3D rotation data
+    sdata = StructuredData(N, range, {{1,1,0.},{-1,1,0},{1,1,1}});
+    sdata.AddPhysics("sin", (void*) sinfunc2d);
+    field = {0};
+    sdata.Smoothing(0.02, field, true);
+    sdata.OutputData("3drot.plt");
+    ///////////test 2D
+    std::vector<int> N2d = {33,65};
+    std::vector<double> range2d = {-0.5,1.5,-0.5,1.5};
+    StructuredData sdata2d(N2d, range2d);
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[0][Index(N2d, {32,64})]-1.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[1][Index(N2d, {32,64})]-1.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[0][0]+0.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[1][0]+0.5)<1E-4].c_str());
+    sdata2d.OutputData("2d.plt");
+    sdata2d = StructuredData(N2d, range2d, {{1,1},{-1,1}});
+    sdata2d.AddPhysics("sin", (void*) sinfunc2d);
+    field = {0};
+    sdata2d.Smoothing(0.02, field, true);
+    sdata2d.OutputData("2drot.plt");
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[0][Index(N2d, {32,64})]+0.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[1][Index(N2d, {32,64})]+0.5-2*sqrt(2.0))<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[0][0]+0.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[1][0]+0.5)<1E-4].c_str());
+    sum = sdata2d.GetPhysNorm(0,2);
+    printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-0.245466)<1E-6].c_str());
     return 0;
 }
 
@@ -162,20 +194,31 @@ int test_fileio() {
     sum = sdata.GetPhysNorm(2,2);
     printf("test fileio %g, %s\n", sum, testresults[fabs(sum-7.08265)<1E-5].c_str());
     sdata.OutputData("plt_plt.dat");
+    //2d io
+    sdata.InputData("2drot.plt");
+    sum = sdata.GetPhysNorm(0,2);
+    printf("test fileio %g, %s\n", sum, testresults[fabs(sum-0.245466)<1E-6].c_str());
+    sdata.OutputData("2drot_reload.dat");
+    sdata.OutputData("2drot_reload.plt");
+    //3d rot
+    sdata.InputData("3drot.plt");
+    sdata.OutputData("3drot_reload.plt");
+    sdata.OutputData("3drot_reload.dat");
     return 0;
 }
 
 int test_subdomain() {
     StructuredData sdata({33,65,33},{-0.5,1.5,-0.5,1.5,0,5.5});
+    std::map<int, double> field = {{0,0.}, {1,0.}, {2,0.}};
     sdata.InputData("testfile.plt");
     double sum = sdata.GetPhysNorm(2,2);
     printf("test subdomain %g, %s\n", sum, testresults[fabs(sum-7.08265)<1E-5].c_str());
     StructuredData sub1;
-    sub1.CopyAsSubDomain({8,16,8},{17,33,17},{1,1,1}, sdata);
+    sub1.CopyAsSubDomain({8,16,8},{17,33,17},{1,1,1}, field, sdata);
     sub1.OutputData("sub1.plt");
     sum = sub1.GetPhysNorm(2,2);
     printf("test subdomain %g, %s\n", sum, testresults[fabs(sum-10.7204)<1E-4].c_str());
-    sub1.CopyAsSubDomain({8,16,8},{17,33,17},{2,2,1}, sdata);
+    sub1.CopyAsSubDomain({8,16,8},{17,33,17},{2,2,1}, field, sdata);
     sub1.OutputData("sub2.plt");
     sum = sub1.GetPhysNorm(2,2);
     printf("test subdomain %g, %s\n", sum, testresults[fabs(sum-11.2498)<1E-4].c_str());
@@ -185,29 +228,72 @@ int test_subdomain() {
     sum = sflow.GetPhysNorm(2,2);
     printf("test subdomain %g, %s\n", sum, testresults[fabs(sum-7.08265)<1E-5].c_str());
     IncFlow sub2;
-    sub2.CopyAsSubDomain({8,16,8},{17,33,17},{1,1,1}, sflow);
+    sub2.CopyAsSubDomain({8,16,8},{17,33,17},{1,1,1}, field, sflow);
     sum = sub2.GetPhysNorm(2,2);
     printf("test subdomain %g, %s\n", sum, testresults[fabs(sum-10.7204)<1E-4].c_str());
     sub2.OutputData("ssub1.plt");
-    sub2.CopyAsSubDomain({8,16,8},{17,33,17},{2,2,1}, sflow);
+    sub2.CopyAsSubDomain({8,16,8},{17,33,17},{2,2,1}, field, sflow);
     sum = sub2.GetPhysNorm(2,2);
     printf("test subdomain %g, %s\n", sum, testresults[fabs(sum-11.2498)<1E-4].c_str());
     sub2.OutputData("ssub2.plt");
     //test coarsen
     StructuredData coar;
-    coar.CopyAsSubDomain({0,0,0},{33,65,33},{2,2,2}, sdata);
-    sum = coar.GetPhysNorm(2,2);
+    field = {{1,0.}, {2,0.}, {3,0},{4,0},{9,0}};
+    coar.CopyAsSubDomain({0,0,0},{33,65,33},{2,2,2}, field, sdata);
+    sum = coar.GetPhysNorm(1,2);
     printf("test subdomain %g, %s\n", sum, testresults[fabs(sum-6.60311)<1E-5].c_str());
     coar.OutputData("coarsen.plt");
     return 0;
 }
 
-#ifndef MAKEBASH
+int test_interpolation() {
+    std::map<int, double> field = {{0,0.},{1,0},{2,0},{3,0},{4,0}};
+    StructuredData sdata({17,17,17},{-0.5,1.5,-0.5,1.5,0,5.5}), data2;
+    sdata.AddPhysics("linear", (void*)linear);
+    sdata.AddPhysics("sin", (void*)sinfunc);
+    double sum = sdata.GetPhysNorm(0,2);
+    printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-4.06189)<1E-5].c_str());
+    sum = sdata.GetPhysNorm(1,2);
+    printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-0.221453)<1E-6].c_str());
+    sdata.OutputData("interporigin.plt");
+    data2 = sdata;
+    data2.InterpolateFrom(sdata, field);
+    sum = data2.GetPhysNorm(0,2);
+    printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-4.06189)<1E-5].c_str());
+    sum = data2.GetPhysNorm(1,2);
+    printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-0.221453)<1E-6].c_str());
+    data2.OutputData("interp3dsame.plt");
+    data2 = StructuredData({65,65,129},{-0.5,1.5,-0.5,1.5,0,5.5}, {{1,1,0.},{-1,1,1},{1,0,1}});
+    data2.InterpolateFrom(sdata, field);
+    sum = data2.GetPhysNorm(0,2);
+    printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-0.895969)<1E-6].c_str());
+    sum = data2.GetPhysNorm(1,2);
+    printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-0.0436265)<1E-7].c_str());
+    data2.OutputData("interp3d.plt");
+    data2 = StructuredData({65,65,1},{-0.5,1.5,-0.5,1.5,1}, {{1,1,0.},{-1,1,1},{1,0,1}});
+    data2.InterpolateFrom(sdata, field);
+    sum = data2.GetPhysNorm(0,2);
+    printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-0.0938391)<1E-7].c_str());
+    sum = data2.GetPhysNorm(1,2);
+    printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-0.0512146)<1E-7].c_str());
+    data2.OutputData("interp2d.plt");
+    //2D interp
+    StructuredData subdata2({22,22,1},{-0.5,1.5,-0.5,1.5,1}, {{1,1,0.},{-1,1,1},{1,0,1}});
+    subdata2.InterpolateFrom(data2, field);
+    subdata2.OutputData("interpsub2d.plt");
+    //point
+    std::map<int, double> value;
+    sdata.InterpolatePoint ({-0.595777387263203506, 0.919303221756027966, 1.75754030295902952},
+                            field, value);
+    printf("test interpolation %s\n", testresults[fabs(value[0]-0.)<1E-5].c_str());
+    printf("test interpolation %s\n", testresults[fabs(value[1]-0.)<1E-5].c_str());
+}
+
 int main() {
     TestSummary();
     test_structuredData();
     test_fileio();
     test_subdomain();
+    test_interpolation();
     return 0;
 }
-#endif

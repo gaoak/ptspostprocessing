@@ -31,4 +31,13 @@ private:
     std::map<int, std::vector<double> > m_centralcoeff;
 };
 
+class Interpolation {
+public:
+    static void CalcWeight1D(const std::vector<double> &xi, std::vector<double> &w);
+    static void CalcWeight2D(const std::vector<double> &xi, std::vector<double> &w);
+    static void CalcWeight3D(const std::vector<double> &xi, std::vector<double> &w);
+    static void CalcWeight(const std::vector<double> &x1, const int dim,
+                           std::vector<double> &w);
+};
+
 #endif

@@ -2,6 +2,7 @@
 #include<map>
 #include<cmath>
 #include<algorithm>
+#include<set>
 #include "Util.h"
 #include "PlungingMotion.h"
 
@@ -155,7 +156,8 @@ int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
     std::vector<std::vector<double> > cores;
     std::vector<std::vector<double> > radius;
     std::vector<double> circulation;
-    flow.ExtractCore(m_sigma, cores, radius, circulation, m_initcenter, m_vortexcoreVar,
+    std::set<int> searchhist;
+    flow.ExtractCore(m_sigma, cores, searchhist, m_initcenter, m_vortexcoreVar,
         m_vortexcoreVar[3], m_stoponwall>0, m_threshold);
     std::clock_t c_end = std::clock();
     double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
@@ -171,9 +173,9 @@ int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
             ofile << cores[i][0] << " "
                 << cores[i][1] << " "
                 << cores[i][2] << " "
-                << radius[i][0] << " "
-                << radius[i][1] << " "
-                << circulation[i] << "\n";
+                << cores[i][3] << " "
+                << cores[i][4] << " "
+                << cores[i][5] << "\n";
     }
     ofile.close();
     return cores.size();

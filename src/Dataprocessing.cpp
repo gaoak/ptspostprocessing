@@ -167,3 +167,51 @@ int Derivative::Diff(const std::vector<int> &N, const std::vector<std::vector<do
     }
     return Np;
 }
+
+void Interpolation::CalcWeight(const std::vector<double> &x1, const int dim,
+                               std::vector<double> &w) {
+    if(dim==1) {
+        CalcWeight1D(x1, w);
+    } else if(dim==2) {
+        CalcWeight2D(x1, w);
+    } else if(dim==3) {
+        CalcWeight3D(x1, w);
+    } else {
+        printf("error unsupported interpolation dimension %d\n", dim);
+    }
+}
+
+void Interpolation::CalcWeight3D(const std::vector<double> &x1, std::vector<double> &w) {
+    //(0,0,0),(1,0,0),(0,1,0),(1,1,0),(0,0,1),(1,0,1),(0,1,1),(1,1,1)
+    std::vector<double> x0 = x1;
+    x0[0] = 1. - x1[0]; x0[1] = 1. - x1[1]; x0[2] = 1. - x1[2];
+    w.resize(8, 1.);
+    w[0] = x0[0] * x0[1] * x0[2];
+    w[1] = x1[0] * x0[1] * x0[2];
+    w[2] = x0[0] * x1[1] * x0[2];
+    w[3] = x1[0] * x1[1] * x0[2];
+    w[4] = x0[0] * x0[1] * x1[2];
+    w[5] = x1[0] * x0[1] * x1[2];
+    w[6] = x0[0] * x1[1] * x1[2];
+    w[7] = x1[0] * x1[1] * x1[2];
+}
+
+void Interpolation::CalcWeight1D(const std::vector<double> &x1, std::vector<double> &w) {
+    //(0,0,0),(1,0,0)
+    std::vector<double> x0 = x1;
+    x0[0] = 1. - x1[0];
+    w.resize(2, 1.);
+    w[0] = x0[0];
+    w[1] = x1[0];
+}
+
+void Interpolation::CalcWeight2D(const std::vector<double> &x1, std::vector<double> &w) {
+    //(0,0,0),(1,0,0),(0,1,0),(1,1,0)
+    std::vector<double> x0 = x1;
+    x0[0] = 1. - x1[0]; x0[1] = 1. - x1[1];
+    w.resize(4, 1.);
+    w[0] = x0[0] * x0[1];
+    w[1] = x1[0] * x0[1];
+    w[2] = x0[0] * x1[1];
+    w[3] = x1[0] * x1[1];
+}
