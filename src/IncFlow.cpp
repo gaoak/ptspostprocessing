@@ -188,7 +188,7 @@ int IncFlow::SearchOneCoreXYZplane(
 
 int IncFlow::InterpolateFrom(const IncFlow & origin, std::map<int,double> field) {
     m_body = origin.m_body;
-    StructuredData::InterpolateFrom(origin, field);
+    return StructuredData::InterpolateFrom(origin, field);
 }
 
 int IncFlow::SearchOneCorePerpendicular(

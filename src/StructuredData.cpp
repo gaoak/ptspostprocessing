@@ -138,6 +138,7 @@ int StructuredData::GetNumPhys() {
 int StructuredData::RemovePhysics(int i) {
     m_phys.erase(m_phys.begin() + i);
     m_vars.erase(m_vars.begin() + i);
+    return -1;
 }
 
 int StructuredData::ReSetNp() {
@@ -250,6 +251,7 @@ int StructuredData::ResetAxis() {
     for(int i=0; i<m_N.size(); ++i) {
         m_dx[i] = std::sqrt(DotVect(e[i], e[i]));
     }
+    return 0;
 }
 
 int StructuredData::InputData(std::string filename, const bool info) {
@@ -389,7 +391,7 @@ int StructuredData::GetInterpDimension() const {
         dim = 2;
     }
     if(dim==2 && m_N[1]==1) {
-        dim == 1;
+        dim = 1;
     }
     return dim;
  }

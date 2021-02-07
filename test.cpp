@@ -288,6 +288,7 @@ int test_interpolation() {
                             field, value);
     printf("test interpolation %s\n", testresults[fabs(value[0]-0.)<1E-5].c_str());
     printf("test interpolation %s\n", testresults[fabs(value[1]-0.)<1E-5].c_str());
+    return 0;
 }
 
 int main() {
