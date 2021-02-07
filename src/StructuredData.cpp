@@ -84,7 +84,7 @@ int StructuredData::GenPoints(const std::vector<double> &range) {
     m_dx.resize(m_N.size());
     for(int i=0; i<m_N.size(); ++i) {
         if(m_N[i]>1) {
-            m_dx[i] = (range[2*i+1] - range[2*i])/(m_N[i]-1);
+            m_dx[i] = range[2*i+1] /(m_N[i]-1);
         } else {
             m_dx[i] = std::nan("1");
         }
@@ -231,8 +231,9 @@ int StructuredData::ResetAxis() {
         e1 = {m_x[0][i1]-x0[0], m_x[1][i1]-x0[1], m_x[2][i1]-x0[2]};
     } else {
         int imax = FindAbsMax(3, e0.data());
-        e1 = {0,0,0};
-        e1[imax] = 1.;
+        e1 = {1.,1.,1.};
+        e1[imax] = 0.;
+        e1 = CrossVect(e0, e1);
     }
     if(m_N.size()>2) {
         int i2 = Index(m_N, {0, 0, 1});

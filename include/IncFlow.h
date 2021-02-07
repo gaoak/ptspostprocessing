@@ -6,8 +6,14 @@
 class IncFlow : public StructuredData {
 public:
     IncFlow();
+    IncFlow(const std::vector<int> &N, const std::vector<double> &range);
     IncFlow(const std::vector<int> &N, const std::vector<double> &range,
             std::string bodyname, std::vector<double> param);
+    IncFlow(const std::vector<int> &N, const std::vector<double> &range,
+            const std::vector<std::vector<double> > & axis,
+            std::string bodyname, std::vector<double> param);
+    IncFlow(const std::vector<int> &N, const std::vector<double> &range,
+            const std::vector<std::vector<double> > & axis);
     int OverWriteBodyPoint(const std::vector<double> &u0, const std::vector<double> &pivot, const std::vector<double> &omega);
     int TransformCoord(const std::vector<double> &x0);
     int ExtractCore(const double sigma, std::vector<std::vector<double> > & cores, std::set<int> &searched,
@@ -27,6 +33,10 @@ public:
     int SearchOneCoreXYZplane(
         std::vector<int> &intcenter, std::vector<double> &physcenter, std::vector<double> &info,
         const std::vector<int> &v, const double range, const bool ismax);
+    int SearchOneCorePerpendicular(
+        std::vector<int> &intcenter, std::vector<double> &physcenter, std::vector<double> &info,
+        const std::vector<int> &v, const double range, const bool ismax);
+    int InterpolateFrom(const IncFlow & origin, std::map<int,double> field);
 protected:
     Body m_body;
 };

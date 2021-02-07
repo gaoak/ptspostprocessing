@@ -19,7 +19,7 @@ Body::Body(std::string airfoil, std::vector<double> param)
 }
 
 Body::Body()
-    : m_airfoil("0012") {
+    : m_airfoil("0000") {
     m_AoA = 0.;
 }
 

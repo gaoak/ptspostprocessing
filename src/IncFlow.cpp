@@ -4,9 +4,29 @@
 #include "Util.h"
 #include "UtilGraph.h"
 
+IncFlow::IncFlow() {
+    ;
+}
+
 IncFlow::IncFlow(const std::vector<int> &N, const std::vector<double> &range,
         std::string bodyname, std::vector<double> param)
         :StructuredData(N, range), m_body(bodyname, param) {
+}
+
+IncFlow::IncFlow(const std::vector<int> &N, const std::vector<double> &range,
+        const std::vector<std::vector<double> > & axis,
+        std::string bodyname, std::vector<double> param)
+        : StructuredData(N, range, axis), m_body(bodyname, param) {
+}
+
+IncFlow::IncFlow(const std::vector<int> &N, const std::vector<double> &range,
+        const std::vector<std::vector<double> > & axis)
+        : StructuredData(N, range, axis) {
+}
+
+IncFlow::IncFlow(const std::vector<int> &N, const std::vector<double> &range)
+        :StructuredData(N, range) {
+    ;
 }
 
 int IncFlow::CalculateVorticity(int order) {
@@ -117,7 +137,7 @@ int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > &
 
 int IncFlow::SearchOneCoreXYZplane(
         std::vector<int> &intcenter, std::vector<double> &physcenter, std::vector<double> &info,
-        const std::vector<int> &v, const double range, const bool ismax) {
+        const std::vector<int> &v, const double radius, const bool ismax) {
     //printf("center is %d,%d,%d\n", intcenter[0], intcenter[1], intcenter[2]);
     int centerindex = Index(m_N, intcenter);
     std::vector<double> vor = {m_phys[v[0]][centerindex], m_phys[v[1]][centerindex], m_phys[v[2]][centerindex]};
@@ -131,7 +151,7 @@ int IncFlow::SearchOneCoreXYZplane(
     std::vector<int> planeN, subrange;
     std::vector<double> planedata, tmpradius, planevorticity;
     double tmpcirculation;
-    GetSubdomainRange(intcenter, range, subrange);
+    GetSubdomainRange(intcenter, radius, subrange);
     ExtractPlane(m_phys[v[3]], plane, subrange, planeN, planedata);
     ExtractPlane(m_phys[v[dir]], plane, subrange, planeN, planevorticity);
 
@@ -162,6 +182,82 @@ int IncFlow::SearchOneCoreXYZplane(
     m_axis.ToPhysCoord(physcenter);
     info = {physcenter[0], physcenter[1], physcenter[2], tmpradius[0], tmpradius[1],
         std::fabs(tmpcirculation)};
+    return 3;
+}
+
+int IncFlow::InterpolateFrom(const IncFlow & origin, std::map<int,double> field) {
+    m_body = origin.m_body;
+    StructuredData::InterpolateFrom(origin, field);
+}
+
+int IncFlow::SearchOneCorePerpendicular(
+        std::vector<int> &intcenter, std::vector<double> &physcenter, std::vector<double> &info,
+        const std::vector<int> &v, const double rawradius, const bool ismax) {
+    //printf("center is %d,%d,%d\n", intcenter[0], intcenter[1], intcenter[2]);
+    double radius = rawradius;
+    for(int i=0; i<m_N.size(); ++i) {
+        double tmp = (m_N[i]-1)*m_dx[i];
+        if(radius>tmp) {
+            radius = tmp;
+        }
+    }
+    int centerindex = Index(m_N, intcenter);
+    std::vector<double> vor = {m_phys[v[0]][centerindex], m_phys[v[1]][centerindex], m_phys[v[2]][centerindex]};
+    NormalizeVect(vor);
+    int dir = FindAbsMax(3, vor.data());
+    std::vector<double> e0, e1;
+    e0 = {1.,1.,1.};
+    e0[dir] = 0.;
+    e0 = CrossVect(vor, e0);
+    NormalizeVect(e0);
+    e1 = CrossVect(vor, e0);
+    std::vector<std::vector<double> > axis;
+    axis.push_back(e0); axis.push_back(e1); axis.push_back(vor);
+    std::vector<double> range(6);
+    for(int i=0; i<3; ++i) {
+        range[2*i  ] = m_x[i][centerindex] - e0[i] * radius - e1[i] * radius;
+        range[2*i+1] = 2. * radius;
+    }
+    std::map<int, double> field;
+    for(int i=0; i<m_phys.size(); ++i) {
+        field[i] = 0.;
+    }
+    double dx = std::min(m_dx[0], m_dx[1]);
+    dx = std::min(dx, m_dx[2]);
+    int Nr = std::min(int(radius/dx + 0.5), 32);
+    std::vector<int> planeN = {Nr*2 + 1, Nr*2 + 1, 1};
+    intcenter = {Nr, Nr, 0};
+    IncFlow plane(planeN, range, axis);
+    plane.InterpolateFrom(*this, field);
+    std::vector<double> planevorticity(plane.GetTotPoints());
+    std::vector<double> planedata(plane.GetTotPoints());
+    for(int i=0; i<planevorticity.size(); ++i) {
+        planevorticity[i] = vor[0] * plane.m_phys[v[0]][i] + vor[1] * plane.m_phys[v[1]][i] + vor[2] * plane.m_phys[v[2]][i];
+        planedata[i] = plane.m_phys[v[3]][i];
+    }
+
+    planeN.resize(2);
+    double tmpsign = planevorticity[Index(planeN, intcenter)];
+    PurgeDifferentSign(planeN, planevorticity, planedata, tmpsign);
+    FindLocMaxIn2DGraph(planeN, intcenter, planedata, intcenter, ismax);
+
+    std::vector<double> tmpradius;
+    double tmpcirculation;
+    ExtractVortexParam2Dplane(planeN, plane.m_dx, intcenter, planevorticity, tmpradius, tmpcirculation);
+    physcenter = {intcenter[0]*plane.m_dx[0], intcenter[1]*plane.m_dx[1], 0.};
+    plane.m_axis.ToPhysCoord(physcenter);
+    std::vector<double> tmp(3);
+    tmp[0] = physcenter[0]; tmp[1] = physcenter[1]; tmp[2] = physcenter[2];
+    m_axis.ToCompCoord(tmp);
+    for(int i=0; i<3; ++i) {
+        intcenter[i] = myRound<double>(tmp[i]/m_dx[i]);
+    }
+    info = {physcenter[0], physcenter[1], physcenter[2], tmpradius[0], tmpradius[1],
+        std::fabs(tmpcirculation)};
+    //output test
+    //plane.OutputData("perpendicular.plt");
+    //printf("phys point %f,%f,%f\n", physcenter[0], physcenter[1], physcenter[2]);
+    //exit(0);
     return 3;
 }
 
@@ -203,7 +299,7 @@ int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > &
     int Trymax = 2*(m_N[0] + m_N[1] + m_N[2]), count = 0;
     while(count<Trymax) {
         std::vector<double> coreinfo;
-        SearchOneCoreXYZplane(intcenter, physcenter, coreinfo, v, radiusofsubrange, ismax);
+        SearchOneCorePerpendicular(intcenter, physcenter, coreinfo, v, radiusofsubrange, ismax);
         int centerindex = Index(m_N, intcenter);
         std::vector<double> vor = {m_phys[v[0]][centerindex], m_phys[v[1]][centerindex], m_phys[v[2]][centerindex]};
         std::pair<int, std::vector<int> > incplane = GetProceedDirection(vor, vorticityproceedsign);
@@ -234,10 +330,6 @@ int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > &
         ++count;
     }
     return 0;
-}
-
-IncFlow::IncFlow() {
-    ;
 }
 
 int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx,

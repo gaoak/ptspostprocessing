@@ -10,7 +10,7 @@
 
 using namespace std;
 
-std::map<bool, std::string> testresults = {{true, "pass"},{false, "fail!!!!!!!!!!!!!!!!!!!!!!"}};
+std::map<bool, std::string> testresults = {{true, "pass"},{false, "+++++++fail!!!!!!!!!!!!!!!!!!!!!!"}};
 
 int test_weight(int padding) {
     KernelSmooth ker;
@@ -90,7 +90,8 @@ double linear(std::vector<double> p) {
 }
 int test_structuredData() {
     std::vector<int> N = {33,65,33};
-    std::vector<double> range = {-0.5,1.5,-0.5,1.5,0,5.5};
+    std::vector<double> range = {-0.5,2.,-0.5, 2.,0,5.5};
+    //origin0, length0, origin1, length1, origin2, length2
     StructuredData sdata(N, range);
     sdata.OutputData("coor.csv");
     sdata.OutputData("coor.plt");
@@ -155,7 +156,7 @@ int test_structuredData() {
     sdata.OutputData("3drot.plt");
     ///////////test 2D
     std::vector<int> N2d = {33,65};
-    std::vector<double> range2d = {-0.5,1.5,-0.5,1.5};
+    std::vector<double> range2d = {-0.5,2.,-0.5,2.};
     StructuredData sdata2d(N2d, range2d);
     printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[0][Index(N2d, {32,64})]-1.5)<1E-4].c_str());
     printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[1][Index(N2d, {32,64})]-1.5)<1E-4].c_str());
@@ -177,7 +178,7 @@ int test_structuredData() {
 }
 
 int test_fileio() {
-    StructuredData sdata({33,65,33},{-0.5,1.5,-0.5,1.5,0,5.5});
+    StructuredData sdata({33,65,33},{-0.5,2.,-0.5,2.,0,5.5});
     sdata.InputData("testfile.plt");
     double sum = sdata.GetPhysNorm(2,2);
     printf("test fileio %g, %s\n", sum, testresults[fabs(sum-7.08265)<1E-5].c_str());
@@ -208,7 +209,7 @@ int test_fileio() {
 }
 
 int test_subdomain() {
-    StructuredData sdata({33,65,33},{-0.5,1.5,-0.5,1.5,0,5.5});
+    StructuredData sdata({33,65,33},{-0.5,2.,-0.5,2.,0,5.5});
     std::map<int, double> field = {{0,0.}, {1,0.}, {2,0.}};
     sdata.InputData("testfile.plt");
     double sum = sdata.GetPhysNorm(2,2);
@@ -223,7 +224,7 @@ int test_subdomain() {
     sum = sub1.GetPhysNorm(2,2);
     printf("test subdomain %g, %s\n", sum, testresults[fabs(sum-11.2498)<1E-4].c_str());
     //
-    IncFlow sflow({33,65,33},{-0.5,1.5,-0.5,1.5,0,5.5}, "0012", {15,0.,5.});
+    IncFlow sflow({33,65,33},{-0.5,2.,-0.5,2.,0,5.5}, "0012", {15,0.,5.});
     sflow.InputData("testfile.plt");
     sum = sflow.GetPhysNorm(2,2);
     printf("test subdomain %g, %s\n", sum, testresults[fabs(sum-7.08265)<1E-5].c_str());
@@ -248,7 +249,7 @@ int test_subdomain() {
 
 int test_interpolation() {
     std::map<int, double> field = {{0,0.},{1,0},{2,0},{3,0},{4,0}};
-    StructuredData sdata({17,17,17},{-0.5,1.5,-0.5,1.5,0,5.5}), data2;
+    StructuredData sdata({17,17,17},{-0.5,2.,-0.5,2.,0,5.5}), data2;
     sdata.AddPhysics("linear", (void*)linear);
     sdata.AddPhysics("sin", (void*)sinfunc);
     double sum = sdata.GetPhysNorm(0,2);
@@ -263,14 +264,14 @@ int test_interpolation() {
     sum = data2.GetPhysNorm(1,2);
     printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-0.221453)<1E-6].c_str());
     data2.OutputData("interp3dsame.plt");
-    data2 = StructuredData({65,65,129},{-0.5,1.5,-0.5,1.5,0,5.5}, {{1,1,0.},{-1,1,1},{1,0,1}});
+    data2 = StructuredData({65,65,129},{-0.5,2.,-0.5,2.,0,5.5}, {{1,1,0.},{-1,1,1},{1,0,1}});
     data2.InterpolateFrom(sdata, field);
     sum = data2.GetPhysNorm(0,2);
     printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-0.895969)<1E-6].c_str());
     sum = data2.GetPhysNorm(1,2);
     printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-0.0436265)<1E-7].c_str());
     data2.OutputData("interp3d.plt");
-    data2 = StructuredData({65,65,1},{-0.5,1.5,-0.5,1.5,1}, {{1,1,0.},{-1,1,1},{1,0,1}});
+    data2 = StructuredData({65,65,1},{-0.5,2.,-0.5,2.,1}, {{1,1,0.},{-1,1,1},{1,0,1}});
     data2.InterpolateFrom(sdata, field);
     sum = data2.GetPhysNorm(0,2);
     printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-0.0938391)<1E-7].c_str());
@@ -278,7 +279,7 @@ int test_interpolation() {
     printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-0.0512146)<1E-7].c_str());
     data2.OutputData("interp2d.plt");
     //2D interp
-    StructuredData subdata2({22,22,1},{-0.5,1.5,-0.5,1.5,1}, {{1,1,0.},{-1,1,1},{1,0,1}});
+    StructuredData subdata2({22,22,1},{-0.5,2.,-0.5,2.,1}, {{1,1,0.},{-1,1,1},{1,0,1}});
     subdata2.InterpolateFrom(data2, field);
     subdata2.OutputData("interpsub2d.plt");
     //point
