@@ -3,6 +3,13 @@
 #include "StructuredData.h"
 #include "Body.h"
 #include<set>
+
+enum VortexMethod {
+    XYZPlane = 0,
+    PerpendicularPlane = 1,
+    VortexMethodSize = 2
+};
+
 class IncFlow : public StructuredData {
 public:
     IncFlow();
@@ -18,10 +25,11 @@ public:
     int TransformCoord(const std::vector<double> &x0);
     int ExtractCore(const double sigma, std::vector<std::vector<double> > & cores, std::set<int> &searched,
                     std::vector<double> &inputcenter, const std::vector<int> &vf, const int field,
-                    const int direction, const bool stoponwall, const double threshold);
+                    const int direction, const bool stoponwall, const double threshold, VortexMethod vm);
     int ExtractCore(const double sigma, std::vector<std::vector<double> > & cores, std::set<int> &searched,
         std::vector<double> &inputcenter, const std::vector<int> &vf,
-        const int field = -4, const bool stoponwall = true, const double threshold = 0.);
+        const int field = -4, const bool stoponwall = true, const double threshold = 0.,
+        VortexMethod vm = VortexMethod::XYZPlane);
     int ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
         std::vector<double> &planevorticity, std::vector<double> &radius, double &circulation);
     int CalculateVorticity(int order = 2);
@@ -39,15 +47,5 @@ public:
     int InterpolateFrom(const IncFlow & origin, std::map<int,double> field);
 protected:
     Body m_body;
-};
-
-enum vortexcore{
-    x = 0,
-    y = 1,
-    z = 2,
-    r1 = 3,
-    r2 = 4,
-    g = 5,
-    size = 6
 };
 #endif

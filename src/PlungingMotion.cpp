@@ -97,8 +97,14 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     } else {
         m_calculateVorticityQ = 0;
     }
-    if(param.count("intialdirection")) {
-        m_initDirection = myRound<double>(StringToDouble(param["intialdirection"].c_str()));
+    int vm = 0;
+    if(param.count("vortexplanemethod")) {
+        vm = myRound<double>(StringToDouble(param["vortexplanemethod"].c_str()));
+    }
+    if(vm==1) {
+        m_vortexmethod = VortexMethod::PerpendicularPlane;
+    } else {
+        m_vortexmethod = VortexMethod::XYZPlane;
     }
     if(param.count("N")) {
         parserUInt(param["N"].c_str(), m_N);
@@ -158,7 +164,7 @@ int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
     std::vector<double> circulation;
     std::set<int> searchhist;
     flow.ExtractCore(m_sigma, cores, searchhist, m_initcenter, m_vortexcoreVar,
-        m_vortexcoreVar[3], m_stoponwall>0, m_threshold);
+        m_vortexcoreVar[3], m_stoponwall>0, m_threshold, m_vortexmethod);
     std::clock_t c_end = std::clock();
     double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
     if(cores.size()==0) {

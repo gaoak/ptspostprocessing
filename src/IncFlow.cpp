@@ -120,11 +120,12 @@ int IncFlow::GetSubdomainRange(const std::vector<int> &center, double radius,
 int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > & cores,
         std::set<int> &searched,
         std::vector<double> &inputcenter, const std::vector<int> &vf,
-        const int field, const bool stoponwall, const double threshold) {
+        const int field, const bool stoponwall, const double threshold,
+        VortexMethod vm) {
     std::vector<std::vector<double> > cores1, cores2;
     std::vector<double> inputc = inputcenter;
-    ExtractCore(sigma, cores1, searched, inputcenter, vf, field,  1, stoponwall, threshold);
-    ExtractCore(sigma, cores2, searched, inputc     , vf, field, -1, stoponwall, threshold);
+    ExtractCore(sigma, cores1, searched, inputcenter, vf, field,  1, stoponwall, threshold, vm);
+    ExtractCore(sigma, cores2, searched, inputc     , vf, field, -1, stoponwall, threshold, vm);
     cores.clear();
     for(int i=(int)cores2.size()-1; i>0; --i) {
         cores.push_back(cores2[i]);
@@ -263,7 +264,7 @@ int IncFlow::SearchOneCorePerpendicular(
 
 int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > & cores, std::set<int> &searched,
     std::vector<double> &inputcenter, const std::vector<int> &vf, const int field, const int direction,
-    const bool stoponwall, const double threshold) {
+    const bool stoponwall, const double threshold, VortexMethod vm) {
     if(vf.size()<3 || field==0 || direction==0 ||
        vf[0]<=0 || vf[1]<=0 || vf[2]<=0 || inputcenter.size()<3) {
         //printf("error incorrect parameters for ExtractCore\n");
@@ -299,7 +300,11 @@ int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > &
     int Trymax = 2*(m_N[0] + m_N[1] + m_N[2]), count = 0;
     while(count<Trymax) {
         std::vector<double> coreinfo;
-        SearchOneCorePerpendicular(intcenter, physcenter, coreinfo, v, radiusofsubrange, ismax);
+        if(vm==VortexMethod::PerpendicularPlane) {
+            SearchOneCorePerpendicular(intcenter, physcenter, coreinfo, v, radiusofsubrange, ismax);
+        } else {
+            SearchOneCoreXYZplane(intcenter, physcenter, coreinfo, v, radiusofsubrange, ismax);
+        }
         int centerindex = Index(m_N, intcenter);
         std::vector<double> vor = {m_phys[v[0]][centerindex], m_phys[v[1]][centerindex], m_phys[v[2]][centerindex]};
         std::pair<int, std::vector<int> > incplane = GetProceedDirection(vor, vorticityproceedsign);

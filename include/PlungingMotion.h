@@ -32,9 +32,9 @@ protected:
     std::vector<int> m_vortexcoreVar;
     std::vector<double> m_initcenter;
     int m_stoponwall;
-    int m_initDirection;
     double m_threshold;
     int m_calculateVorticityQ;
     int m_translation;
+    VortexMethod m_vortexmethod;
 };
 #endif
