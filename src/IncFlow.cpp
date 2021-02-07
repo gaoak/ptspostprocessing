@@ -313,6 +313,7 @@ int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > &
             break; //reach threshold
         }
         cores.push_back(coreinfo);
+        radiusofsubrange = 3. * coreinfo[CoreR2];
         if(count==0) {
             inputcenter = physcenter;
         }

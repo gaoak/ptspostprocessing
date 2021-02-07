@@ -10,6 +10,16 @@ enum VortexMethod {
     VortexMethodSize = 2
 };
 
+enum CoreInfo {
+    Corex = 0,
+    Corey = 1,
+    Corez = 2,
+    CoreR1 = 3,
+    CoreR2 = 4,
+    CoreGamma = 5,
+    CoreInfoSize = 6
+};
+
 class IncFlow : public StructuredData {
 public:
     IncFlow();
