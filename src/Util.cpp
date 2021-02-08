@@ -5,7 +5,7 @@
 
 double DotVect(const std::vector<double> &a, const std::vector<double> &b) {
     double res = 0.;
-    for(int i=0; i<a.size(); ++i) {
+    for(size_t i=0; i<a.size(); ++i) {
         res += a[i]*b[i];
     }
     return res;
@@ -17,15 +17,15 @@ double NormVect(const std::vector<double> data, int p) {
     }
     double sum = 0.;
     if(p==1) {
-        for(int i=0; i<data.size(); ++i) {
+        for(size_t i=0; i<data.size(); ++i) {
             sum += std::fabs(data[i]);
         }
     } else if(p==2) {
-        for(int i=0; i<data.size(); ++i) {
+        for(size_t i=0; i<data.size(); ++i) {
             sum += data[i] * data[i];
         }
     } else {
-        for(int i=0; i<data.size(); ++i) {
+        for(size_t i=0; i<data.size(); ++i) {
             sum += std::pow(std::fabs(data[i]), p);
         }
     }
@@ -34,7 +34,7 @@ double NormVect(const std::vector<double> data, int p) {
 
 void NormalizeVect(std::vector<double> &data) {
     double norm = std::sqrt(NormVect(data, 2));
-    for(int i=0; i<data.size(); ++i) {
+    for(size_t i=0; i<data.size(); ++i) {
         data[i] /= norm;
     }
 }
@@ -45,7 +45,7 @@ void AddVect(const double a1, const std::vector<double> &a,
     if(res.size()<a.size()) {
         res.resize(a.size());
     }
-    for(int i=0; i<a.size(); ++i) {
+    for(size_t i=0; i<a.size(); ++i) {
         res[i] = a1*a[i] + b1*b[i];
     }
 }
@@ -53,7 +53,7 @@ void AddVect(const double a1, const std::vector<double> &a,
 std::vector<double> AddVect(const double a1, const std::vector<double> &a,
              const double b1, const std::vector<double> &b) {
     std::vector<double> res(a.size());
-    for(int i=0; i<a.size(); ++i) {
+    for(size_t i=0; i<a.size(); ++i) {
         res[i] = a1*a[i] + b1*b[i];
     }
     return res;
@@ -108,7 +108,7 @@ void parserUInt(const char * cstr, std::vector<int> & value) {
         ++i;
     }
     int k;
-    for(int i=0; i<digs.size(); ++i) {
+    for(int i=0; i<(int) digs.size(); ++i) {
         std::string cuts(cstr+digs[i], dige[i]-digs[i]);// data  in [s e-1]
         if(sscanf(cuts.c_str(), "%d", &k)<1) {
             printf("error: parser int %s \n",  cuts.c_str());
@@ -145,7 +145,7 @@ void parserInt(const char * cstr, std::vector<int> & value) {
         ++i;
     }
     int k;
-    for(int i=0; i<digs.size(); ++i) {
+    for(size_t i=0; i<digs.size(); ++i) {
         std::string cuts(cstr+digs[i], dige[i]-digs[i]);// data  in [s e-1]
         if(sscanf(cuts.c_str(), "%d", &k)<1) {
             printf("error: parser int %s \n",  cuts.c_str());
@@ -175,8 +175,7 @@ void parserString(const char * cstr, std::vector<std::string> & value, char sep)
         if(cstr[i]==0) break;
         ++i;
     }
-    double k;
-    for(int i=0; i<digs.size(); ++i) {
+    for(size_t i=0; i<digs.size(); ++i) {
         std::string cuts(cstr+digs[i], dige[i]-digs[i]);
         value.push_back(cuts);
     }
@@ -207,7 +206,7 @@ void parserDouble(const char * cstr, std::vector<double> & value) {
         ++i;
     }
     double k;
-    for(int i=0; i<digs.size(); ++i) {
+    for(size_t i=0; i<digs.size(); ++i) {
         std::string cuts(cstr+digs[i], dige[i]-digs[i]);
         if(sscanf(cuts.c_str(), "%lf", &k)<1) {
             printf("error: parser double %s, in \n%s\n", cuts.c_str(), cstr);
@@ -227,7 +226,7 @@ double StringToDouble(std::string str) {
 bool CompactArray(std::vector<int> &N) {
     std::vector<int> sN = N;
     N.clear();
-    for(int i=0; i<sN.size(); ++i) {
+    for(size_t i=0; i<sN.size(); ++i) {
         if(1!=sN[i]) {
             N.push_back(sN[i]);
         }
@@ -236,7 +235,7 @@ bool CompactArray(std::vector<int> &N) {
 }
 
 bool NeedShift(std::vector<int> N, int dir) {
-    for(int i=0; i<N.size(); ++i) {
+    for(size_t i=0; i<N.size(); ++i) {
         if(N[i]!=1) {
             N[i] = 10 + i;
         }
@@ -245,7 +244,7 @@ bool NeedShift(std::vector<int> N, int dir) {
     ShiftArray<int>(sN, dir);
     CompactArray(N);
     CompactArray(sN);
-    for(int i=0; i<N.size(); ++i) {
+    for(size_t i=0; i<N.size(); ++i) {
         if(N[i]!=sN[i]) {
             return true;
         }
@@ -267,7 +266,7 @@ int myMod(int x, int N) {
 int Index(const std::vector<int> &N, const std::vector<int> & index) {
     int res = index[0];
     int Np = N[0];
-    for(int i=1; i<N.size(); ++i) {
+    for(size_t i=1; i<N.size(); ++i) {
         if(index[i]<0 || index[i]>=N[i]) {
             printf("error: illegal index %d in Index %d\n", index[i], N[i]);
         }

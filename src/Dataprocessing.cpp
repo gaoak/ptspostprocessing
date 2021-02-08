@@ -88,7 +88,7 @@ int KernelSmooth::DoSmooth(int N, double * sdata) {
 int KernelSmooth::DoSmooth(const std::vector<double> &sigmaintegerwidth, const std::vector<int> &Nraw, std::vector<std::vector<double> > &sdata) {
     std::vector<int> N;
     std::vector<int> sigma;
-    for(int i=0; i<Nraw.size(); ++i) {
+    for(int i=0; i<(int)Nraw.size(); ++i) {
         if(Nraw[i]>1) {
             N.push_back(Nraw[i]);
             sigma.push_back(sigmaintegerwidth[i]);
@@ -96,27 +96,27 @@ int KernelSmooth::DoSmooth(const std::vector<double> &sigmaintegerwidth, const s
     }
     std::vector<int> Np(N.size(), 1);
     std::vector<int> sN(N.size());
-    for(int dir=0; dir<N.size(); ++dir) {
-        for(int i=0; i<N.size(); ++i) {
+    for(int dir=0; dir<(int)N.size(); ++dir) {
+        for(int i=0; i<(int)N.size(); ++i) {
             if(i==dir) continue;
             Np[dir] *= N[i];
         }
         sN[dir] = N[dir];
     }
     std::vector<std::vector<double> > swap;
-    for(int i=0; i<sdata.size(); ++i) {
+    for(int i=0; i<(int)sdata.size(); ++i) {
         swap.push_back(sdata[i]);
     }
-    for(int dir=0; dir<N.size(); ++dir) {
+    for(int dir=0; dir<(int)N.size(); ++dir) {
         UpdateWeight(sigma[dir]);
-        for(int d=0; d<sdata.size(); ++d) {
+        for(int d=0; d<(int)sdata.size(); ++d) {
             for(int p=0; p<Np[dir]; ++p) {
                 DoSmooth(N[dir], swap[d].data()+p*N[dir]);
             }
         }
         ShiftIndex<double>(sN, swap, -1);
     }
-    for(int d=0; d<sdata.size(); ++d) {
+    for(int d=0; d<(int)sdata.size(); ++d) {
         sdata[d] = swap[d];
     }
     return (int) sdata.size();
@@ -157,10 +157,10 @@ int Derivative::Diff(int N, const double * uu, double * du, double dx, int order
 
 int Derivative::Diff(const std::vector<int> &N, const std::vector<std::vector<double> > &data, std::vector<std::vector<double> > &ddata, double dx, int order) {
     int Np = 1;
-    for(int i=1; i<N.size(); ++i) {
+    for(int i=1; i<(int)N.size(); ++i) {
         Np *= N[i];
     }
-    for(int d=0; d<data.size(); ++d) {
+    for(int d=0; d<(int)data.size(); ++d) {
         for(int p=0; p<Np; ++p) {
             Diff(N[0], data[d].data() + p*N[0], ddata[d].data() + p*N[0], dx, order);
         }

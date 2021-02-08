@@ -3,6 +3,7 @@ project(ptspostprocessing)
 # c++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+add_compile_options(-Wall -Wextra -pedantic -Werror)
 
 # header and src files
 include_directories(include)

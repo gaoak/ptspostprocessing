@@ -175,7 +175,7 @@ int PlungingMotion::OutputVortexCore(std::string filename, IncFlow &flow) {
     }
     std::ofstream ofile(filename.c_str());
     ofile << "variables = x,y,z,radius1,radius2,Gamma" << std::endl;
-    for(int i=0; i<cores.size(); ++i) {
+    for(int i=0; i<(int)cores.size(); ++i) {
             ofile << cores[i][0] << " "
                 << cores[i][1] << " "
                 << cores[i][2] << " "
@@ -219,7 +219,7 @@ int PlungingMotion::ProcessFlowData(int dir) {
     if(dir<0) {
         std::reverse(filen.begin(), filen.end());;
     }
-    for(int k=0; k<filen.size(); ++k) {
+    for(int k=0; k<(int)filen.size(); ++k) {
         int n = filen[k];
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA, m_span[0], m_span[1]});
         flow.InputData(GetInFileName(n));

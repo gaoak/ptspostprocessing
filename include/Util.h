@@ -64,22 +64,22 @@ int FindMin(int N, const T* data) {
 template <typename T>
 int DoMask(const std::vector<int> &N, T* data, const std::vector<int> &center, const std::vector<int> &padding, const bool relation) {
     int Np = 1;
-    for(int i=0; i<N.size(); ++i) {
+    for(int i=0; i<(int)N.size(); ++i) {
         Np *= N[i];
     }
     std::vector<int> ind;
     for(int i=0; i<Np; ++i) {
         invIndex(N, i, ind);
         int k=0;
-        for(; k<N.size(); ++k) {
+        for(; k<(int)N.size(); ++k) {
             if (std::abs(ind[k] - center[k]) > padding[k]) {
                 break;
             }
         }
-        if(k==N.size() && relation) {
+        if(k==(int)N.size() && relation) {
             data[i] = 0;
         }
-        if(k<N.size() && !relation) {
+        if(k<(int)N.size() && !relation) {
             data[i] = 0;
         }
     }
@@ -89,7 +89,7 @@ int DoMask(const std::vector<int> &N, T* data, const std::vector<int> &center, c
 template <typename T>
 int WeightedCenter(const std::vector<int> &N, T* data, std::vector<T> &center) {
     int Np = 1;
-    for(int i=0; i<N.size(); ++i) {
+    for(int i=0; i<(int)N.size(); ++i) {
         Np *= N[i];
     }
     center = std::vector<T>(N.size(), 0);
@@ -98,11 +98,11 @@ int WeightedCenter(const std::vector<int> &N, T* data, std::vector<T> &center) {
     for(int i=0; i<Np; ++i) {
         invIndex(N, i, ind);
         sum += data[i];
-        for(int k=0; k<N.size(); ++k) {
+        for(int k=0; k<(int)N.size(); ++k) {
             center[k] += data[i] * ind[k];
         }
     }
-    for(int k=0; k<N.size(); ++k) {
+    for(int k=0; k<(int)N.size(); ++k) {
         center[k] /= sum;
     }
     return Np;
@@ -156,7 +156,7 @@ int ShiftIndex(std::vector<int> &N, std::vector<std::vector<T> > &odata, int dir
     int dim = sN.size();
     dir = myMod(dir, dim);
     std::vector<std::vector<double> > data(odata.size());
-    for(int i=0; i<odata.size(); ++i) {
+    for(int i=0; i<(int)odata.size(); ++i) {
         data[i] = odata[i];
     }
     if(dim==2) {
@@ -164,7 +164,7 @@ int ShiftIndex(std::vector<int> &N, std::vector<std::vector<T> > &odata, int dir
             return 0;
         }
         int Np = sN[0] * sN[1];
-        for(int d=0; d<odata.size(); ++d) {
+        for(int d=0; d<(int)odata.size(); ++d) {
             int count = 0;
             for(int i=0; i<sN[0]; ++i) {
                 for(int j=i; j<Np; j+=sN[0]) {
@@ -177,7 +177,7 @@ int ShiftIndex(std::vector<int> &N, std::vector<std::vector<T> > &odata, int dir
         int Np = sN[0] * sN[1] * sN[2];
         int N01 = sN[0] * sN[1];
         if(dir==2) {
-            for(int d=0; d<odata.size(); ++d) {
+            for(int d=0; d<(int)odata.size(); ++d) {
                 int count = 0;
                 for(int i=0; i<sN[0]; ++i) {
                     for(int k=i; k<Np; k+=N01) {
@@ -189,7 +189,7 @@ int ShiftIndex(std::vector<int> &N, std::vector<std::vector<T> > &odata, int dir
                 }
             }
         } else if(dir==1) {
-            for(int d=0; d<odata.size(); ++d) {
+            for(int d=0; d<(int)odata.size(); ++d) {
                 int count = 0;
                 for(int j=0; j<N01; j+=sN[0]) {
                     for(int i=0; i<sN[0]; ++i) {

@@ -103,12 +103,12 @@ int IncFlow::GetSubdomainRange(const std::vector<int> &center, double radius,
                                std::vector<int> &range) {
     range.resize(m_N.size() * 2);
     if(center.size()<m_N.size()) {
-        for(int i=0; i<m_N.size(); ++i) {
+        for(int i=0; i<(int)m_N.size(); ++i) {
             range[2*i  ] = 0;
             range[2*i+1] = m_N[i]-1;
         }
     } else {
-        for(int i=0; i<m_N.size(); ++i) {
+        for(int i=0; i<(int)m_N.size(); ++i) {
             int p = radius / m_dx[i];
             range[2*i  ] = std::min(m_N[i]-1, std::max(0, center[i] - p));
             range[2*i+1] = std::min(m_N[i]-1, std::max(0, center[i] + p));
@@ -196,7 +196,7 @@ int IncFlow::SearchOneCorePerpendicular(
         const std::vector<int> &v, const double rawradius, const bool ismax) {
     //printf("center is %d,%d,%d\n", intcenter[0], intcenter[1], intcenter[2]);
     double radius = rawradius;
-    for(int i=0; i<m_N.size(); ++i) {
+    for(int i=0; i<(int)m_N.size(); ++i) {
         double tmp = (m_N[i]-1)*m_dx[i];
         if(radius>tmp) {
             radius = tmp;
@@ -220,7 +220,7 @@ int IncFlow::SearchOneCorePerpendicular(
         range[2*i+1] = 2. * radius;
     }
     std::map<int, double> field;
-    for(int i=0; i<m_phys.size(); ++i) {
+    for(size_t i=0; i<m_phys.size(); ++i) {
         field[i] = 0.;
     }
     double dx = std::min(m_dx[0], m_dx[1]);
@@ -232,7 +232,7 @@ int IncFlow::SearchOneCorePerpendicular(
     plane.InterpolateFrom(*this, field);
     std::vector<double> planevorticity(plane.GetTotPoints());
     std::vector<double> planedata(plane.GetTotPoints());
-    for(int i=0; i<planevorticity.size(); ++i) {
+    for(size_t i=0; i<planevorticity.size(); ++i) {
         planevorticity[i] = vor[0] * plane.m_phys[v[0]][i] + vor[1] * plane.m_phys[v[1]][i] + vor[2] * plane.m_phys[v[2]][i];
         planedata[i] = plane.m_phys[v[3]][i];
     }
@@ -291,7 +291,7 @@ int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > &
         intcenter[i] = myRound<double>(physcenter[i]/m_dx[i]);
     }
     double radiusofsubrange = 0;
-    for(int i=0; i<m_N.size(); ++i) {
+    for(int i=0; i<(int)m_N.size(); ++i) {
         radiusofsubrange += m_dx[i] * (m_N[i] - 1);
     }
 

@@ -25,7 +25,7 @@ int test_weight(int padding) {
 
 int test_index(std::vector<int> &N) {
     int Np = N[0];
-    for(int i=1; i<N.size(); ++i) {
+    for(int i=1; i<(int)N.size(); ++i) {
         Np *= N[i];
     }
     std::vector<int> ind(N.size());
@@ -34,7 +34,7 @@ int test_index(std::vector<int> &N) {
         invIndex(N, i, ind);
         int tmp = Index(N, ind);
         //printf("%d, (", i);
-        for(int j=0; j<ind.size(); ++j) {
+        for(int j=0; j<(int)ind.size(); ++j) {
             ;//printf("%d,",ind[j]);
         }
         //printf("), %d\n", tmp);

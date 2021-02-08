@@ -6,8 +6,8 @@
 int PurgeDifferentSign(const std::vector<int> &N, const std::vector<double> &v,
                        std::vector<double> &data, double sign) {
     int Np = 1;
-    for(int i=0; i<N.size(); ++i) Np *= N[i];
-    if(Np>data.size()) Np = data.size();
+    for(size_t i=0; i<N.size(); ++i) Np *= N[i];
+    if(Np>(int)data.size()) Np = data.size();
     for(int i=0; i<Np; ++i) {
         if(v[i]*sign < 0.) {
             data[i] = 0.;
@@ -115,7 +115,7 @@ int Fill2DGraph(const std::vector<int> &rawN, std::vector<double> &value, const 
                 if(j<N[1]-1) {
                     p.push_back(ind + N[0]);
                 }
-                for(int n=0; n<p.size(); ++n) {
+                for(int n=0; n<(int)p.size(); ++n) {
                     int indt = p[n];
                     bool checkmono = !monotone || val[ind] <= val[indt];
                     if( res[indt] && val[ind]>0. && checkmono) {

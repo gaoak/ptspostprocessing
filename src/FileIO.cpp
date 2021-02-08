@@ -8,9 +8,9 @@ int OutputCSV(const std::string filename, const std::vector<std::string> &variab
                  const std::vector<int> &N, const std::vector<std::vector<double> > &data) {
     std::ofstream file(filename.c_str());
     file << "# ";
-    for(int i=0; i<variables.size(); ++i) {
+    for(int i=0; i<(int)variables.size(); ++i) {
         file << variables[i];
-        if(i!=variables.size()-1) {
+        if(i!=(int)variables.size()-1) {
             file << ",";
         } else {
             file << "\n";
@@ -18,11 +18,11 @@ int OutputCSV(const std::string filename, const std::vector<std::string> &variab
     }
     file << std::scientific << std::setprecision(16);
     int Np = 1;
-    for(int i=0; i<N.size(); ++i) {
+    for(size_t i=0; i<N.size(); ++i) {
         Np *= N[i];
     }
     for(int index=0; index<Np; ++index) {
-        for(int v=0; v<data.size(); ++v) {
+        for(int v=0; v<(int)data.size(); ++v) {
             file << data[v][index];
             if(v!=(int)data.size()-1) {
                 file << ",";
@@ -47,12 +47,13 @@ int OutputTec360_ascii(const std::string filename, const std::vector<std::string
                  const std::vector<int> &rawN, const std::vector<std::vector<double> > &data,
                  int isdouble)
 {
+    (void)isdouble;
     std::vector<int> N = rawN;
-    for(int i=N.size(); i<3; ++i) {
+    for(size_t i=N.size(); i<3; ++i) {
         N.push_back(1);
     }
     std::string varlist = variables[0];
-    for(int i=1; i<variables.size(); ++i) {
+    for(size_t i=1; i<variables.size(); ++i) {
         varlist += "," + variables[i];
     }
     std::ofstream ofile(filename.c_str());
@@ -60,7 +61,7 @@ int OutputTec360_ascii(const std::string filename, const std::vector<std::string
     ofile << "zone I = " << N[0] << ", J = " << N[1] << ", K = " << N[2] << std::endl;
     int Np = N[0] * N[1] * N[2];
     for(int i=0; i<Np; ++i) {
-        for(int j=0; j<data.size(); ++j) {
+        for(size_t j=0; j<data.size(); ++j) {
             ofile << data[j][i] << " ";
         }
         ofile << "\n";
@@ -71,7 +72,7 @@ int OutputTec360_ascii(const std::string filename, const std::vector<std::string
 
 int BinaryWrite(std::ofstream &ofile, std::string str) {
     int tmp = 0;
-    for(int i=0; i<str.size(); ++i) {
+    for(size_t i=0; i<str.size(); ++i) {
         tmp = str[i];
         ofile.write((char*)&tmp, 4);
     }
@@ -102,7 +103,6 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
     int filetype = 0;
     odata.write((char*)&filetype, 4);
     //read file title and variable names
-    int tempi = 0;
     std::string filetitle = "";
     BinaryWrite(odata, filetitle);
     int nvar = variables.size();
@@ -178,7 +178,7 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
 int ReorderVariable(std::vector<std::string> &variables, std::map<int, int> &target) {
     std::vector<std::string> tmpv = variables;
     int ncoor = 0;
-    for(int i=0; i<tmpv.size(); ++i) {
+    for(int i=0; i<(int)tmpv.size(); ++i) {
         if(tmpv[i].compare("x")==0 || tmpv[i].compare("X")==0) {
             variables[0] = tmpv[i];
             tmpv[i] = "";
@@ -199,7 +199,7 @@ int ReorderVariable(std::vector<std::string> &variables, std::map<int, int> &tar
         }
     }
     variables.resize(ncoor);
-    for(int i=0; i<tmpv.size(); ++i) {
+    for(size_t i=0; i<tmpv.size(); ++i) {
         if(tmpv[i].size()) {
             target[i] = variables.size();
             variables.push_back(tmpv[i]);
@@ -215,7 +215,7 @@ int InputCSV(const std::string filename, std::vector<std::string> &variables,
         printf("error: unable to open file %s\n", filename.c_str());
     }
     int Np = 1;
-    for(int i=0; i<N.size(); ++i) {
+    for(size_t i=0; i<N.size(); ++i) {
         Np *= N[i];
     }
     char buffer[1000];
@@ -241,6 +241,7 @@ int InputCSV(const std::string filename, std::vector<std::string> &variables,
         file.getline(buffer, sizeof(buffer));
     }
     file.close();
+    isdouble = 1;
     return ncoor;
 }
 
