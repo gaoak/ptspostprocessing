@@ -195,13 +195,8 @@ int IncFlow::SearchOneCorePerpendicular(
         std::vector<int> &intcenter, std::vector<double> &physcenter, std::vector<double> &info,
         const std::vector<int> &v, const double rawradius, const bool ismax) {
     //printf("center is %d,%d,%d\n", intcenter[0], intcenter[1], intcenter[2]);
-    double radius = rawradius;
-    for(int i=0; i<(int)m_N.size(); ++i) {
-        double tmp = (m_N[i]-1)*m_dx[i];
-        if(radius>tmp) {
-            radius = tmp;
-        }
-    }
+    SearchOneCoreXYZplane(intcenter, physcenter, info, v, rawradius, ismax);
+    double radius = 3. * info[CoreR2];
     int centerindex = Index(m_N, intcenter);
     std::vector<double> vor = {m_phys[v[0]][centerindex], m_phys[v[1]][centerindex], m_phys[v[2]][centerindex]};
     NormalizeVect(vor);
