@@ -245,6 +245,7 @@ int IncFlow::SearchOneCorePerpendicular(
     std::vector<double> tmp(3);
     tmp[0] = physcenter[0]; tmp[1] = physcenter[1]; tmp[2] = physcenter[2];
     m_axis.ToCompCoord(tmp);
+    intcenter.resize(3);
     for(int i=0; i<3; ++i) {
         intcenter[i] = myRound<double>(tmp[i]/m_dx[i]);
     }
