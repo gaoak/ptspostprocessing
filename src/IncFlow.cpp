@@ -294,6 +294,11 @@ VortexExtractionStopReason IncFlow::ExtractCore(const double sigma, std::vector<
     cores.clear();
     int Trymax = m_Np, count = 0;
     while(count<Trymax) {
+        if(intcenter[0]<0 || intcenter[0]>=m_N[0] ||
+           intcenter[1]<0 || intcenter[1]>=m_N[1] ||
+           intcenter[2]<0 || intcenter[2]>=m_N[2]) {
+            return StopOutDomain;
+        }
         std::vector<double> coreinfo;
         if(vm==VortexMethod::PerpendicularPlane) {
             SearchOneCorePerpendicular(intcenter, physcenter, coreinfo, v, radiusofsubrange, ismax);
@@ -322,11 +327,6 @@ VortexExtractionStopReason IncFlow::ExtractCore(const double sigma, std::vector<
         }
         for(int i=0; i<3; ++i) {
             intcenter[i] += incplane.second[i];
-        }
-        if(intcenter[0]<0 || intcenter[0]>=m_N[0] ||
-           intcenter[1]<0 || intcenter[1]>=m_N[1] ||
-           intcenter[2]<0 || intcenter[2]>=m_N[2]) {
-            return StopOutDomain;
         }
         ++count;
     }

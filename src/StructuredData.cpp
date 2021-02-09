@@ -317,13 +317,13 @@ int StructuredData::InputData(std::string filename, const bool info) {
     }
     ReSetNp();
     //copy data
-    m_x.resize(ncoor);
+    m_x.clear();
     m_phys.resize((int)vars.size()-ncoor);
     m_vars.resize(vars.size());
     for(int i=0; i<(int)vars.size(); ++i) {
         m_vars[vm[i]] = vars[i];
         if(vm[i]<ncoor) {
-            m_x[vm[i]] = data[i];
+            m_x.push_back(data[i]);
         } else {
             m_phys[vm[i]-ncoor] = data[i];
         }
