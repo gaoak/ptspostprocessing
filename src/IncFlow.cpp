@@ -257,13 +257,13 @@ int IncFlow::SearchOneCorePerpendicular(
     return 3;
 }
 
-int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > & cores, std::set<int> &searched,
+VortexExtractionStopReason IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > & cores, std::set<int> &searched,
     std::vector<double> &inputcenter, const std::vector<int> &vf, const int field, const int direction,
     const bool stoponwall, const double threshold, VortexMethod vm) {
     if(vf.size()<3 || field==0 || direction==0 ||
        vf[0]<=0 || vf[1]<=0 || vf[2]<=0 || inputcenter.size()<3) {
         //printf("error incorrect parameters for ExtractCore\n");
-        return -1;
+        return StopError;
     }
 
     // get parameter
@@ -292,7 +292,7 @@ int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > &
 
     //start extraction
     cores.clear();
-    int Trymax = 2*(m_N[0] + m_N[1] + m_N[2]), count = 0;
+    int Trymax = m_Np, count = 0;
     while(count<Trymax) {
         std::vector<double> coreinfo;
         if(vm==VortexMethod::PerpendicularPlane) {
@@ -305,7 +305,7 @@ int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > &
         std::pair<int, std::vector<int> > incplane = GetProceedDirection(vor, vorticityproceedsign);
         if((ismax && m_phys[v[3]][centerindex]<threshold) ||
            (!ismax && m_phys[v[3]][centerindex]>threshold) ) {
-            break; //reach threshold
+            return StopThreshold;
         }
         cores.push_back(coreinfo);
         radiusofsubrange = 3. * coreinfo[CoreR2];
@@ -313,12 +313,12 @@ int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > &
             inputcenter = physcenter;
         }
         if(searched.find(centerindex)!=searched.end() && count) {
-            break; //reaching previous point
+            return StopRepeatPoint; //reaching previous point
         } else {
             searched.insert(centerindex);
         }
         if(stoponwall && m_body.IsInBody(physcenter, sigma)) {
-            break; //touch wall
+            return StopReachWall;
         }
         for(int i=0; i<3; ++i) {
             intcenter[i] += incplane.second[i];
@@ -326,11 +326,11 @@ int IncFlow::ExtractCore(const double sigma, std::vector<std::vector<double> > &
         if(intcenter[0]<0 || intcenter[0]>=m_N[0] ||
            intcenter[1]<0 || intcenter[1]>=m_N[1] ||
            intcenter[2]<0 || intcenter[2]>=m_N[2]) {
-            break; //out of domain
+            return StopOutDomain;
         }
         ++count;
     }
-    return 0;
+    return StopMaxTry;
 }
 
 int IncFlow::ExtractVortexParam2Dplane(const std::vector<int> &N, const std::vector<double> &dx,

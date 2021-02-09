@@ -28,7 +28,6 @@ public:
     StructuredData();
     int OutputData(std::string filename, const bool info = true);
     int InputData(std::string filename, const bool info = true);
-    int GetTotPoints();
     int AddPhysics(std::string var, void * func);
     int AddPhysics(std::string var, const std::vector<double> &data);
     int RemovePhysics(int i);
@@ -40,9 +39,6 @@ public:
     int ExtractPlane(const std::vector<double> &data, std::pair<int, int> plane,
                      const std::vector<int> &range, std::vector<int> & N,
                      std::vector<double> &odata);
-    double GetPhysValue(int f, int i);
-    double GetCoordValue(int f, int i);
-    int GetNumPhys();
     int CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> &Ne,
                         const std::vector<int> &skip, std::map<int, double> &field,
                         const StructuredData & big);
@@ -53,18 +49,26 @@ public:
     int InterpolatePoint (const std::vector<double> & x, std::map<int, double> field,
                         std::map<int, double> &value) const;
     void clear();
-    std::vector<std::vector<double> > m_x; // i first, then j, k last
-    std::vector<std::vector<double> > m_phys; //physics fields
-    std::vector<std::string> m_vars;
+    int ShuffleIndex(std::map<int, int> ReIndex, std::vector<int> dir,
+            std::map<int, int> pm);
+    int ResetAxis();
+    inline int GetTotPoints() {return m_Np;}
+    inline double GetPhysValue(int f, int i) {return m_phys[f][i];}
+    inline double GetCoordValue(int f, int i) {return m_x[f][i];}
+    inline void SetPhysValue(double v, int f, int i) {m_phys[f][i] = v;}
+    inline void SetCoordValue(double v, int f, int i) {m_x[f][i] = v;};
+    inline int GetNumPhys() {return m_phys.size();}
 protected:
     int GetInterpDimension() const;
     int ParserCSVHeader(const char * header);
     int GenPoints(const std::vector<double> &range);
-    int ResetAxis();
     int ReSetNp();
     int Diff(std::vector<std::vector<double> > &u,
              std::vector<std::vector<double> > &du, int dir, int order);
+    std::vector<std::vector<double> > m_x; // i first, then j, k last
+    std::vector<std::vector<double> > m_phys; //physics fields
     std::vector<int> m_N;        //dimension 3
+    std::vector<std::string> m_vars;
     int m_Np;
     CoordSystem m_axis;
     std::vector<double> m_dx;    //dimension 3

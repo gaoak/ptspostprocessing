@@ -126,7 +126,11 @@ int test_structuredData() {
     std::pair<int, int> plane = std::make_pair(0, 16);
     ShiftArray<double>(range, -2);
     std::vector<int> planeN;
-    sdata.ExtractPlane(sdata.m_phys[2], plane, {8,16,0,32,0,16}, planeN, planedata);
+    std::vector<double> phys2(sdata.GetTotPoints());
+    for(size_t i=0; i<phys2.size(); ++i) {
+        phys2[i] = sdata.GetPhysValue(2, i);
+    }
+    sdata.ExtractPlane(phys2, plane, {8,16,0,32,0,16}, planeN, planedata);
     StructuredData tmp(planeN, range);
     tmp.AddPhysics("deriv", planedata);
     tmp.OutputData("plane0.plt");
@@ -134,7 +138,7 @@ int test_structuredData() {
     printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-8.48457)<1E-5].c_str());
     plane = std::make_pair(1, 32);
     ShiftArray<double>(range, -2);
-    sdata.ExtractPlane(sdata.m_phys[2], plane, {8,16,0,32,0,16}, planeN, planedata);
+    sdata.ExtractPlane(phys2, plane, {8,16,0,32,0,16}, planeN, planedata);
     StructuredData tmp1(planeN, range);
     tmp1.AddPhysics("deriv", planedata);
     tmp1.OutputData("plane1.plt");
@@ -142,7 +146,7 @@ int test_structuredData() {
     printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-19.7392)<1E-4].c_str());
     plane = std::make_pair(2, 16);
     ShiftArray<double>(range, -2);
-    sdata.ExtractPlane(sdata.m_phys[2], plane, {8,16,0,32,0,16}, planeN, planedata);
+    sdata.ExtractPlane(phys2, plane, {8,16,0,32,0,16}, planeN, planedata);
     StructuredData tmp2(planeN, range);
     tmp2.AddPhysics("deriv", planedata);
     tmp2.OutputData("plane2.plt");
@@ -158,20 +162,20 @@ int test_structuredData() {
     std::vector<int> N2d = {33,65};
     std::vector<double> range2d = {-0.5,2.,-0.5,2.};
     StructuredData sdata2d(N2d, range2d);
-    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[0][Index(N2d, {32,64})]-1.5)<1E-4].c_str());
-    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[1][Index(N2d, {32,64})]-1.5)<1E-4].c_str());
-    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[0][0]+0.5)<1E-4].c_str());
-    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[1][0]+0.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.GetCoordValue(0, Index(N2d, {32,64}))-1.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.GetCoordValue(1,Index(N2d, {32,64}))-1.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.GetCoordValue(0,0)+0.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.GetCoordValue(1, 0)+0.5)<1E-4].c_str());
     sdata2d.OutputData("2d.plt");
     sdata2d = StructuredData(N2d, range2d, {{1,1},{-1,1}});
     sdata2d.AddPhysics("sin", (void*) sinfunc2d);
     field = {0};
     sdata2d.Smoothing(0.02, field, true);
     sdata2d.OutputData("2drot.plt");
-    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[0][Index(N2d, {32,64})]+0.5)<1E-4].c_str());
-    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[1][Index(N2d, {32,64})]+0.5-2*sqrt(2.0))<1E-4].c_str());
-    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[0][0]+0.5)<1E-4].c_str());
-    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.m_x[1][0]+0.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.GetCoordValue(0,Index(N2d, {32,64}))+0.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.GetCoordValue(1,Index(N2d, {32,64}))+0.5-2*sqrt(2.0))<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.GetCoordValue(0,0)+0.5)<1E-4].c_str());
+    printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.GetCoordValue(1,0)+0.5)<1E-4].c_str());
     sum = sdata2d.GetPhysNorm(0,2);
     printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-0.245466)<1E-6].c_str());
     return 0;

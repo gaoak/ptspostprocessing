@@ -175,7 +175,7 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
     return 0;
 }
 
-int ReorderVariable(std::vector<std::string> &variables, std::map<int, int> &target) {
+int GetVariableMap(std::vector<std::string> variables, std::map<int, int> &target) {
     std::vector<std::string> tmpv = variables;
     int ncoor = 0;
     for(int i=0; i<(int)tmpv.size(); ++i) {
@@ -209,7 +209,8 @@ int ReorderVariable(std::vector<std::string> &variables, std::map<int, int> &tar
 }
 
 int InputCSV(const std::string filename, std::vector<std::string> &variables,
-                 std::vector<int> &N, std::vector<std::vector<double> > &data, int &isdouble) {
+                 std::vector<int> &N, std::vector<std::vector<double> > &data, int &isdouble,
+                 std::map<int, int> &vm) {
     std::ifstream file(filename.c_str());
     if(!file.is_open()) {
         printf("error: unable to open file %s\n", filename.c_str());
@@ -223,8 +224,8 @@ int InputCSV(const std::string filename, std::vector<std::string> &variables,
     file.getline(buffer, sizeof(buffer));
     variables.clear();
     int vcount = ParserCSVHeader(buffer, variables);
-    std::map<int, int> vm;
-    int ncoor = ReorderVariable(variables, vm);
+    vm.clear();
+    int ncoor = GetVariableMap(variables, vm);
     data.resize(vcount);
     for(int i=0; i<vcount; ++i) {
         data[i].resize(Np);
@@ -235,7 +236,7 @@ int InputCSV(const std::string filename, std::vector<std::string> &variables,
     while(!file.eof()) {
         parserDouble(buffer, value);
         for(int i=0; i<vcount; ++i) {
-            data[vm[i]][index] = value[i];
+            data[i][index] = value[i];
         }
         ++index;
         file.getline(buffer, sizeof(buffer));
@@ -246,7 +247,8 @@ int InputCSV(const std::string filename, std::vector<std::string> &variables,
 }
 
 int InputTec360_binary(const std::string filename, std::vector<std::string> &variables,
-                 std::vector<int> &N, std::vector<std::vector<double> > &data, int &isdouble) {
+                 std::vector<int> &N, std::vector<std::vector<double> > &data, int &isdouble,
+                 std::map<int, int> &vm) {
     std::ifstream indata;
     indata.open(filename, std::ios::binary);
     if(!indata.is_open())
@@ -337,8 +339,8 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
         indata.read((char*)&maxv, 8);
     }
     //copy data
-    std::map<int, int> vm;
-    int ncoor = ReorderVariable(variables, vm);
+    vm.clear();
+    int ncoor = GetVariableMap(variables, vm);
     int Np, datasize;
     Np = N[0] * N[1] * N[2];
     datasize = Np * 4;
@@ -348,12 +350,12 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
     }
     for(int i=0; i<nvar; ++i) {
         if(isdouble) {
-            indata.read((char*)data[vm[i]].data(), datasize * 2);
+            indata.read((char*)data[i].data(), datasize * 2);
         } else {
             std::vector<float> vardata(Np);
             indata.read((char*)vardata.data(), datasize);
             for(int j=0; j<Np; ++j) {
-                data[vm[i]][j] = vardata[j];
+                data[i][j] = vardata[j];
             }
         }
     }

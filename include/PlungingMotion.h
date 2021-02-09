@@ -5,16 +5,21 @@
 class PlungingMotion {
 public:
     PlungingMotion(std::string dataconfigue);
-    int ProcessFlowData(int dir = 1);
+    int ProcessCFDWingData(int dir = 1);
+    int ProcessEXPWingData(int dir = 1);
     int Dumppoints();
-    double GetFilePhase(int n);
-    int OutputVortexCore(std::string filename, IncFlow &flow);
-    double PlungingVelocity(double phase, double phi);
-    double PlungingLocation(double phase, double phi);
     std::string GetInFileName(int n);
     std::string GetOutFileName(int n);
-    int GenerateFileSeries();
 protected:
+    int ProcessFiniteWingData(IncFlow &flow, int n);
+    int ProcessSmoothing(IncFlow &flow);
+    int ProcessVorticity(IncFlow &flow);
+    int ProcessVortexCore(IncFlow &flow, int n);
+    int GenerateFileSeries();
+    int TransformBathCoord(IncFlow &flow);
+    double GetFilePhase(int n);
+    double PlungingVelocity(double phase, double phi);
+    double PlungingLocation(double phase, double phi);
     std::vector<int> m_N;
     std::vector<double> m_range;
     double m_k;

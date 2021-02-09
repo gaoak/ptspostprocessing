@@ -33,5 +33,5 @@ add_executable(checkcode test.cpp)
 target_link_libraries(checkcode LIBPROCESSING)
 
 # target
-add_executable(dump dumppts.cpp)
-target_link_libraries(dump LIBPROCESSING)
+add_executable(dumppts dumppts.cpp)
+target_link_libraries(dumppts LIBPROCESSING)

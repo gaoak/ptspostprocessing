@@ -1,6 +1,7 @@
 #include<string>
 #include<vector>
 #include<cmath>
+#include<set>
 #include "StructuredData.h"
 #include "Dataprocessing.h"
 #include "FileIO.h"
@@ -127,14 +128,6 @@ int StructuredData::GenPoints(const std::vector<double> &range) {
     return m_Np;
 }
 
-int StructuredData::GetTotPoints() {
-    return m_Np;
-}
-
-int StructuredData::GetNumPhys() {
-    return m_phys.size();
-}
-
 int StructuredData::RemovePhysics(int i) {
     m_phys.erase(m_phys.begin() + i);
     m_vars.erase(m_vars.begin() + i);
@@ -183,14 +176,6 @@ int StructuredData::AddPhysics(std::string var, const std::vector<double> &data)
 double StructuredData::GetPhysNorm(int f, int p) {
     double sum = NormVect(m_phys[f], p);
     return sum/m_Np;
-}
-
-double StructuredData::GetPhysValue(int f, int i) {
-    return m_phys[f][i];
-}
-
-double StructuredData::GetCoordValue(int f, int i) {
-    return m_x[f][i];
 }
 
 int StructuredData::OutputData(std::string filename, const bool info) {
@@ -254,33 +239,103 @@ int StructuredData::ResetAxis() {
     return 0;
 }
 
+int StructuredData::ShuffleIndex(std::map<int, int> ReIndex, std::vector<int> dir,
+        std::map<int, int> pm) {
+    //only shuffle index, not change variable order
+    //place ReIndex[i] to i
+    int dim = m_x.size();
+    std::map<int, int> RI;
+    std::set<int> sec, fir;
+    bool needshuff = false;
+    int count = 0;
+    for(auto it=ReIndex.begin(); it!=ReIndex.end(); ++it) {
+        if(it->second<0 || it->second>=dim || sec.find(it->second)!=sec.end()) {
+            continue;
+        }
+        if(count!=it->second) {
+            needshuff = true;
+        }
+        fir.insert(count);
+        sec.insert(it->second);
+        RI[count++] = it->second;
+    }
+    if(!needshuff || fir!=sec || (int)fir.size()!=dim) {
+        return 0;
+    }
+    std::vector<std::vector<double> > x = m_x;
+    std::vector<std::vector<double> > phys = m_phys;
+    std::vector<int> N = m_N;
+    std::vector<std::string> vars = m_vars;
+    N.push_back(1); N.push_back(1); N.push_back(1);
+    std::vector<int> targ(3, 0);
+    for(int d=0; d<dim; ++d) {
+        m_N[RI[d]] = N[d];
+    }
+    for(int k=0; k<N[2]; ++k) {
+        int tmp2 = k * N[0] * N[1];
+        for(int j=0; j<N[1]; ++j) {
+            int tmp1 = j * N[0] + tmp2;
+            for(int i=0; i<N[0]; ++i) {
+                int index = i + tmp1;
+                std::vector<int> orig = {i, j, k};
+                for(int d=0; d<dim; ++d) {
+                    if(dir[d]<0) {
+                        targ[RI[d]] = N[d]-1 - orig[d];
+                    } else {
+                        targ[RI[d]] = orig[d];
+                    }
+                }
+                int newind = Index(m_N, targ);
+                for(size_t d=0; d<m_x.size(); ++d) {
+                    m_x[RI[d]][newind] = x[d][index];
+                }
+                for(size_t d=0; d<m_phys.size(); ++d) {
+                    m_phys[pm[d]][newind] = phys[d][index];
+                }
+            }
+        }
+    }
+    ResetAxis();
+    return (m_x.size() + m_phys.size() ) * m_Np;
+}
+
 int StructuredData::InputData(std::string filename, const bool info) {
     std::clock_t c_start = std::clock();
     std::vector<std::vector<double> > data;
     int isdouble;
     std::string ext = filename.substr(filename.size()-4, 4);
     int ncoor = -1;
+    std::map<int, int> vm;
+    std::vector<std::string> vars;
     if(0 == ext.compare(".plt")) {
-        ncoor = InputTec360_binary(filename, m_vars, m_N, data, isdouble);
+        ncoor = InputTec360_binary(filename, vars, m_N, data, isdouble, vm);
     } else if(0 == ext.compare(".csv")) {
-        ncoor = InputCSV(filename, m_vars, m_N, data, isdouble);
+        ncoor = InputCSV(filename, vars, m_N, data, isdouble, vm);
     } else {
         printf("error: unsupported tecplot file type %s\n", filename.c_str());
         return -1;
     }
     ReSetNp();
     //copy data
-    m_x.clear();
-    m_phys.clear();
-    for(int i=0; i<(int)m_vars.size(); ++i) {
-        if(i<ncoor) {
-            m_x.push_back(data[i]);
+    m_x.resize(ncoor);
+    m_phys.resize((int)vars.size()-ncoor);
+    m_vars.resize(vars.size());
+    for(int i=0; i<(int)vars.size(); ++i) {
+        m_vars[vm[i]] = vars[i];
+        if(vm[i]<ncoor) {
+            m_x[vm[i]] = data[i];
         } else {
-            m_phys.push_back(data[i]);
+            m_phys[vm[i]-ncoor] = data[i];
         }
     }
     //reset axis
     ResetAxis();
+    std::vector<int> dir(m_N.size(), 1);
+    std::map<int, int> pm;
+    for(int i=0; i<(int)m_phys.size(); ++i) {
+        pm[i] = i;
+    }
+    ShuffleIndex(vm, dir, pm);
     if(info) {
         std::clock_t c_end = std::clock();
         double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;

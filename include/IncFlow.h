@@ -10,6 +10,16 @@ enum VortexMethod {
     VortexMethodSize = 2
 };
 
+enum VortexExtractionStopReason {
+    StopRepeatPoint,
+    StopThreshold,
+    StopReachWall,
+    StopOutDomain,
+    StopError,
+    StopMaxTry,
+    VortexExtractionStopReasonSize
+};
+
 enum CoreInfo {
     Corex = 0,
     Corey = 1,
@@ -33,7 +43,7 @@ public:
             const std::vector<std::vector<double> > & axis);
     int OverWriteBodyPoint(const std::vector<double> &u0, const std::vector<double> &pivot, const std::vector<double> &omega);
     int TransformCoord(const std::vector<double> &x0);
-    int ExtractCore(const double sigma, std::vector<std::vector<double> > & cores, std::set<int> &searched,
+    VortexExtractionStopReason ExtractCore(const double sigma, std::vector<std::vector<double> > & cores, std::set<int> &searched,
                     std::vector<double> &inputcenter, const std::vector<int> &vf, const int field,
                     const int direction, const bool stoponwall, const double threshold, VortexMethod vm);
     int ExtractCore(const double sigma, std::vector<std::vector<double> > & cores, std::set<int> &searched,
