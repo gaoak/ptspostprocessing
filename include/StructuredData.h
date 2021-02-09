@@ -52,6 +52,8 @@ public:
     int ShuffleIndex(std::map<int, int> ReIndex, std::vector<int> dir,
             std::map<int, int> pm);
     int ResetAxis();
+    std::vector<double> GetRange();
+    inline std::vector<int> GetN() {return m_N;}
     inline int GetTotPoints() {return m_Np;}
     inline double GetPhysValue(int f, int i) {return m_phys[f][i];}
     inline double GetCoordValue(int f, int i) {return m_x[f][i];}

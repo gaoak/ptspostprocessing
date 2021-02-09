@@ -196,6 +196,17 @@ int PlungingMotion::TransformBathCoord(IncFlow &flow) {
     std::vector<int> dir = {-1, -1, 1};
     std::map<int, int> pm = {{0,0},{1,2},{2,1},{3,3}};
     flow.ShuffleIndex(vm, dir, pm);
+    std::vector<int> N = flow.GetN();
+    for(size_t i=0; i<N.size(); ++i) {
+        N[i] = N[i]*2 - 1;
+    }
+    IncFlow flow2(N, flow.GetRange());
+    std::map<int, double> field;
+    for(int i=0; i<flow.GetNumPhys(); ++i) {
+        field[i] = 0.;
+    }
+    flow2.InterpolateFrom(flow, field);
+    flow = flow2;
     return 3*Np;
 }
 

@@ -514,6 +514,15 @@ int StructuredData::CopyToSubDomain(const std::vector<int> &Ns, const std::vecto
     return small.CopyAsSubDomain(Ns, Ne, skip, field, *this);
 }
 
+std::vector<double> StructuredData::GetRange() {
+    std::vector<double> res(6);
+    for(size_t i=0; i<m_N.size(); ++i) {
+        res[2*i] = m_axis.m_o[i];
+        res[2*i+1] = m_dx[i] * (m_N[i] - 1);
+    }
+    return res;
+}
+
 int StructuredData::InterpolateFrom(const StructuredData & origin, std::map<int,double> rawfield) {
     if(m_N.size() != origin.m_N.size()) {
         printf("error dimension mismatch in interpolation\n");
