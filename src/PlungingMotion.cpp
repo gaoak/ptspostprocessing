@@ -266,10 +266,10 @@ int PlungingMotion::ProcessFiniteWingData(IncFlow &flow, int n) {
 }
 
 int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n) {
-    if(m_vortexcoreVar.size()<4 || m_vortexcoreVar[3]==0) {
+    if(m_vortexcoreVar.size()<4) {
         return -1;
     }
-    for(int i=0; i<3; ++i) {
+    for(int i=0; i<4; ++i) {
         if(m_vortexcoreVar[i]<=0 || m_vortexcoreVar[i]>flow.GetNumPhys()) {
             return -1;
         }

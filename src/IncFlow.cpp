@@ -209,8 +209,11 @@ int IncFlow::SearchOneCorePerpendicular(
     }
     int centerindex = Index(m_N, intcenter);
     std::vector<double> vor = {m_phys[v[0]][centerindex], m_phys[v[1]][centerindex], m_phys[v[2]][centerindex]};
-    NormalizeVect(vor);
     int dir = FindAbsMax(3, vor.data());
+    if(std::fabs(vor[dir])<std::numeric_limits<double>::epsilon()) {
+        return -1; //zero vorticity point
+    }
+    NormalizeVect(vor);
     std::vector<double> e0, e1;
     e0 = {1.,1.,1.};
     e0[dir] = 0.;
