@@ -257,7 +257,7 @@ int IncFlow::SearchOneCorePerpendicular(
     m_axis.ToCompCoord(tmp);
     for(int i=0; i<3; ++i) {
         tmpintcenter[i] = myRound<double>(tmp[i]/m_dx[i]);
-        if(tmpintcenter[i]<0 || tmpintcenter[i]>=m_N[i]-1) {
+        if(tmpintcenter[i]<0 || tmpintcenter[i]>=m_N[i]) {
             return -1;//out of domain
         }
     }
