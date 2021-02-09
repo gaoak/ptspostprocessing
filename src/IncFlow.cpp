@@ -226,6 +226,9 @@ int IncFlow::SearchOneCorePerpendicular(
     dx = std::min(dx, m_dx[2]);
     int Nr = std::min(int(radius/dx + 0.5), 48);
     std::vector<int> planeN = {Nr*2 + 1, Nr*2 + 1, 1};
+    if(planeN[0]==1 || planeN[1]==1) {
+        return -1; //search fail
+    }
     intcenter = {Nr, Nr, 0};
     IncFlow slice(planeN, range, axis);
     slice.InterpolateFrom(*this, field);

@@ -33,6 +33,7 @@ int ExtractPatchStat2DGraph(const std::vector<int> &N, const std::vector<double>
         mu.clear();
         mu.push_back(0.);
         mu.push_back(0.);
+        mu.push_back(0.);
         sum = 0.;
         return 0;
     }
