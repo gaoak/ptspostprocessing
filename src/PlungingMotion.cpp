@@ -181,6 +181,7 @@ int PlungingMotion::TransformBathCoord(IncFlow &flow) {
     // y = z
     // x = -x
     // z = 5 - y
+    std::clock_t c_start = std::clock();
     int Np = flow.GetTotPoints();
     for(int i=0; i<Np; ++i) {
         double x = flow.GetCoordValue(0, i);
@@ -198,7 +199,7 @@ int PlungingMotion::TransformBathCoord(IncFlow &flow) {
     flow.ShuffleIndex(vm, dir, pm);
     std::vector<int> N = flow.GetN();
     for(size_t i=0; i<N.size(); ++i) {
-        N[i] = N[i]*2 - 1;
+        N[i] = N[i]*4 - 3;
     }
     IncFlow flow2(N, flow.GetRange());
     std::map<int, double> field;
@@ -207,6 +208,9 @@ int PlungingMotion::TransformBathCoord(IncFlow &flow) {
     }
     flow2.InterpolateFrom(flow, field);
     flow = flow2;
+    std::clock_t c_end = std::clock();
+    double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
+    printf("transform Bath exp data, cpu time %fs\n", time_elapsed_ms);
     return 3*Np;
 }
 
@@ -219,6 +223,10 @@ int PlungingMotion::ProcessEXPWingData(int dir) {
         int n = filen[k];
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA, m_span[0], m_span[1]});
         flow.InputData(GetInFileName(n));
+        if(m_translation) {
+            double h0 = PlungingLocation(GetFilePhase(n), m_phi) - 0.5*m_A;
+            flow.TransformCoord({0., h0, 0.});
+        }
         TransformBathCoord(flow);
         ProcessFiniteWingData(flow, k);
     }
@@ -234,20 +242,20 @@ int PlungingMotion::ProcessCFDWingData(int dir) {
         int n = filen[k];
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA, m_span[0], m_span[1]});
         flow.InputData(GetInFileName(n));
+        if(m_airfoil.compare("0000")!=0) {
+            double v0 = PlungingVelocity(GetFilePhase(n), m_phi);
+            flow.OverWriteBodyPoint({0., v0, 0.}, {0., 0., 0.}, {0., 0., 0.});
+        }
+        if(m_translation) {
+            double h0 = PlungingLocation(GetFilePhase(n), m_phi);
+            flow.TransformCoord({0., h0, 0.});
+        }
         ProcessFiniteWingData(flow, n);
     }
     return m_fileseries.size();
 }
 
 int PlungingMotion::ProcessFiniteWingData(IncFlow &flow, int n) {
-    if(m_airfoil.compare("0000")!=0) {
-        double v0 = PlungingVelocity(GetFilePhase(n), m_phi);
-        flow.OverWriteBodyPoint({0., v0, 0.}, {0., 0., 0.}, {0., 0., 0.});
-    }
-    if(m_translation) {
-        double h0 = PlungingLocation(GetFilePhase(n), m_phi);
-        flow.TransformCoord({0., h0, 0.});
-    }
     ProcessSmoothing(flow);
     if(m_calculateVorticityQ) {
         ProcessVorticity(flow);
@@ -282,14 +290,16 @@ int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n) {
         printf("vortex core with %d points extracted, cpu time %fs\n", (int)cores.size(), time_elapsed_ms);
     }
     std::ofstream ofile(filename.c_str());
-    ofile << "variables = x,y,z,radius1,radius2,Gamma" << std::endl;
-    for(int i=0; i<(int)cores.size(); ++i) {
-            ofile << cores[i][0] << " "
-                << cores[i][1] << " "
-                << cores[i][2] << " "
-                << cores[i][3] << " "
-                << cores[i][4] << " "
-                << cores[i][5] << "\n";
+    ofile << "variables = \"x\",\"y\",\"z\",\"radius1\",\"radius2\",\"Gamma\"";
+    for(size_t i=0; i<m_vortexcoreVar.size(); ++i) {
+        ofile << ",\"" << flow.GetPhysVarName(m_vortexcoreVar[i]-1) << "\"";
+    }
+    ofile << "\n";
+    for(size_t i=0; i<cores.size(); ++i) {
+        for(size_t j=0; j<cores[i].size(); ++j) {
+            ofile << cores[i][j] << " ";
+        }
+        ofile << "\n";
     }
     ofile.close();
     return cores.size();

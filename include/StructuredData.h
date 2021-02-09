@@ -55,6 +55,7 @@ public:
     std::vector<double> GetRange();
     inline std::vector<int> GetN() {return m_N;}
     inline int GetTotPoints() {return m_Np;}
+    inline std::string GetPhysVarName(int i) {return m_vars[(int)m_x.size()+i];}
     inline double GetPhysValue(int f, int i) {return m_phys[f][i];}
     inline double GetCoordValue(int f, int i) {return m_x[f][i];}
     inline void SetPhysValue(double v, int f, int i) {m_phys[f][i] = v;}

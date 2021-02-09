@@ -175,14 +175,18 @@ int IncFlow::SearchOneCoreXYZplane(
 
     ExtractVortexParam2Dplane(planeN, dx, intcenter, planevorticity, tmpradius, tmpcirculation);
 
-
     intcenter[0] += subrange[0];
     intcenter[1] += subrange[2];
     ShiftArray<double>(physcenter, dir-2);
     ShiftArray<int>(intcenter, dir-2);
     m_axis.ToPhysCoord(physcenter);
+
     info = {physcenter[0], physcenter[1], physcenter[2], tmpradius[0], tmpradius[1],
         std::fabs(tmpcirculation)};
+    centerindex = Index(m_N, intcenter);
+    for(size_t i=0; i<v.size(); ++i) {
+        info.push_back(m_phys[v[i]][centerindex]);
+    }
     return 3;
 }
 
@@ -220,37 +224,42 @@ int IncFlow::SearchOneCorePerpendicular(
     }
     double dx = std::min(m_dx[0], m_dx[1]);
     dx = std::min(dx, m_dx[2]);
-    int Nr = std::min(int(radius/dx + 0.5), 32);
+    int Nr = std::min(int(radius/dx + 0.5), 48);
     std::vector<int> planeN = {Nr*2 + 1, Nr*2 + 1, 1};
     intcenter = {Nr, Nr, 0};
-    IncFlow plane(planeN, range, axis);
-    plane.InterpolateFrom(*this, field);
-    std::vector<double> planevorticity(plane.GetTotPoints());
-    std::vector<double> planedata(plane.GetTotPoints());
+    IncFlow slice(planeN, range, axis);
+    slice.InterpolateFrom(*this, field);
+    std::vector<double> planevorticity(slice.GetTotPoints());
+    std::vector<double> planedata(slice.GetTotPoints());
     for(size_t i=0; i<planevorticity.size(); ++i) {
-        planevorticity[i] = vor[0] * plane.m_phys[v[0]][i] + vor[1] * plane.m_phys[v[1]][i] + vor[2] * plane.m_phys[v[2]][i];
-        planedata[i] = plane.m_phys[v[3]][i];
+        planevorticity[i] = vor[0] * slice.m_phys[v[0]][i] + vor[1] * slice.m_phys[v[1]][i]
+                          + vor[2] * slice.m_phys[v[2]][i];
+        planedata[i] = slice.m_phys[v[3]][i];
     }
 
     planeN.resize(2);
     double tmpsign = planevorticity[Index(planeN, intcenter)];
     PurgeDifferentSign(planeN, planevorticity, planedata, tmpsign);
     FindLocMaxIn2DGraph(planeN, intcenter, planedata, intcenter, ismax);
+    intcenter.push_back(0);
+    centerindex = Index(slice.m_N, intcenter);
 
     std::vector<double> tmpradius;
     double tmpcirculation;
-    ExtractVortexParam2Dplane(planeN, plane.m_dx, intcenter, planevorticity, tmpradius, tmpcirculation);
-    physcenter = {intcenter[0]*plane.m_dx[0], intcenter[1]*plane.m_dx[1], 0.};
-    plane.m_axis.ToPhysCoord(physcenter);
+    ExtractVortexParam2Dplane(planeN, slice.m_dx, intcenter, planevorticity, tmpradius, tmpcirculation);
+    physcenter = {intcenter[0]*slice.m_dx[0], intcenter[1]*slice.m_dx[1], 0.};
+    slice.m_axis.ToPhysCoord(physcenter);
     std::vector<double> tmp(3);
     tmp[0] = physcenter[0]; tmp[1] = physcenter[1]; tmp[2] = physcenter[2];
     m_axis.ToCompCoord(tmp);
-    intcenter.resize(3);
     for(int i=0; i<3; ++i) {
         intcenter[i] = myRound<double>(tmp[i]/m_dx[i]);
     }
     info = {physcenter[0], physcenter[1], physcenter[2], tmpradius[0], tmpradius[1],
         std::fabs(tmpcirculation)};
+    for(size_t i=0; i<v.size(); ++i) {
+        info.push_back(slice.m_phys[v[i]][centerindex]);
+    }
     //output test
     //plane.OutputData("perpendicular.plt");
     //printf("phys point %f,%f,%f\n", physcenter[0], physcenter[1], physcenter[2]);

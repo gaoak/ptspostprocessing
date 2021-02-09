@@ -5,9 +5,9 @@
 #include<set>
 
 enum VortexMethod {
-    XYZPlane = 0,
-    PerpendicularPlane = 1,
-    VortexMethodSize = 2
+    XYZPlane,
+    PerpendicularPlane,
+    VortexMethodSize
 };
 
 enum VortexExtractionStopReason {
@@ -21,13 +21,17 @@ enum VortexExtractionStopReason {
 };
 
 enum CoreInfo {
-    Corex = 0,
-    Corey = 1,
-    Corez = 2,
-    CoreR1 = 3,
-    CoreR2 = 4,
-    CoreGamma = 5,
-    CoreInfoSize = 6
+    Corex,
+    Corey,
+    Corez,
+    CoreR1,
+    CoreR2,
+    CoreGamma,
+    CoreVectx,
+    CoreVecty,
+    CoreVectz,
+    CoreCriterion,
+    CoreInfoSize
 };
 
 class IncFlow : public StructuredData {
