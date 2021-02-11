@@ -11,7 +11,7 @@ double DotVect(const std::vector<double> &a, const std::vector<double> &b) {
     return res;
 }
 
-double NormVect(const std::vector<double> data, int p) {
+double NormVect(const std::vector<double> &data, int p) {
     if(p<=0) {
         return (int)data.size();
     }

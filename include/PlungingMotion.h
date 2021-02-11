@@ -12,9 +12,9 @@ public:
     std::string GetOutFileName(int n);
 protected:
     int ProcessFiniteWingData(IncFlow &flow, int n);
-    int ProcessSmoothing(IncFlow &flow);
+    int ProcessSmoothing(IncFlow &flow, double sigma);
     int ProcessVorticity(IncFlow &flow);
-    int ProcessVortexCore(IncFlow &flow, int n);
+    int ProcessVortexCore(IncFlow &flow, int n, double sigma, std::vector<std::vector<double> > &cores);
     int GenerateFileSeries();
     int TransformBathCoord(IncFlow &flow);
     double GetFilePhase(int n);
@@ -33,13 +33,12 @@ protected:
     std::string m_airfoil;
     double m_AoA;
     std::vector<double> m_span;
-    double m_sigma;
+    std::vector<double> m_sigma;
     std::vector<int> m_vortexcoreVar;
     std::vector<double> m_initcenter;
     int m_stoponwall;
     double m_threshold;
     int m_calculateVorticityQ;
     int m_translation;
-    VortexMethod m_vortexmethod;
 };
 #endif

@@ -26,7 +26,7 @@ template<typename T>
 int FindMin(int N, const T* data);
 std::vector<double> transform(const std::vector<double> &p, double AoA);
 double DotVect(const std::vector<double> &a, const std::vector<double> &b);
-double NormVect(const std::vector<double> data, int p);
+double NormVect(const std::vector<double> &data, int p);
 void NormalizeVect(std::vector<double> &data);
 void AddVect(const double a1, const std::vector<double> &a,
              const double b1, const std::vector<double> &b,

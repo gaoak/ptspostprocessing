@@ -15,7 +15,7 @@ CoordSystem::CoordSystem() {
 
 CoordSystem::CoordSystem(const std::vector<double> &o)
     : CoordSystem() {
-    for(int i=0; i<(int)o.size(); ++i) {
+    for(int i=0; i<(int)o.size() && i<3; ++i) {
         m_o[i] = o[i];
     }
 }
@@ -23,7 +23,7 @@ CoordSystem::CoordSystem(const std::vector<double> &o)
 CoordSystem::CoordSystem(const std::vector<double> &o,
     const std::vector<std::vector<double> > & axis)
     : CoordSystem() {
-    for(int i=0; i<(int)o.size(); ++i) {
+    for(int i=0; i<(int)o.size() && i<3; ++i) {
         m_o[i] = o[i];
     }
     for(int i=0; i<(int)axis.size() && i<3; ++i) {
@@ -32,6 +32,11 @@ CoordSystem::CoordSystem(const std::vector<double> &o,
         }
         NormalizeVect(m_e[i]);
     }
+}
+
+CoordSystem::CoordSystem(const CoordSystem & coord) {
+    m_o = coord.m_o;
+    m_e = coord.m_e;
 }
 
 void CoordSystem::ToPhysCoord(std::vector<double> &x) const {
@@ -46,10 +51,11 @@ void CoordSystem::ToPhysCoord(std::vector<double> &x) const {
 
 void CoordSystem::ToCompCoord(std::vector<double> &x) const {
     std::vector<double> tmp(3, 0.);
-    for(int i=0; i<(int)x.size(); ++i) {
+    int N = std::min(3, (int)x.size());
+    for(int i=0; i<N; ++i) {
         tmp[i] = x[i] - m_o[i];
     }
-    for(int i=0; i<(int)x.size(); ++i) {
+    for(int i=0; i<(int)x.size() && i<3; ++i) {
         x[i] = DotVect(m_e[i], tmp);
     }
 }
@@ -72,6 +78,16 @@ StructuredData::StructuredData(const std::vector<int> &N, const std::vector<doub
 
 StructuredData::StructuredData()
     : m_axis() {
+}
+
+StructuredData::StructuredData(const StructuredData & data) {
+    m_x = data.m_x;
+    m_phys = data.m_phys;
+    m_N = data.m_N;
+    m_vars = data.m_vars;
+    m_Np = data.m_Np;
+    m_axis = data.m_axis;
+    m_dx = data.m_dx;
 }
 
 int StructuredData::GenPoints(const std::vector<double> &range) {

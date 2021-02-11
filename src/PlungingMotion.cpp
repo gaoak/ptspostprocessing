@@ -97,15 +97,6 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     } else {
         m_calculateVorticityQ = 0;
     }
-    int vm = 0;
-    if(param.count("vortexplanemethod")) {
-        vm = myRound<double>(StringToDouble(param["vortexplanemethod"].c_str()));
-    }
-    if(vm==1) {
-        m_vortexmethod = VortexMethod::PerpendicularPlane;
-    } else {
-        m_vortexmethod = VortexMethod::XYZPlane;
-    }
     if(param.count("N")) {
         parserUInt(param["N"].c_str(), m_N);
     }
@@ -113,9 +104,9 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
         parserDouble(param["range"].c_str(), m_range);
     }
     if(param.count("sigma")) {
-        m_sigma = StringToDouble(param["sigma"].c_str());
+        parserDouble(param["sigma"].c_str(), m_sigma);
     } else {
-        m_sigma = -1.;
+        m_sigma = {-1.};
     }
     if(param.count("initcenter")) {
         parserDouble(param["initcenter"].c_str(), m_initcenter);
@@ -255,39 +246,33 @@ int PlungingMotion::ProcessCFDWingData(int dir) {
     return m_fileseries.size();
 }
 
-int PlungingMotion::ProcessFiniteWingData(IncFlow &flow, int n) {
-    ProcessSmoothing(flow);
+int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n, double sigma,
+        std::vector<std::vector<double> > &cores) {
+    ProcessSmoothing(flow, sigma);
     if(m_calculateVorticityQ) {
         ProcessVorticity(flow);
     }
-    ProcessVortexCore(flow, n);
-    flow.OutputData(GetOutFileName(n));
-    return 1;
-}
-
-int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n) {
+    std::clock_t c_start = std::clock();
     if(m_vortexcoreVar.size()<4) {
+        printf("error incorrect vortex variables.\n");
         return -1;
     }
     for(int i=0; i<4; ++i) {
         if(m_vortexcoreVar[i]<=0 || m_vortexcoreVar[i]>flow.GetNumPhys()) {
+            printf("error incorrect vortex variables.\n");
             return -1;
         }
     }
-    std::clock_t c_start = std::clock();
-    std::string filename("vortexcore");
-    filename += std::to_string(n) + ".dat";
-    std::vector<std::vector<double> > cores;
-    std::set<int> searchhist;
-    flow.ExtractCore(m_sigma, cores, searchhist, m_initcenter, m_vortexcoreVar,
-        m_vortexcoreVar[3], m_stoponwall>0, m_threshold, m_vortexmethod);
-    std::clock_t c_end = std::clock();
-    double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
+    std::string filename("vcore");
+    std::string fname = GetOutFileName(n);
     if(cores.size()==0) {
-        printf("no vortex core found with threshold %f, cpu time %fs\n", m_threshold, time_elapsed_ms);
-        return 0;
+        std::set<int> searchhist;
+        flow.ExtractCoreByPoint(cores, searchhist, m_initcenter, m_vortexcoreVar,
+            m_vortexcoreVar[3], m_stoponwall>0, m_threshold, sigma);
+        filename += fname.substr(0, (int)fname.size()-4) + ".dat";
     } else {
-        printf("vortex core with %d points extracted, cpu time %fs\n", (int)cores.size(), time_elapsed_ms);
+        flow.RefineCore(cores, m_vortexcoreVar, m_vortexcoreVar[3]);
+        filename += fname.substr(0, (int)fname.size()-4) + "_" + std::to_string(cores.size()) + ".dat";
     }
     std::ofstream ofile(filename.c_str());
     ofile << "variables = \"x\",\"y\",\"z\",\"radius1\",\"radius2\",\"Gamma\"";
@@ -302,17 +287,37 @@ int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n) {
         ofile << "\n";
     }
     ofile.close();
+    std::clock_t c_end = std::clock();
+    double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
+    if(cores.size()==0) {
+        printf("no vortex core found with threshold %f, cpu time %fs\n", m_threshold, time_elapsed_ms);
+        return 0;
+    } else {
+        printf("vortex core file %s, cpu time %fs\n", filename.c_str(), time_elapsed_ms);
+    }
+    return (int)cores.size();
+}
+
+int PlungingMotion::ProcessFiniteWingData(IncFlow &flow, int n) {
+    std::vector<std::vector<double> > cores;
+    IncFlow rawdata = flow; // backed raw data;
+    ProcessVortexCore(flow, n, m_sigma[0], cores);
+    flow.OutputData(GetOutFileName(n));
+    if(m_sigma.size()>1) {
+        ProcessVortexCore(rawdata, n, m_sigma[1], cores);
+        rawdata.OutputData("refine_" + GetOutFileName(n));
+    }
     return cores.size();
 }
 
-int PlungingMotion::ProcessSmoothing(IncFlow &flow) {
-    if(m_sigma>0.) {
+int PlungingMotion::ProcessSmoothing(IncFlow &flow, double sigma) {
+    if(sigma>0.) {
         std::clock_t c_start = std::clock();
         std::vector<int> field;
         for(int i=0; i<flow.GetNumPhys(); ++i) {
             field.push_back(i);
         }
-        flow.Smoothing(m_sigma, field);
+        flow.Smoothing(sigma, field);
         std::clock_t c_end = std::clock();
         double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
         printf("do smooth, cpu time %fs\n", time_elapsed_ms);
