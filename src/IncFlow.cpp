@@ -86,7 +86,7 @@ int IncFlow::TransformCoord(const std::vector<double> &x0) {
     return m_Np;
 }
 
-std::pair<int, std::vector<int> > IncFlow::GetProceedDirection(const std::vector<double> &vor, double sign) {
+std::pair<int, std::vector<int> > IncFlow::GetProceedDirectionInt(const std::vector<double> &vor, double sign) {
     std::pair<int, std::vector<int>> res;
     res.first = FindAbsMax(3, vor.data());
     std::vector<int> inc(3);
@@ -98,6 +98,24 @@ std::pair<int, std::vector<int> > IncFlow::GetProceedDirection(const std::vector
     }
     for(int i=0; i<3; ++i) {
         inc[i] = myRound<double>(vor[i] * ds / m_dx[i]);
+    }
+    res.second = inc;
+    //printf("direction %d, (%d,%d,%d)\n", res.first, res.second[0], res.second[1], res.second[2]);
+    return res;
+}
+
+std::pair<int, std::vector<double> > IncFlow::GetProceedDirection(const std::vector<double> &vor, double sign) {
+    std::pair<int, std::vector<double>> res;
+    res.first = FindAbsMax(3, vor.data());
+    std::vector<double> inc(3);
+    double ds = 0.;
+    if(sign * vor[res.first] > 0) {
+        ds = m_dx[res.first]/vor[res.first];
+    } else {
+        ds = -m_dx[res.first]/vor[res.first];
+    }
+    for(int i=0; i<3; ++i) {
+        inc[i] = vor[i] * ds;
     }
     res.second = inc;
     //printf("direction %d, (%d,%d,%d)\n", res.first, res.second[0], res.second[1], res.second[2]);
@@ -125,14 +143,17 @@ int IncFlow::GetSubdomainRange(const std::vector<int> &center, double radius,
 int IncFlow::ExtractCoreByPoint(
         std::vector<std::vector<double> > & cores, std::set<int> &searched,
         std::vector<double> &inputcenter, const std::vector<int> vf,
-        const int field, const bool stoponwall, const double threshold, const double walltol) {
+        const int field, const bool stoponwall, const double threshold, const double walltol,
+        VortexMethod vm) {
     std::vector<std::vector<double> > cores1, cores2;
     std::vector<double> inputc = inputcenter;
-    ExtractCoreByPointDirection(cores1, searched, inputc, vf, field,  1, stoponwall, threshold, walltol);
+    VortexExtractionStopReason r1 = ExtractCoreByPointDirection(
+        cores1, searched, inputc, vf, field,  1, stoponwall, threshold, walltol, vm);
     if(cores1.size()) {
         inputcenter = inputc;
     }
-    ExtractCoreByPointDirection(cores2, searched, inputc, vf, field, -1, stoponwall, threshold, walltol);
+    VortexExtractionStopReason r2 = ExtractCoreByPointDirection(
+        cores2, searched, inputc, vf, field, -1, stoponwall, threshold, walltol, vm);
     if(cores2.size()) {
         inputcenter = inputc;
     }
@@ -143,6 +164,7 @@ int IncFlow::ExtractCoreByPoint(
     for(int i=0; i<(int)cores1.size()-1; ++i) {
         cores.push_back(cores1[i]);
     }
+    printf("stop because of %d,%d\n", r1, r2);
     return cores.size();
 }
 
@@ -206,7 +228,7 @@ int IncFlow::InterpolateFrom(const IncFlow & origin, std::map<int,double> field)
 }
 
 int IncFlow::SearchOneCorePerpendicular(
-        std::vector<int> &intcenter, std::vector<double> &physcenter, std::vector<double> &info,
+        std::vector<double> &physcenter, std::vector<double> &info,
         const std::vector<int> &v, const double ran, const bool ismax) {
     //[-ran, ran]
     double dx = std::min(m_dx[0], m_dx[1]);
@@ -215,8 +237,19 @@ int IncFlow::SearchOneCorePerpendicular(
     if(Nr<1) {
         return -1; //search fail
     }
-    int centerindex = Index(m_N, intcenter);
-    std::vector<double> vor = {m_phys[v[0]][centerindex], m_phys[v[1]][centerindex], m_phys[v[2]][centerindex]};
+    std::map<int, double> field;
+    std::map<int, double> value;
+    for(size_t i=0; i<m_phys.size(); ++i) {
+        field[i] = 0.;
+    }
+    if(ismax) {
+        field[v[3]] = -1e10;
+    } else {
+        field[v[3]] = 1e10;
+    }
+    physcenter.resize(3);
+    InterpolatePoint(physcenter, field, value);
+    std::vector<double> vor = {value[v[0]], value[v[1]], value[v[2]]};
     int dir = FindAbsMax(3, vor.data());
     if(std::fabs(vor[dir])<std::numeric_limits<double>::epsilon()) {
         return -1; //zero vorticity point
@@ -232,17 +265,8 @@ int IncFlow::SearchOneCorePerpendicular(
     axis.push_back(e0); axis.push_back(e1); axis.push_back(vor);
     std::vector<double> range(6);
     for(int i=0; i<3; ++i) {
-        range[2*i  ] = m_x[i][centerindex] - e0[i] * ran - e1[i] * ran;
+        range[2*i  ] = physcenter[i] - e0[i] * ran - e1[i] * ran;
         range[2*i+1] = 2. * ran;
-    }
-    std::map<int, double> field;
-    for(size_t i=0; i<m_phys.size(); ++i) {
-        field[i] = 0.;
-    }
-    if(ismax) {
-        field[v[3]] = -1e10;
-    } else {
-        field[v[3]] = 1e10;
     }
     std::vector<int> planeN = {Nr*2 + 1, Nr*2 + 1, 1};
     std::vector<int> tmpintcenter = {Nr, Nr, 0};
@@ -258,29 +282,16 @@ int IncFlow::SearchOneCorePerpendicular(
 
     planeN.resize(2);
     FindLocMaxIn2DGraph(planeN, tmpintcenter, planedata, tmpintcenter, ismax);
-    tmpintcenter.push_back(0);
-    centerindex = Index(slice.m_N, tmpintcenter);
 
     std::vector<double> tmpradius;
     double tmpcirculation;
     ExtractVortexParam2Dplane(planeN, slice.m_dx, tmpintcenter, planevorticity, tmpradius, tmpcirculation);
     physcenter = {tmpintcenter[0]*slice.m_dx[0], tmpintcenter[1]*slice.m_dx[1], 0.};
     slice.m_axis.ToPhysCoord(physcenter);
-    std::vector<double> tmp(3);
-    tmp[0] = physcenter[0]; tmp[1] = physcenter[1]; tmp[2] = physcenter[2];
-    m_axis.ToCompCoord(tmp);
-    for(int i=0; i<3; ++i) {
-        tmpintcenter[i] = myRound<double>(tmp[i]/m_dx[i]);
-        if(tmpintcenter[i]<0) {
-            tmpintcenter[i] = 0;
-        }
-        if(tmpintcenter[i]>=m_N[i]) {
-            tmpintcenter[i] = m_N[i] - 1;
-        }
-    }
-    intcenter = tmpintcenter;
     info = {physcenter[0], physcenter[1], physcenter[2], tmpradius[0], tmpradius[1],
         std::fabs(tmpcirculation)};
+    tmpintcenter.push_back(0);
+    int centerindex = Index(slice.m_N, tmpintcenter);
     for(size_t i=0; i<v.size(); ++i) {
         info.push_back(slice.m_phys[v[i]][centerindex]);
     }
@@ -294,11 +305,35 @@ int IncFlow::SearchOneCorePerpendicular(
 VortexExtractionStopReason IncFlow::ExtractCoreByPointDirection(
         std::vector<std::vector<double> > & cores, std::set<int> &searched,
         std::vector<double> &inputcenter, const std::vector<int> vf, const int field, const int direction,
-        const bool stoponwall, const double threshold, const double walltol) {
+        const bool stoponwall, const double threshold, const double walltol, VortexMethod vm) {
     if(vf.size()<3 || field==0 || direction==0 ||
        vf[0]<=0 || vf[1]<=0 || vf[2]<=0 || inputcenter.size()<3) {
         printf("error incorrect parameters for ExtractCore\n");
-        return StopError;
+        return StopParamsError;
+    }
+    if(vm == VorticityLine) {
+        ExtractCoreByPointDirectionXYZ(cores, searched,
+            inputcenter, vf, field, direction,
+            stoponwall, threshold, walltol, true); //initial search
+        return ExtractCoreByPointDirectionVorticityLine(cores, searched,
+            inputcenter, vf, field, direction,
+            stoponwall, threshold, walltol);
+    } else {
+        return ExtractCoreByPointDirectionXYZ(cores, searched,
+            inputcenter, vf, field, direction,
+            stoponwall, threshold, walltol);
+    }
+}
+
+VortexExtractionStopReason IncFlow::ExtractCoreByPointDirectionXYZ(
+        std::vector<std::vector<double> > & cores, std::set<int> &searched,
+        std::vector<double> &inputcenter, const std::vector<int> vf, const int field, const int direction,
+        const bool stoponwall, const double threshold, const double walltol,
+        const bool onestep) {
+    if(vf.size()<3 || field==0 || direction==0 ||
+       vf[0]<=0 || vf[1]<=0 || vf[2]<=0 || inputcenter.size()<3) {
+        printf("error incorrect parameters for ExtractCore\n");
+        return StopParamsError;
     }
 
     // get parameter
@@ -343,13 +378,16 @@ VortexExtractionStopReason IncFlow::ExtractCoreByPointDirection(
            NormVect(vor, 1) < std::numeric_limits<double>::epsilon()) {
             return StopThreshold;
         }
-        cores.push_back(coreinfo);
-        std::pair<int, std::vector<int> > incplane = GetProceedDirection(vor, vorticityproceedsign);
-        dir = incplane.first;
-        radiusofsubrange = 3. * coreinfo[CoreR2];
         if(count==0) {
             inputcenter = physcenter;
         }
+        if(onestep) {
+            return StopSuccess;
+        }
+        cores.push_back(coreinfo);
+        std::pair<int, std::vector<int> > incplane = GetProceedDirectionInt(vor, vorticityproceedsign);
+        dir = incplane.first;
+        radiusofsubrange = 3. * coreinfo[CoreR2];
         if(searched.find(centerindex)!=searched.end() && count) {
             return StopRepeatPoint; //reaching previous point
         } else {
@@ -366,12 +404,95 @@ VortexExtractionStopReason IncFlow::ExtractCoreByPointDirection(
     return StopMaxTry;
 }
 
+VortexExtractionStopReason IncFlow::ExtractCoreByPointDirectionVorticityLine(
+        std::vector<std::vector<double> > & cores, std::set<int> &searched,
+        std::vector<double> &inputcenter, const std::vector<int> vf, const int field, const int direction,
+        const bool stoponwall, const double threshold, const double walltol) {
+    if(vf.size()<3 || field==0 || direction==0 ||
+       vf[0]<=0 || vf[1]<=0 || vf[2]<=0 || inputcenter.size()<3) {
+        printf("error incorrect parameters for ExtractCore\n");
+        return StopParamsError;
+    }
+
+    // get parameter
+    std::vector<int> v = {vf[0]-1, vf[1]-1, vf[2]-1, std::abs(field)-1};
+    bool ismax = true;
+    if(field<0) {
+        ismax = false;
+    }
+    double vorticityproceedsign = 1.;
+    if(direction<0) {
+        vorticityproceedsign = -1.;
+    }
+
+    // set initial position and direction
+    std::vector<double> physcenter = inputcenter;
+    std::vector<double> tmp = inputcenter;
+    m_axis.ToCompCoord(tmp);
+    std::vector<int> intcenter(3);
+    for(int i=0; i<3; ++i) {
+        intcenter[i] = myRound<double>(tmp[i]/m_dx[i]);
+        if(intcenter[i]<0 || intcenter[i]>=m_N[i]) {
+            return StopOutDomain;
+        }
+    }
+    double radiusofsubrange = 0;
+    for(int i=0; i<(int)m_N.size(); ++i) {
+        radiusofsubrange += m_dx[i] * (m_N[i] - 1);
+    }
+
+    //start extraction
+    cores.clear();
+    int Trymax = m_Np, count = 0;
+    while(count<Trymax) {
+        std::vector<double> coreinfo;
+        if(0 > SearchOneCorePerpendicular(
+            physcenter, coreinfo, v, radiusofsubrange, ismax) ) {
+            return StopPerpendicularError;
+        }
+        tmp = physcenter;
+        m_axis.ToCompCoord(tmp);
+        for(int i=0; i<3; ++i) {
+            intcenter[i] = myRound<double>(tmp[i]/m_dx[i]);
+            if(intcenter[i]<0 || intcenter[i]>=m_N[i]) {
+                return StopOutDomain;
+            }
+        }
+        int centerindex = Index(m_N, intcenter);
+        std::vector<double> vor = {m_phys[v[0]][centerindex], m_phys[v[1]][centerindex], m_phys[v[2]][centerindex]};
+        if((ismax && m_phys[v[3]][centerindex]<threshold) ||
+           (!ismax && m_phys[v[3]][centerindex]>threshold) ||
+           NormVect(vor, 1) < std::numeric_limits<double>::epsilon()) {
+            return StopThreshold;
+        }
+        cores.push_back(coreinfo);
+        std::pair<int, std::vector<double> > incplane = GetProceedDirection(vor, vorticityproceedsign);
+        radiusofsubrange = 3. * coreinfo[CoreR2];
+        if(count==0) {
+            inputcenter = physcenter;
+        }
+        if(searched.find(centerindex)!=searched.end() && count) {
+            ;//return StopRepeatPoint; //reaching previous point
+        } else {
+            searched.insert(centerindex);
+        }
+        if(stoponwall && m_body.IsInBody(physcenter, walltol)) {
+            return StopReachWall;
+        }
+        for(int i=0; i<3; ++i) {
+            physcenter[i] += incplane.second[i];
+        }
+        ++count;
+    }
+    return StopMaxTry;
+}
+
 VortexExtractionStopReason IncFlow::RefineCore(
         std::vector<std::vector<double> > & cores, const std::vector<int> vf, const int field) {
     //cores should be vortex cores found by ExtractCoreByPoint
     if(vf.size()<3 || field==0 || vf[0]<=0 || vf[1]<=0 || vf[2]<=0) {
         printf("error incorrect parameters for ExtractCore\n");
-        return StopError;
+        return StopParamsError;
     }
 
     // get parameter
@@ -386,32 +507,12 @@ VortexExtractionStopReason IncFlow::RefineCore(
         for(int i=0; i<3; ++i) {
             physcenter[i] = cores[c][i];
         }
-        m_axis.ToCompCoord(physcenter);
-        std::vector<int> intcenter(3);
-        for(int i=0; i<3; ++i) {
-            intcenter[i] = myRound<double>(physcenter[i]/m_dx[i]);
-        }
         double radiusofsubrange = 3. * cores[c][CoreR2];
-        //check data validity
-        if(intcenter[0]<0 || intcenter[0]>=m_N[0] ||
-           intcenter[1]<0 || intcenter[1]>=m_N[1] ||
-           intcenter[2]<0 || intcenter[2]>=m_N[2]) {
-            return StopOutDomain;
-        }
-        int centerindex = Index(m_N, intcenter);
-        std::vector<double> vor = {m_phys[v[0]][centerindex],
-            m_phys[v[1]][centerindex], m_phys[v[2]][centerindex]};
-        if(NormVect(vor, 1) < std::numeric_limits<double>::epsilon()) {
-            continue;
-        }
-        //
         std::vector<double> coreinfo;
-        if(SearchOneCorePerpendicular(intcenter, physcenter, coreinfo, v,
-            radiusofsubrange, ismax) < 0) {
-            continue;
-        }
-        for(size_t i=0; i<coreinfo.size(); ++i) {
-            cores[c][i] = coreinfo[i];
+        if(SearchOneCorePerpendicular(physcenter, coreinfo, v, radiusofsubrange, ismax)) {
+            for(size_t i=0; i<coreinfo.size(); ++i) {
+                cores[c][i] = coreinfo[i];
+            }
         }
     }
     return StopSuccess;

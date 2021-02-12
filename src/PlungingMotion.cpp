@@ -97,6 +97,15 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     } else {
         m_calculateVorticityQ = 0;
     }
+    int vm = 0;	
+    if(param.count("vortexplanemethod")) {	
+        vm = myRound<double>(StringToDouble(param["vortexplanemethod"].c_str()));	
+    }	
+    if(vm==1) {	
+        m_vortexmethod = VortexMethod::VorticityLine;	
+    } else {	
+        m_vortexmethod = VortexMethod::XYZPlane;	
+    }
     if(param.count("N")) {
         parserUInt(param["N"].c_str(), m_N);
     }
@@ -265,14 +274,14 @@ int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n, double sigma,
     }
     std::string filename("vcore");
     std::string fname = GetOutFileName(n);
+    filename += fname.substr(0, (int)fname.size()-4) + ".dat";
     if(cores.size()==0) {
         std::set<int> searchhist;
         flow.ExtractCoreByPoint(cores, searchhist, m_initcenter, m_vortexcoreVar,
-            m_vortexcoreVar[3], m_stoponwall>0, m_threshold, sigma);
-        filename += fname.substr(0, (int)fname.size()-4) + ".dat";
+            m_vortexcoreVar[3], m_stoponwall>0, m_threshold, sigma, m_vortexmethod);
     } else {
         flow.RefineCore(cores, m_vortexcoreVar, m_vortexcoreVar[3]);
-        filename += fname.substr(0, (int)fname.size()-4) + "_" + std::to_string(cores.size()) + ".dat";
+        filename = "refine_" + filename;
     }
     std::ofstream ofile(filename.c_str());
     ofile << "variables = \"x\",\"y\",\"z\",\"radius1\",\"radius2\",\"Gamma\"";
@@ -293,7 +302,8 @@ int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n, double sigma,
         printf("no vortex core found with threshold %f, cpu time %fs\n", m_threshold, time_elapsed_ms);
         return 0;
     } else {
-        printf("vortex core file %s, cpu time %fs\n", filename.c_str(), time_elapsed_ms);
+        printf("vortex core file %s (%d points), cpu time %fs\n", filename.c_str(),
+            (int)cores.size(), time_elapsed_ms);
     }
     return (int)cores.size();
 }

@@ -40,5 +40,6 @@ protected:
     double m_threshold;
     int m_calculateVorticityQ;
     int m_translation;
+    VortexMethod m_vortexmethod;
 };
 #endif

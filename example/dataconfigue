@@ -20,6 +20,8 @@ calculateVorticityQ 1
 #which vector variable to use p(-4), Q(8), start from 1, should be 4 int
 vortexcorevar 5,6,7,8
 threshold 10
+#use xyz plane 0 or perpendicular plane 1
+vortexplanemethod 1
 #negative is vorticity sign different from axis, start from 1
 initcenter 0.868,0.374,2.03
 stoponwall 1

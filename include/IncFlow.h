@@ -6,7 +6,7 @@
 
 enum VortexMethod {
     XYZPlane,
-    PerpendicularPlane,
+    VorticityLine,
     VortexMethodSize
 };
 
@@ -15,7 +15,8 @@ enum VortexExtractionStopReason {
     StopThreshold,
     StopReachWall,
     StopOutDomain,
-    StopError,
+    StopParamsError,
+    StopPerpendicularError,
     StopMaxTry,
     StopSuccess,
     StopRefineError,
@@ -54,7 +55,7 @@ public:
     int ExtractCoreByPoint(std::vector<std::vector<double> > & cores, std::set<int> &searched,
             std::vector<double> &inputcenter, const std::vector<int> vf,
             const int field = -4, const bool stoponwall = true, const double threshold = 0.,
-            const double walltol = 1.e-6);
+            const double walltol = 1.e-6, VortexMethod vm = XYZPlane);
     VortexExtractionStopReason RefineCore(
             std::vector<std::vector<double> > & cores, const std::vector<int> vf, const int field);
     int CalculateVorticity(int order = 2);
@@ -67,16 +68,26 @@ protected:
             std::vector<double> &planevorticity, std::vector<double> &radius, double &circulation);
     VortexExtractionStopReason ExtractCoreByPointDirection(
             std::vector<std::vector<double> > & cores, std::set<int> &searched,
+            std::vector<double> &inputcenter, const std::vector<int> vf, const int field, const int direction,
+            const bool stoponwall, const double threshold, const double walltol, VortexMethod vm);
+    VortexExtractionStopReason ExtractCoreByPointDirectionXYZ(
+            std::vector<std::vector<double> > & cores, std::set<int> &searched,
             std::vector<double> &inputcenter, const std::vector<int> vf, const int field,
-            const int direction, const bool stoponwall, const double threshold, const double walltol);
+            const int direction, const bool stoponwall, const double threshold, const double walltol,
+            const bool onestep = false);
+    VortexExtractionStopReason ExtractCoreByPointDirectionVorticityLine(
+            std::vector<std::vector<double> > & cores, std::set<int> &searched,
+            std::vector<double> &inputcenter, const std::vector<int> vf, const int field, const int direction,
+            const bool stoponwall, const double threshold, const double walltol);
     int SearchOneCoreXYZplane(
             std::vector<int> &intcenter, std::vector<double> &physcenter, std::vector<double> &info,
             const std::vector<int> &v, const double range, const bool ismax, int dir = -1);
     int SearchOneCorePerpendicular(
-            std::vector<int> &intcenter, std::vector<double> &physcenter, std::vector<double> &info,
+            std::vector<double> &physcenter, std::vector<double> &info,
             const std::vector<int> &v, const double range, const bool ismax);
     int GetSubdomainRange(const std::vector<int> &center, double radius, std::vector<int> &range);
-    std::pair<int, std::vector<int> > GetProceedDirection(const std::vector<double> &vor, double sign);
+    std::pair<int, std::vector<int> > GetProceedDirectionInt(const std::vector<double> &vor, double sign);
+    std::pair<int, std::vector<double> > GetProceedDirection(const std::vector<double> &vor, double sign);
     Body m_body;
 };
 #endif
