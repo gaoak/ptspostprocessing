@@ -3,6 +3,7 @@
 #include "StructuredData.h"
 #include "Body.h"
 #include<set>
+#define SLICERESOLUTION 52
 
 enum VortexMethod {
     XYZPlane,

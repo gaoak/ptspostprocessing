@@ -87,6 +87,7 @@ int IncFlow::TransformCoord(const std::vector<double> &x0) {
 }
 
 std::pair<int, std::vector<int> > IncFlow::GetProceedDirectionInt(const std::vector<double> &vor, double sign) {
+    //need check vor!=0 before calling this function
     std::pair<int, std::vector<int>> res;
     res.first = FindAbsMax(3, vor.data());
     std::vector<int> inc(3);
@@ -105,17 +106,18 @@ std::pair<int, std::vector<int> > IncFlow::GetProceedDirectionInt(const std::vec
 }
 
 std::pair<int, std::vector<double> > IncFlow::GetProceedDirection(const std::vector<double> &vor, double sign) {
+    //need check vor!=0 before calling this function
     std::pair<int, std::vector<double>> res;
     res.first = FindAbsMax(3, vor.data());
-    std::vector<double> inc(3);
-    double ds = 0.;
-    if(sign * vor[res.first] > 0) {
-        ds = m_dx[res.first]/vor[res.first];
-    } else {
-        ds = -m_dx[res.first]/vor[res.first];
+    std::vector<double> inc = {vor[0], vor[1], vor[2]};
+    NormalizeVect(inc);
+    double dx = std::min(m_dx[0], m_dx[1]);
+    dx = std::min(dx, m_dx[2]);
+    if(sign<0) {
+        dx = -dx;
     }
     for(int i=0; i<3; ++i) {
-        inc[i] = vor[i] * ds;
+        inc[i] = inc[i] * dx;
     }
     res.second = inc;
     //printf("direction %d, (%d,%d,%d)\n", res.first, res.second[0], res.second[1], res.second[2]);
@@ -164,7 +166,7 @@ int IncFlow::ExtractCoreByPoint(
     for(int i=0; i<(int)cores1.size()-1; ++i) {
         cores.push_back(cores1[i]);
     }
-    printf("stop because of %d,%d\n", r1, r2);
+    printf("ExtractCoreByPoint stop because of %d,%d\n", r1, r2);
     return cores.size();
 }
 
@@ -233,7 +235,7 @@ int IncFlow::SearchOneCorePerpendicular(
     //[-ran, ran]
     double dx = std::min(m_dx[0], m_dx[1]);
     dx = std::min(dx, m_dx[2]);
-    int Nr = std::min(int(ran/dx*2. + 0.5), 52);
+    int Nr = std::min(int(ran/dx*2. + 0.5), SLICERESOLUTION);
     if(Nr<1) {
         return -1; //search fail
     }
@@ -252,7 +254,7 @@ int IncFlow::SearchOneCorePerpendicular(
     std::vector<double> vor = {value[v[0]], value[v[1]], value[v[2]]};
     int dir = FindAbsMax(3, vor.data());
     if(std::fabs(vor[dir])<std::numeric_limits<double>::epsilon()) {
-        return -1; //zero vorticity point
+        return -2; //zero vorticity point
     }
     NormalizeVect(vor);
     std::vector<double> e0, e1;
@@ -296,7 +298,7 @@ int IncFlow::SearchOneCorePerpendicular(
         info.push_back(slice.m_phys[v[i]][centerindex]);
     }
     //output test
-    //plane.OutputData("perpendicular.plt");
+    //slice.OutputData("perpendicular.plt");
     //printf("phys point %f,%f,%f\n", physcenter[0], physcenter[1], physcenter[2]);
     //exit(0);
     return 3;
@@ -381,10 +383,10 @@ VortexExtractionStopReason IncFlow::ExtractCoreByPointDirectionXYZ(
         if(count==0) {
             inputcenter = physcenter;
         }
+        cores.push_back(coreinfo);
         if(onestep) {
             return StopSuccess;
         }
-        cores.push_back(coreinfo);
         std::pair<int, std::vector<int> > incplane = GetProceedDirectionInt(vor, vorticityproceedsign);
         dir = incplane.first;
         radiusofsubrange = 3. * coreinfo[CoreR2];
@@ -437,8 +439,10 @@ VortexExtractionStopReason IncFlow::ExtractCoreByPointDirectionVorticityLine(
         }
     }
     double radiusofsubrange = 0;
-    for(int i=0; i<(int)m_N.size(); ++i) {
-        radiusofsubrange += m_dx[i] * (m_N[i] - 1);
+    if(cores.size()) {
+        radiusofsubrange = 3. * cores[0][CoreR2];
+    } else {
+        radiusofsubrange = 0.3 * SLICERESOLUTION * (m_dx[0] + m_dx[1] + m_dx[2]);
     }
 
     //start extraction
@@ -446,8 +450,10 @@ VortexExtractionStopReason IncFlow::ExtractCoreByPointDirectionVorticityLine(
     int Trymax = m_Np, count = 0;
     while(count<Trymax) {
         std::vector<double> coreinfo;
-        if(0 > SearchOneCorePerpendicular(
-            physcenter, coreinfo, v, radiusofsubrange, ismax) ) {
+        int serr = SearchOneCorePerpendicular(
+            physcenter, coreinfo, v, radiusofsubrange, ismax);
+        if(0 > serr) {
+            printf("SearchOneCorePerpendicular error %d, r=%f\n", serr, radiusofsubrange);
             return StopPerpendicularError;
         }
         tmp = physcenter;
