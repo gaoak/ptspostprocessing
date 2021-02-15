@@ -13,6 +13,10 @@ IncFlow::IncFlow(const std::vector<int> &N, const std::vector<double> &range,
         :StructuredData(N, range), m_body(bodyname, param) {
 }
 
+IncFlow::IncFlow(std::string bodyname, std::vector<double> param)
+        :m_body(bodyname, param) {
+}
+
 IncFlow::IncFlow(const std::vector<int> &N, const std::vector<double> &range,
         const std::vector<std::vector<double> > & axis,
         std::string bodyname, std::vector<double> param)

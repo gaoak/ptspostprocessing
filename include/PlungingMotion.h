@@ -21,6 +21,7 @@ protected:
     double GetFilePhase(int n);
     double PlungingVelocity(double phase, double phi);
     double PlungingLocation(double phase, double phi);
+    int Resampling(IncFlow &flow);
     std::vector<int> m_N;
     std::vector<double> m_range;
     double m_k;

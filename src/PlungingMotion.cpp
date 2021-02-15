@@ -113,9 +113,13 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     }
     if(param.count("N")) {
         parserUInt(param["N"].c_str(), m_N);
+    } else {
+        m_N.clear();
     }
     if(param.count("range")) {
         parserDouble(param["range"].c_str(), m_range);
+    } else {
+        m_range.clear();
     }
     if(param.count("sigma")) {
         parserDouble(param["sigma"].c_str(), m_sigma);
@@ -206,17 +210,6 @@ int PlungingMotion::TransformBathCoord(IncFlow &flow) {
     std::vector<int> dir = {-1, -1, 1};
     std::map<int, int> pm = {{0,0},{1,2},{2,1},{3,3}};
     flow.ShuffleIndex(vm, dir, pm);
-    std::vector<int> N = flow.GetN();
-    for(size_t i=0; i<N.size(); ++i) {
-        N[i] = N[i]*4 - 3;
-    }
-    IncFlow flow2(N, flow.GetRange());
-    std::map<int, double> field;
-    for(int i=0; i<flow.GetNumPhys(); ++i) {
-        field[i] = 0.;
-    }
-    flow2.InterpolateFrom(flow, field);
-    flow = flow2;
     std::clock_t c_end = std::clock();
     double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
     printf("transform Bath exp data, cpu time %fs\n", time_elapsed_ms);
@@ -230,16 +223,43 @@ int PlungingMotion::ProcessEXPWingData(int dir) {
     }
     for(int k=0; k<(int)filen.size(); ++k) {
         int n = filen[k];
-        IncFlow flow(m_N, m_range, m_airfoil, {m_AoA, m_span[0], m_span[1]});
+        IncFlow flow(m_airfoil, {m_AoA, m_span[0], m_span[1]});
         flow.InputData(GetInFileName(n));
         if(m_translation) {
             double h0 = PlungingLocation(GetFilePhase(n), m_phi) - 0.5*m_A;
             flow.TransformCoord({0., h0, 0.});
         }
         TransformBathCoord(flow);
+        Resampling(flow);
         ProcessFiniteWingData(flow, k);
     }
     return m_fileseries.size();
+}
+
+int PlungingMotion::Resampling(IncFlow &flow) {
+    if(m_N.size()==0 && m_range.size()==0) {
+        return 0;
+    }
+    std::clock_t c_start = std::clock();
+    std::vector<int> N = m_N;
+    if(N.size()==0) {
+        N = flow.GetN();
+    }
+    std::vector<double> range = m_range;
+    if(range.size()==0) {
+        range = flow.GetRange();
+    }
+    IncFlow flow2(N, range);
+    std::map<int, double> field;
+    for(int i=0; i<flow.GetNumPhys(); ++i) {
+        field[i] = 0.;
+    }
+    flow2.InterpolateFrom(flow, field);
+    flow = flow2;
+    std::clock_t c_end = std::clock();
+    double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
+    printf("resample data, cpu time %fs\n", time_elapsed_ms);
+    return 1;
 }
 
 int PlungingMotion::ProcessCFDWingData(int dir) {
@@ -249,7 +269,7 @@ int PlungingMotion::ProcessCFDWingData(int dir) {
     }
     for(int k=0; k<(int)filen.size(); ++k) {
         int n = filen[k];
-        IncFlow flow(m_N, m_range, m_airfoil, {m_AoA, m_span[0], m_span[1]});
+        IncFlow flow(m_airfoil, {m_AoA, m_span[0], m_span[1]});
         flow.InputData(GetInFileName(n));
         if(m_airfoil.compare("0000")!=0) {
             double v0 = PlungingVelocity(GetFilePhase(n), m_phi);
@@ -259,6 +279,7 @@ int PlungingMotion::ProcessCFDWingData(int dir) {
             double h0 = PlungingLocation(GetFilePhase(n), m_phi);
             flow.TransformCoord({0., h0, 0.});
         }
+        Resampling(flow);
         ProcessFiniteWingData(flow, n);
     }
     return m_fileseries.size();

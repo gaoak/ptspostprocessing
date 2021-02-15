@@ -41,6 +41,7 @@ enum CoreInfo {
 class IncFlow : public StructuredData {
 public:
     IncFlow();
+    IncFlow(std::string bodyname, std::vector<double> param);
     IncFlow(const std::vector<int> &N, const std::vector<double> &range);
     IncFlow(const std::vector<int> &N, const std::vector<double> &range,
             std::string bodyname, std::vector<double> param);
