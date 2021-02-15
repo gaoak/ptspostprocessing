@@ -10,6 +10,7 @@ public:
     int Dumppoints();
     std::string GetInFileName(int n);
     std::string GetOutFileName(int n);
+    std::string GetVortexCoreFileName(int n);
 protected:
     int ProcessFiniteWingData(IncFlow &flow, int n);
     int ProcessSmoothing(IncFlow &flow, double sigma);
@@ -31,6 +32,7 @@ protected:
     std::string m_inputformat;
     std::string m_outputformat;
     std::string m_airfoil;
+    std::string m_vortexcorefileformat;
     double m_AoA;
     std::vector<double> m_span;
     std::vector<double> m_sigma;

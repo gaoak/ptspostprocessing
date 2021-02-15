@@ -46,6 +46,11 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     } else {
         m_outputformat = "";
     }
+    if(param.count("vortexcorefile")) {
+        m_vortexcorefileformat = param["vortexcorefile"];
+    } else {
+        m_vortexcorefileformat = "vcore%d.dat";
+    }
     if(param.count("filesnumber")) {
         parserInt(param["filesnumber"].c_str(), m_file);
     } else {
@@ -276,9 +281,7 @@ int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n, double sigma,
             return -1;
         }
     }
-    std::string filename("vcore");
-    std::string fname = GetOutFileName(n);
-    filename += fname.substr(0, (int)fname.size()-4) + ".dat";
+    std::string filename = GetVortexCoreFileName(n);
     if(cores.size()==0) {
         std::set<int> searchhist;
         flow.ExtractCoreByPoint(cores, searchhist, m_initcenter, m_vortexcoreVar,
@@ -355,4 +358,15 @@ int PlungingMotion::ProcessVorticity(IncFlow &flow) {
     double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
     printf("calculate vorticity, cpu time %fs\n", time_elapsed_ms);
     return 1;
+}
+
+std::string PlungingMotion::GetVortexCoreFileName(int n) {
+    char buffer[100];
+    if(m_vortexcorefileformat.size()) {
+        sprintf(buffer, m_vortexcorefileformat.c_str(), n);
+    } else {
+        sprintf(buffer, "vcore%d.dat", n);
+    }
+    std::string res(buffer);
+    return res;
 }

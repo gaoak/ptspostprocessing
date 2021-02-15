@@ -2,26 +2,31 @@
 k 2.
 A 0.5
 phi 0.
+
 #airfoil shapt and AoA (in degree)
 body 0012
 AoA 15.
 span 0.,5.
-translation 1
+translation 0
+
 #input output file infomation
 filesnumber 48,4,49
 phase       0.,0.25
 input   interp%d.plt
 output sdata%d.plt
-#standard deviation of Gauss smoother
+
+#standard deviation of Gauss smoother, the second smoother is to refine vortex core
 sigma 0.07,0.07
-#parameter for vortex core extraction
 #calculate vorticity and Q, u,v,w,p,W_x,W_y,W_z,Q
 calculateVorticityQ 1
-#which vector variable to use p(-4), Q(8), start from 1, should be 4 int
+
+#parameter for vortex core extraction
+#which vector variable to use p(-4, negative minimum), Q(8, positive masximum)
+#start from 1, should be 4 int
 vortexcorevar 5,6,7,8
 threshold 10
 #use xyz plane 0 or perpendicular plane 1
 vortexplanemethod 1
-#negative is vorticity sign different from axis, start from 1
-initcenter 0.868,0.374,2.03
+initcenter 0.83,0.157,1.914
 stoponwall 1
+vortexcorefile vcore%d.dat
