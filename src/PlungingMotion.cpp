@@ -230,7 +230,6 @@ int PlungingMotion::ProcessEXPWingData(int dir) {
             flow.TransformCoord({0., h0, 0.});
         }
         TransformBathCoord(flow);
-        Resampling(flow);
         ProcessFiniteWingData(flow, k);
     }
     return m_fileseries.size();
@@ -279,7 +278,6 @@ int PlungingMotion::ProcessCFDWingData(int dir) {
             double h0 = PlungingLocation(GetFilePhase(n), m_phi);
             flow.TransformCoord({0., h0, 0.});
         }
-        Resampling(flow);
         ProcessFiniteWingData(flow, n);
     }
     return m_fileseries.size();
@@ -291,6 +289,7 @@ int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n, double sigma,
     if(m_calculateVorticityQ) {
         ProcessVorticity(flow);
     }
+    Resampling(flow);
     std::clock_t c_start = std::clock();
     if(m_vortexcoreVar.size()<4) {
         printf("error incorrect vortex variables.\n");
