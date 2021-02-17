@@ -15,7 +15,8 @@ protected:
     int ProcessFiniteWingData(IncFlow &flow, int n);
     int ProcessSmoothing(IncFlow &flow, double sigma);
     int ProcessVorticity(IncFlow &flow);
-    int ProcessVortexCore(IncFlow &flow, int n, double sigma, std::vector<std::vector<double> > &cores);
+    int ProcessVortexCore(IncFlow &flow, int n, double sigma, std::vector<std::vector<double> > &cores,
+            bool outfield = false);
     int GenerateFileSeries();
     int TransformBathCoord(IncFlow &flow);
     double GetFilePhase(int n);
@@ -44,5 +45,6 @@ protected:
     int m_calculateVorticityQ;
     int m_translation;
     VortexMethod m_vortexmethod;
+    int m_processVortexCoreCount;
 };
 #endif

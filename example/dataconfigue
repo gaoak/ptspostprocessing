@@ -20,7 +20,7 @@ input   interp%d.plt
 output sdata%d.plt
 
 #standard deviation of Gauss smoother, the second smoother is to refine vortex core
-sigma 0.07,0.07
+sigma 0.03,0.03
 #calculate vorticity and Q, u,v,w,p,W_x,W_y,W_z,Q
 calculateVorticityQ 1
 

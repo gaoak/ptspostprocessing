@@ -283,8 +283,9 @@ int PlungingMotion::ProcessCFDWingData(int dir) {
     return m_fileseries.size();
 }
 
-int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n, double sigma,
-        std::vector<std::vector<double> > &cores) {
+int PlungingMotion::ProcessVortexCore(IncFlow &rawflow, int n, double sigma,
+        std::vector<std::vector<double> > &cores, bool outfield) {
+    IncFlow flow = rawflow;
     ProcessSmoothing(flow, sigma);
     if(m_calculateVorticityQ) {
         ProcessVorticity(flow);
@@ -301,14 +302,14 @@ int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n, double sigma,
             return -1;
         }
     }
-    std::string filename = GetVortexCoreFileName(n);
+    std::string prefix = "R" + std::to_string(m_processVortexCoreCount) + "_";
+    std::string filename = prefix + GetVortexCoreFileName(n);
     if(cores.size()==0) {
         std::set<int> searchhist;
         flow.ExtractCoreByPoint(cores, searchhist, m_initcenter, m_vortexcoreVar,
             m_vortexcoreVar[3], m_stoponwall>0, m_threshold, sigma, m_vortexmethod);
     } else {
         flow.RefineCore(cores, m_vortexcoreVar, m_vortexcoreVar[3]);
-        filename = "refine_" + filename;
     }
     if(cores.size()==0) {
         std::clock_t c_end = std::clock();
@@ -334,21 +335,19 @@ int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n, double sigma,
         printf("vortex core file %s (%d points), cpu time %fs\n", filename.c_str(),
             (int)cores.size(), time_elapsed_ms);
     }
+    if(m_outputformat.size() && outfield) {
+        flow.OutputData(prefix + GetOutFileName(n));
+    }
+    ++m_processVortexCoreCount;
     return (int)cores.size();
 }
 
 int PlungingMotion::ProcessFiniteWingData(IncFlow &flow, int n) {
+    m_processVortexCoreCount = 0;
     std::vector<std::vector<double> > cores;
-    IncFlow rawdata = flow; // backed raw data;
-    ProcessVortexCore(flow, n, m_sigma[0], cores);
-    if(m_outputformat.size()) {
-        flow.OutputData(GetOutFileName(n));
-    }
-    if(m_sigma.size()>1) {
-        ProcessVortexCore(rawdata, n, m_sigma[1], cores);
-        if(m_outputformat.size()) {
-            rawdata.OutputData("refine_" + GetOutFileName(n));
-        }
+    ProcessVortexCore(flow, n, m_sigma[0], cores, true);
+    for(size_t i=1; i<m_sigma.size(); ++i) {
+        ProcessVortexCore(flow, n, m_sigma[i], cores, i+1==m_sigma.size());
     }
     return cores.size();
 }
