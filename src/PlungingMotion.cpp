@@ -292,17 +292,24 @@ int PlungingMotion::ProcessVortexCore(IncFlow &rawflow, int n, double sigma,
     }
     Resampling(flow);
     std::clock_t c_start = std::clock();
+    bool doextraction = true;
     if(m_vortexcoreVar.size()<4) {
         printf("error incorrect vortex variables.\n");
-        return -1;
+        doextraction = false;
     }
     for(int i=0; i<4; ++i) {
         if(m_vortexcoreVar[i]<=0 || m_vortexcoreVar[i]>flow.GetNumPhys()) {
             printf("error incorrect vortex variables.\n");
-            return -1;
+            doextraction = false;
         }
     }
     std::string prefix = "R" + std::to_string(m_processVortexCoreCount) + "_";
+    if(m_outputformat.size() && outfield) {
+        flow.OutputData(prefix + GetOutFileName(n));
+    }
+    if(!doextraction) {
+        return -1;
+    }
     std::string filename = prefix + GetVortexCoreFileName(n);
     if(cores.size()==0) {
         std::set<int> searchhist;
@@ -334,9 +341,6 @@ int PlungingMotion::ProcessVortexCore(IncFlow &rawflow, int n, double sigma,
         double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
         printf("vortex core file %s (%d points), cpu time %fs\n", filename.c_str(),
             (int)cores.size(), time_elapsed_ms);
-    }
-    if(m_outputformat.size() && outfield) {
-        flow.OutputData(prefix + GetOutFileName(n));
     }
     ++m_processVortexCoreCount;
     return (int)cores.size();
