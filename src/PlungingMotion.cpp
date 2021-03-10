@@ -303,7 +303,7 @@ int PlungingMotion::ProcessVortexCore(IncFlow &rawflow, int n, double sigma,
             doextraction = false;
         }
     }
-    std::string prefix = "R" + std::to_string(m_processVortexCoreCount) + "_";
+    std::string prefix = "R" + std::to_string(m_processVortexCoreCount++) + "_";
     if(m_outputformat.size() && outfield) {
         flow.OutputData(prefix + GetOutFileName(n));
     }
@@ -342,7 +342,6 @@ int PlungingMotion::ProcessVortexCore(IncFlow &rawflow, int n, double sigma,
         printf("vortex core file %s (%d points), cpu time %fs\n", filename.c_str(),
             (int)cores.size(), time_elapsed_ms);
     }
-    ++m_processVortexCoreCount;
     return (int)cores.size();
 }
 
