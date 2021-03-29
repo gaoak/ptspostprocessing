@@ -197,7 +197,7 @@ int PlungingMotion::TransformBathCoord(IncFlow &flow, int n) {
     std::clock_t c_start = std::clock();
     int Np = flow.GetTotPoints();
     double Uref = 1./0.1734;
-    double h0 = PlungingLocation(GetFilePhase(n), m_phi);
+    double h0 = PlungingLocation(GetFilePhase(n), m_phi) - 0.575588159998172;
     for(int i=0; i<Np; ++i) {
         double x = flow.GetCoordValue(0, i);
         double y = flow.GetCoordValue(1, i);
