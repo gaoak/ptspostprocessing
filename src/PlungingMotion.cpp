@@ -189,22 +189,28 @@ int PlungingMotion::GenerateFileSeries() {
     return m_fileseries.size();
 }
 
-int PlungingMotion::TransformBathCoord(IncFlow &flow) {
+int PlungingMotion::TransformBathCoord(IncFlow &flow, int n) {
     // after = before
     // y = z
     // x = -x
     // z = 5 - y
     std::clock_t c_start = std::clock();
     int Np = flow.GetTotPoints();
+    double Uref = 1./0.1734;
+    double h0 = PlungingLocation(GetFilePhase(n), m_phi);
     for(int i=0; i<Np; ++i) {
         double x = flow.GetCoordValue(0, i);
         double y = flow.GetCoordValue(1, i);
+        double z = flow.GetCoordValue(2, i);
         double u = flow.GetPhysValue(0, i);
         double v = flow.GetPhysValue(1, i);
+        double w = flow.GetPhysValue(2, i);
         flow.SetCoordValue(-x, 0, i);
         flow.SetCoordValue(5.-y, 1, i);
-        flow.SetPhysValue(-u, 0, i);
-        flow.SetPhysValue(-v, 1, i);
+        flow.SetCoordValue(z-h0, 2, i);
+        flow.SetPhysValue(-u*Uref, 0, i);
+        flow.SetPhysValue(-v*Uref, 1, i);
+        flow.SetPhysValue(w*Uref, 2, i);
     }
     std::map<int, int> vm = {{2, 1}, {1, 2}, {0,0}};
     std::vector<int> dir = {-1, -1, 1};
@@ -226,11 +232,11 @@ int PlungingMotion::ProcessEXPWingData(int dir) {
         IncFlow flow(m_airfoil, {m_AoA, m_span[0], m_span[1]});
         flow.InputData(GetInFileName(n));
         if(m_translation) {
-            double h0 = PlungingLocation(GetFilePhase(n), m_phi) - 0.5*m_A;
+            double h0 = PlungingLocation(GetFilePhase(n), m_phi);
             flow.TransformCoord({0., h0, 0.});
         }
-        TransformBathCoord(flow);
-        ProcessFiniteWingData(flow, k);
+        TransformBathCoord(flow, n);
+        ProcessFiniteWingData(flow, n);
     }
     return m_fileseries.size();
 }

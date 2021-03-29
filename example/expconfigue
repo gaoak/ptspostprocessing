@@ -1,5 +1,5 @@
 #resample parameter, input file will be resampled as follows
-N 65,65,65
+#N 65,65,65
 #range -0.2,1.2,-0.2,1,0,5.3
 
 #plunging motion

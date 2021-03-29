@@ -91,7 +91,7 @@ int KernelSmooth::DoSmooth(const std::vector<double> &sigmaintegerwidth, const s
     for(int i=0; i<(int)Nraw.size(); ++i) {
         if(Nraw[i]>1) {
             N.push_back(Nraw[i]);
-            sigma.push_back(sigmaintegerwidth[i]);
+            sigma.push_back(0.5 + sigmaintegerwidth[i]);
         }
     }
     std::vector<int> Np(N.size(), 1);

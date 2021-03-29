@@ -18,7 +18,7 @@ protected:
     int ProcessVortexCore(IncFlow &flow, int n, double sigma, std::vector<std::vector<double> > &cores,
             bool outfield = false);
     int GenerateFileSeries();
-    int TransformBathCoord(IncFlow &flow);
+    int TransformBathCoord(IncFlow &flow, int n);
     double GetFilePhase(int n);
     double PlungingVelocity(double phase, double phi);
     double PlungingLocation(double phase, double phi);
