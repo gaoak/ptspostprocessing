@@ -35,3 +35,7 @@ target_link_libraries(checkcode LIBPROCESSING)
 # target
 add_executable(dumppts dumppts.cpp)
 target_link_libraries(dumppts LIBPROCESSING)
+
+# target
+add_executable(stabilitymode stabilitymode.cpp)
+target_link_libraries(stabilitymode LIBPROCESSING)
