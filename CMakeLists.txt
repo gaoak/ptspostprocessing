@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(ptspostprocessing)
+
+# third party library
+SET(FFTW_SEARCH_PATHS $ENV{LD_LIBRARY_PATH} $ENV{FFTW_HOME}/lib)
+FIND_LIBRARY(FFTW_LIBRARY NAMES fftw3 fftw3f PATHS ${FFTW_SEARCH_PATHS})
+FIND_PATH(FFTW_INCLUDE_DIR NAMES fftw3.h CACHE FILEPATH "FFTW include directory.")
+
 # c++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -23,6 +29,7 @@ ADD_CUSTOM_TARGET(release
 
 # build shared library
 add_library(LIBPROCESSING SHARED ${SOURCES})
+target_link_libraries(LIBPROCESSING  ${FFTW_LIBRARY})
 
 # process executable
 add_executable(process main.cpp)

@@ -1,7 +1,98 @@
 #include<vector>
 #include<string>
 #include<cmath>
+#include <fftw3.h>
 #include "Util.h"
+
+int getRealPowerSpectral(const std::vector<double> &data, std::vector<double> &spectral,
+    std::vector<double> &beta ,double Tlen, int Nfft)
+{
+    // prepare wavenumber, lz = 2*pi/beta
+    double temp = 2.*M_PI/Tlen;
+    for(int i=0;i<Nfft;++i)
+    {
+        if(i<=Nfft-i)
+        {
+            beta[i] = temp*double(i);
+        }
+        else
+        {
+            beta[i] = 0.;
+        }
+    }
+    //fftw initiates
+    fftw_complex *in, *out;
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nfft);
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nfft);
+    fftw_plan pf;
+    pf = fftw_plan_dft_1d(Nfft, in, out, FFTW_FORWARD, FFTW_MEASURE);
+    //copy data
+    for(int i=0;i<Nfft;++i)
+    {
+        in[i][0] = data[i];
+        in[i][1] = 0.;
+    }
+    fftw_execute(pf); 
+    // power spectral, integral of energy
+    temp = 1. / (double(Nfft)*double(Nfft));
+    spectral[0] = Tlen * (out[0][0]*out[0][0] + out[0][1]*out[0][1]) * temp;
+    for(int i=1;i<Nfft;++i)
+    {
+        if(i<Nfft-i)
+        {
+            spectral[i] = 2. * Tlen * (out[i][0]*out[i][0] + out[i][1]*out[i][1]) * temp;
+        }
+        else if (i==Nfft-i)
+        {
+            spectral[i] = 0.5 * Tlen * out[i][0]*out[i][0] * temp;
+        }
+        else
+        {
+            spectral[i] = 0.;
+        }
+    }
+    return 0;
+}
+
+int doRealFFT(const std::vector<double> &data, std::vector<double> &spectral,
+    std::vector<double> &beta ,double Tlen, int Nfft)
+{
+    // prepare wavenumber, lz = 2*pi/beta, beta is circular frequency, i.e. omega
+    double temp = 2.*M_PI/Tlen;
+    beta[0] = 0.;
+    beta[1] = temp * (Nfft / 2);
+    for(int i=1;i<Nfft/2;++i)
+    {
+        int k = i * 2;
+        beta[k  ] = temp*double(i); //cos mode
+        beta[k+1] =-temp*double(i); //sin mode
+    }
+    //fftw initiates
+    fftw_complex *in, *out;
+    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nfft);
+    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * Nfft);
+    fftw_plan pf;
+    pf = fftw_plan_dft_1d(Nfft, in, out, FFTW_FORWARD, FFTW_MEASURE);
+    //copy data
+    for(int i=0;i<Nfft;++i)
+    {
+        in[i][0] = data[i];
+        in[i][1] = 0.;
+    }
+    fftw_execute(pf); 
+    // Fourier coefficients, nektar++ format
+    // [0], [cos N/2] not 0 in Nektar++, [cos 1], [-sin 1], [cos 2], [-sin 2], ...
+    temp = 1. / double(Nfft);
+    spectral[0] = out[0][0] * temp;
+    spectral[1] = out[Nfft/2][0] * temp;
+    for(int i=1;i<Nfft/2;++i)
+    {
+        int k = i * 2;
+        spectral[k  ] = 2. * out[i][0] * temp;
+        spectral[k+1] =-2. * out[i][1] * temp;
+    }
+    return 0;
+}
 
 double DotVect(const std::vector<double> &a, const std::vector<double> &b) {
     double res = 0.;

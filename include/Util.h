@@ -228,4 +228,10 @@ int myRound(T x) {
         return -(int) (-x + 0.5);
     }
 }
+
+int getRealPowerSpectral(const std::vector<double> &data, std::vector<double> &spectral,
+    std::vector<double> &beta ,double Tlen, int Nfft);
+
+int doRealFFT(const std::vector<double> &data, std::vector<double> &spectral,
+    std::vector<double> &beta ,double Tlen, int Nfft);
 #endif
