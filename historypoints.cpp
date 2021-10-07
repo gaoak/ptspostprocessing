@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
             &(datasp[0][offset1]),Zlen, N[0]-1);
         for(int j=0; j<Nsp[0]; ++j)
         {
-            datasp[1][j+offset1] = data[1][j+offset0]
+            datasp[1][j+offset1] = data[1][j+offset0];
         }
         offset0 += N[0];
         offset1 += Nsp[0];
