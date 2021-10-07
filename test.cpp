@@ -12,6 +12,23 @@ using namespace std;
 
 std::map<bool, std::string> testresults = {{true, "pass"},{false, "+++++++fail!!!!!!!!!!!!!!!!!!!!!!"}};
 
+int testfftw() {
+    std::vector<double> data0(8, 0.);
+    for (size_t i=0; i<data0.size(); ++i)
+    {
+        double t = i * 2. * M_PI / data0.size();
+        data0[i] = sin(t) + 0.5* cos(3 * t)  + sin(3 * t) + 2.;
+    }
+    std::vector<double> spectral(data0.size());
+    std::vector<double> beta(data0.size());
+    doRealFFT(data0.data(), spectral.data(), beta.data(), 2.*M_PI, data0.size());
+    for (size_t i=0; i<data0.size(); ++i)
+    {
+        printf("%3lu: %f, %f, %g\n", i, data0[i], beta[i], spectral[i]);
+    }
+    return 0;
+}
+
 int test_weight(int padding) {
     KernelSmooth ker;
     double sum = 0.;

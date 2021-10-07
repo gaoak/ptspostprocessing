@@ -229,9 +229,9 @@ int myRound(T x) {
     }
 }
 
-int getRealPowerSpectral(const std::vector<double> &data, std::vector<double> &spectral,
-    std::vector<double> &beta ,double Tlen, int Nfft);
+int getRealPowerSpectral(const double *data, double *spectral,
+    double *beta,double Tlen, int Nfft);
 
-int doRealFFT(const std::vector<double> &data, std::vector<double> &spectral,
-    std::vector<double> &beta ,double Tlen, int Nfft);
+int doRealFFT(const double *data, double *spectral,
+    double *beta,double Tlen, int Nfft);
 #endif

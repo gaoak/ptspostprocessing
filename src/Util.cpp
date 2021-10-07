@@ -4,8 +4,8 @@
 #include <fftw3.h>
 #include "Util.h"
 
-int getRealPowerSpectral(const std::vector<double> &data, std::vector<double> &spectral,
-    std::vector<double> &beta ,double Tlen, int Nfft)
+int getRealPowerSpectral(const double *data, double *spectral,
+    double *beta, double Tlen, int Nfft)
 {
     // prepare wavenumber, lz = 2*pi/beta
     double temp = 2.*M_PI/Tlen;
@@ -14,10 +14,6 @@ int getRealPowerSpectral(const std::vector<double> &data, std::vector<double> &s
         if(i<=Nfft-i)
         {
             beta[i] = temp*double(i);
-        }
-        else
-        {
-            beta[i] = 0.;
         }
     }
     //fftw initiates
@@ -46,16 +42,12 @@ int getRealPowerSpectral(const std::vector<double> &data, std::vector<double> &s
         {
             spectral[i] = 0.5 * Tlen * out[i][0]*out[i][0] * temp;
         }
-        else
-        {
-            spectral[i] = 0.;
-        }
     }
     return 0;
 }
 
-int doRealFFT(const std::vector<double> &data, std::vector<double> &spectral,
-    std::vector<double> &beta ,double Tlen, int Nfft)
+int doRealFFT(const double *data, double *spectral,
+    double *beta,double Tlen, int Nfft)
 {
     // prepare wavenumber, lz = 2*pi/beta, beta is circular frequency, i.e. omega
     double temp = 2.*M_PI/Tlen;
