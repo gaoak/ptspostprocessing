@@ -81,7 +81,7 @@ int doRealFFT(const std::vector<double> &data, std::vector<double> &spectral,
     }
     fftw_execute(pf); 
     // Fourier coefficients, nektar++ format
-    // [0], [cos N/2] not 0 in Nektar++, [cos 1], [-sin 1], [cos 2], [-sin 2], ...
+    // [0], [cos N/2] not 0 in Nektar++, [cos 1], [sin 1] not -1 in Nektar++, [cos 2], [sin 2], ...
     temp = 1. / double(Nfft);
     spectral[0] = out[0][0] * temp;
     spectral[1] = out[Nfft/2][0] * temp;

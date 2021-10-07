@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     for (size_t i=0; i<data0.size(); ++i)
     {
         double t = i * 2. * M_PI / data0.size();
-        data0[i] = sin(t) + 0.5* cos(3 * t)  + cos(6 * t) + 2.;
+        data0[i] = sin(t) + 0.5* cos(3 * t)  + sin(3 * t) + 2.;
     }
     std::vector<double> spectral(data0.size());
     std::vector<double> beta(data0.size());
