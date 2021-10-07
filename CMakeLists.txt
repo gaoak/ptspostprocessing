@@ -39,3 +39,7 @@ target_link_libraries(dumppts LIBPROCESSING)
 # target
 add_executable(stabilitymode stabilitymode.cpp)
 target_link_libraries(stabilitymode LIBPROCESSING)
+
+# target z-t plot
+add_executable(hispts historypoints.cpp)
+target_link_libraries(hispts LIBPROCESSING)
