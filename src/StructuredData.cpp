@@ -375,6 +375,9 @@ int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int,
     //range = {imin, imax, jmin, jmax, kmin, kmax}
     std::vector<int> range = Range;
     for(int i=0; i<3; ++i) {
+        if(plane.first==i) {
+            continue;
+        }
         if(range[2*i] < 0) {
             range[2*i] = 0;
         }
@@ -438,10 +441,6 @@ int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int,
 }
 
 int StructuredData::Diff(std::vector<std::vector<double> > &u, std::vector<std::vector<double> > &du, int dir, int order) {
-    if(m_N[dir]==0) {
-        printf("error: cannot calculate finite difference in 1 data, dir %d\n", dir);
-        return 0;
-    }
     Derivative der;
     std::vector<int> N = m_N;
     if(dir) {

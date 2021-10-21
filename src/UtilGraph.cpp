@@ -193,3 +193,29 @@ int FindLocMaxIn2DGraph(const std::vector<int> &N, const std::vector<int> &initi
     }
     return core.size();
 }
+
+int FindAllLocMaxIn2DGraph(const std::vector<int> &N,
+    std::vector<double> &data, std::vector<std::vector<int> > &cores, double threshold, bool ismax) {
+    if(!ismax) {
+        for(int i=0; i<N[0]*N[1]; ++i) {
+            data[i] = -data[i];
+        }
+        threshold = -threshold;
+    }
+    cores.clear();
+    for (int j=1; j<N[1]-1; ++j) {
+        int p = j * N[0];
+        for (int i=1; i<N[0]-1; ++i) {
+            int index = p + i;
+            double value = data[index];
+            if (value>threshold &&
+                value>=data[index+1] &&
+                value>=data[index-1] &&
+                value>=data[index+N[0]] &&
+                value>=data[index-N[0]]) {
+                cores.push_back({i, j});
+            }
+        }
+    }
+    return cores.size();
+}

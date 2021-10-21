@@ -7,12 +7,14 @@ public:
     PlungingMotion(std::string dataconfigue);
     int ProcessCFDWingData(int dir = 1);
     int ProcessEXPWingData(int dir = 1);
+    int ProcessCFDAirfoilData(int dir = 1);
     int Dumppoints();
     std::string GetInFileName(int n);
     std::string GetOutFileName(int n);
     std::string GetVortexCoreFileName(int n);
 protected:
     int ProcessFiniteWingData(IncFlow &flow, int n);
+    int ProcessAirfoilData(IncFlow &flow, int n);
     int ProcessSmoothing(IncFlow &flow, double sigma);
     int ProcessVorticity(IncFlow &flow);
     int ProcessVortexCore(IncFlow &flow, int n, double sigma, std::vector<std::vector<double> > &cores,

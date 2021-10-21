@@ -9,4 +9,6 @@ int PurgeDifferentSign(const std::vector<int> &N, const std::vector<double> &v,
                        std::vector<double> &data, double sign);
 int ExtractPatchStat2DGraph(const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
     std::vector<double> &v, std::vector<double> &mu, double &sum);
+int FindAllLocMaxIn2DGraph(const std::vector<int> &N,
+    std::vector<double> &data, std::vector<std::vector<int> > &cores, double threshold, bool ismax);
 #endif

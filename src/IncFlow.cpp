@@ -39,6 +39,14 @@ IncFlow::IncFlow(const IncFlow & flow)
 }
 
 int IncFlow::CalculateVorticity(int order) {
+    if(GetNumCoords()==2) {
+        return CalculateVorticity2D(order);
+    } else if(GetNumCoords()==3) {
+        return CalculateVorticity3D(order);
+    }
+}
+
+int IncFlow::CalculateVorticity3D(int order) {
     std::vector<std::vector<double> > u, ux(3), uy(3), uz(3);
     u.push_back(m_phys[0]);
     u.push_back(m_phys[1]);
@@ -80,8 +88,40 @@ int IncFlow::CalculateVorticity(int order) {
     return m_Np;
 }
 
+int IncFlow::CalculateVorticity2D(int order) {
+    std::vector<std::vector<double> > u, ux(2), uy(2);
+    u.push_back(m_phys[0]);
+    u.push_back(m_phys[1]);
+    for(int i=0; i<3; ++i) {
+        ux[i].resize(m_Np);
+        uy[i].resize(m_Np);
+    }
+    Diff(u, ux, 0, order);
+    Diff(u, uy, 1, order);
+    int id;
+    //W_x
+    m_vars.push_back("W_z");
+    id = m_phys.size();
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    for(int i=0; i<m_Np; ++i) {
+        m_phys[id][i] = ux[1][i] - uy[0][i];
+    }
+
+    // Q Criterion
+    m_vars.push_back("Q");
+    id = m_phys.size();
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    for(int i=0; i<m_Np; ++i) {
+        m_phys[id][i] = -0.5 * (
+            ux[0][i]*ux[0][i] + ux[1][i]*uy[0][i] +
+            uy[0][i]*ux[1][i] + uy[1][i]*uy[1][i]
+        );
+    }
+    return m_Np;
+}
+
 int IncFlow::TransformCoord(const std::vector<double> &x0) {
-    for(int k=0; k<3; ++k) {
+    for(int k=0; k<GetNumCoords(); ++k) {
         m_axis.m_o[k] += x0[k];
         for(int i=0; i<m_Np; ++i) {
             m_x[k][i] += x0[k];
@@ -172,6 +212,32 @@ int IncFlow::ExtractCoreByPoint(
     }
     printf("ExtractCoreByPoint stop because of %d,%d\n", r1, r2);
     return cores.size();
+}
+
+int IncFlow::SearchAllCoreXYZplane(std::vector<std::vector<int>> &intcenters, const std::vector<int> &v,
+    const bool ismax, const std::pair<int, int> plane, const double threshold) {
+    if(plane.first<0 || plane.first>2) {
+        printf("error: a correct direction [%d] must be assigned in SearchAllCoreXYZplane\n", plane.first);
+        return -1;
+    }
+    std::vector<int> N = m_N;
+    std::vector<double> dx = m_dx;
+    std::vector<int> planeN, subrange = {0, m_N[0]-1, 0, m_N[1]-1, 0, m_N[2]-1};
+    std::vector<double> planedata;
+    double tmpcirculation;
+    ExtractPlane(m_phys[v[3]], plane, subrange, planeN, planedata);
+
+    ShiftArray<int>(subrange, 2*(2-plane.first));
+    ShiftArray<int>(N, 2-plane.first);
+
+    FindAllLocMaxIn2DGraph(planeN, planedata, intcenters, threshold, ismax);
+
+    for(size_t i=0; i<intcenters.size(); ++i) {
+        intcenters[i][0] += subrange[0];
+        intcenters[i][1] += subrange[2];
+        ShiftArray<int>(intcenters[i], plane.first-2);
+    }
+    return 3;
 }
 
 int IncFlow::SearchOneCoreXYZplane(
@@ -552,12 +618,12 @@ int IncFlow::CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> 
 
 int IncFlow::OverWriteBodyPoint(const std::vector<double> &u0, const std::vector<double> &pivot, const std::vector<double> &omega) {
     for(int i=0; i<m_Np; ++i) {
-        std::vector<double> x = {m_x[0][i], m_x[1][i], m_x[2][i]};
+        std::vector<double> x = {m_x[0][i], m_x[1][i], GetCoordValue(2, i)};
         if(m_body.IsInBody(x, 10. * std::numeric_limits<double>::epsilon())) {
             std::vector<double> vel = AddVect(1., CrossVect(omega, AddVect(1., x, -1., pivot)), 1., u0);
-            m_phys[0][i] = vel[0];
-            m_phys[1][i] = vel[1];
-            m_phys[2][i] = vel[2];
+            for (size_t d=0; d<vel.size(); ++d) {
+                m_phys[d][i] = vel[d];
+            }
         }
     }
     return m_Np;

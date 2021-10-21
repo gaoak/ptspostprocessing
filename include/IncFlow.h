@@ -61,6 +61,8 @@ public:
     VortexExtractionStopReason RefineCore(
             std::vector<std::vector<double> > & cores, const std::vector<int> vf, const int field);
     int CalculateVorticity(int order = 2);
+    int CalculateVorticity2D(int order = 2);
+    int CalculateVorticity3D(int order = 2);
     int InterpolateFrom(const IncFlow & origin, std::map<int,double> field);
     int CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> &Ne,
             const std::vector<int> &skip, std::map<int, double> &field, const IncFlow & big);
@@ -84,6 +86,9 @@ protected:
     int SearchOneCoreXYZplane(
             std::vector<int> &intcenter, std::vector<double> &physcenter, std::vector<double> &info,
             const std::vector<int> &v, const double range, const bool ismax, int dir = -1);
+    int SearchAllCoreXYZplane(
+            std::vector<std::vector<int>> &intcenters, const std::vector<int> &v, const bool ismax,
+            const std::pair<int, int> plane, const double threshold);
     int SearchOneCorePerpendicular(
             std::vector<double> &physcenter, std::vector<double> &info,
             const std::vector<int> &v, const double range, const bool ismax);

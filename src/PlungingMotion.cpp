@@ -289,6 +289,39 @@ int PlungingMotion::ProcessCFDWingData(int dir) {
     return m_fileseries.size();
 }
 
+int PlungingMotion::ProcessCFDAirfoilData(int dir) {
+    std::vector<int> filen = m_fileseries;
+    if(dir<0) {
+        std::reverse(filen.begin(), filen.end());;
+    }
+    for(int k=0; k<(int)filen.size(); ++k) {
+        int n = filen[k];
+        IncFlow flow(m_airfoil, {m_AoA});
+        flow.InputData(GetInFileName(n));
+        if(m_airfoil.compare("0000")!=0) {
+            double v0 = PlungingVelocity(GetFilePhase(n), m_phi);
+            flow.OverWriteBodyPoint({0., v0}, {0., 0., 0.}, {0., 0., 0.});
+        }
+        if(m_translation) {
+            double h0 = PlungingLocation(GetFilePhase(n), m_phi);
+            flow.TransformCoord({0., h0, 0.});
+        }
+        ProcessAirfoilData(flow, n);
+    }
+    return m_fileseries.size();
+}
+
+int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
+    m_processVortexCoreCount = 0;
+    std::vector<std::vector<double> > cores;
+    ProcessVortexCore(flow, n, m_sigma[0], cores, true);
+    for(size_t i=1; i<m_sigma.size(); ++i) {
+        ProcessVortexCore(flow, n, m_sigma[i], cores, i+1==m_sigma.size());
+    }
+    return cores.size();
+}
+
+
 int PlungingMotion::ProcessVortexCore(IncFlow &rawflow, int n, double sigma,
         std::vector<std::vector<double> > &cores, bool outfield) {
     IncFlow flow = rawflow;
