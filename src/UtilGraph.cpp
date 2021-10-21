@@ -217,5 +217,10 @@ int FindAllLocMaxIn2DGraph(const std::vector<int> &N,
             }
         }
     }
+    if(!ismax) {
+        for(int i=0; i<N[0]*N[1]; ++i) {
+            data[i] = -data[i];
+        }
+    }
     return cores.size();
 }

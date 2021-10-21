@@ -43,6 +43,8 @@ int IncFlow::CalculateVorticity(int order) {
         return CalculateVorticity2D(order);
     } else if(GetNumCoords()==3) {
         return CalculateVorticity3D(order);
+    } else {
+        return -1;
     }
 }
 
@@ -214,30 +216,61 @@ int IncFlow::ExtractCoreByPoint(
     return cores.size();
 }
 
-int IncFlow::SearchAllCoreXYZplane(std::vector<std::vector<int>> &intcenters, const std::vector<int> &v,
-    const bool ismax, const std::pair<int, int> plane, const double threshold) {
+int IncFlow::Extract2DVortex(std::vector<std::vector<int>> &intcenters,
+        std::vector<std::vector<double>> &physcenters,
+        std::vector<std::vector<double>> &info, const std::vector<int> &v,
+        const std::pair<int, int> &plane, const double threshold) {
+
+    SearchAllCoreXYZplane(intcenters, physcenters, info, v, false, plane, threshold);
+
+    for(size_t i=0; i<intcenters.size(); ++i) {
+        std::vector<double> tempinfo;
+        bool ismax = m_phys[v[plane.first]][Index(m_N, intcenters[i])] > 0.;
+        SearchOneCoreXYZplane(intcenters[i], physcenters[i], tempinfo, v, 3., ismax, 2);
+        info[i].insert(info[i].end(), tempinfo.begin(), tempinfo.end());
+    }
+    return info.size();
+}
+
+int IncFlow::SearchAllCoreXYZplane(std::vector<std::vector<int>> &intcenters,
+    std::vector<std::vector<double>> &physcenters, std::vector<std::vector<double>> &info,
+    const std::vector<int> &v, const bool ismax, const std::pair<int, int> plane, const double threshold) {
     if(plane.first<0 || plane.first>2) {
         printf("error: a correct direction [%d] must be assigned in SearchAllCoreXYZplane\n", plane.first);
         return -1;
     }
+    intcenters.clear();
+    physcenters.clear();
+    info.clear();
     std::vector<int> N = m_N;
     std::vector<double> dx = m_dx;
     std::vector<int> planeN, subrange = {0, m_N[0]-1, 0, m_N[1]-1, 0, m_N[2]-1};
     std::vector<double> planedata;
-    double tmpcirculation;
     ExtractPlane(m_phys[v[3]], plane, subrange, planeN, planedata);
 
+    ShiftArray<double>(dx, 2-plane.first);
     ShiftArray<int>(subrange, 2*(2-plane.first));
     ShiftArray<int>(N, 2-plane.first);
 
     FindAllLocMaxIn2DGraph(planeN, planedata, intcenters, threshold, ismax);
 
+    physcenters.resize(intcenters.size());
     for(size_t i=0; i<intcenters.size(); ++i) {
+        double tempvalue = planedata[intcenters[i][0]+intcenters[i][1]*planeN[0]];
         intcenters[i][0] += subrange[0];
         intcenters[i][1] += subrange[2];
+        intcenters[i].push_back(plane.second);
+        physcenters[i].resize(2);
+        for(int k=0; k<2; ++k) {
+            physcenters[i][k] = dx[k] * (intcenters[i][k] + subrange[2*k]);
+        }
+        physcenters[i].push_back(plane.second*dx[2]);
         ShiftArray<int>(intcenters[i], plane.first-2);
+        ShiftArray<double>(physcenters[i], plane.first-2);
+        m_axis.ToPhysCoord(physcenters[i]);
+        info.push_back({physcenters[i][0], physcenters[i][1], physcenters[i][2], tempvalue});
     }
-    return 3;
+    return info.size();
 }
 
 int IncFlow::SearchOneCoreXYZplane(

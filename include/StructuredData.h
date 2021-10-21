@@ -58,10 +58,10 @@ public:
     inline std::vector<int> GetN() {return m_N;}
     inline int GetTotPoints() {return m_Np;}
     inline std::string GetPhysVarName(int i) {return m_vars[(int)m_x.size()+i];}
-    inline double GetPhysValue(int f, int i)  {return f<m_phys.size() ? m_phys[f][i] : 0.;}
-    inline double GetCoordValue(int f, int i) {return f<m_x.size()    ? m_x[f][i]    : 0.;}
-    inline void SetPhysValue(double v, int f, int i)  {if(f<m_phys.size()) m_phys[f][i] = v;}
-    inline void SetCoordValue(double v, int f, int i) {if(f<m_x.size()   ) m_x[f][i]    = v;};
+    inline double GetPhysValue(size_t f, int i)  {return f<m_phys.size() ? m_phys[f][i] : 0.;}
+    inline double GetCoordValue(size_t f, int i) {return f<m_x.size()    ? m_x[f][i]    : 0.;}
+    inline void SetPhysValue(double v, size_t f, int i)  {if(f<m_phys.size()) m_phys[f][i] = v;}
+    inline void SetCoordValue(double v, size_t f, int i) {if(f<m_x.size()   ) m_x[f][i]    = v;};
     inline int GetNumPhys() {return m_phys.size();}
     inline int GetNumCoords() {return m_x.size();}
 protected:

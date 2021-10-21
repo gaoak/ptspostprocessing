@@ -66,6 +66,10 @@ public:
     int InterpolateFrom(const IncFlow & origin, std::map<int,double> field);
     int CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> &Ne,
             const std::vector<int> &skip, std::map<int, double> &field, const IncFlow & big);
+    int Extract2DVortex(std::vector<std::vector<int>> &intcenters,
+            std::vector<std::vector<double>> &physcenters,
+            std::vector<std::vector<double>> &info, const std::vector<int> &v,
+            const std::pair<int, int> &plane, const double threshold);
 protected:
     int ExtractVortexParam2Dplane(
             const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
@@ -87,8 +91,9 @@ protected:
             std::vector<int> &intcenter, std::vector<double> &physcenter, std::vector<double> &info,
             const std::vector<int> &v, const double range, const bool ismax, int dir = -1);
     int SearchAllCoreXYZplane(
-            std::vector<std::vector<int>> &intcenters, const std::vector<int> &v, const bool ismax,
-            const std::pair<int, int> plane, const double threshold);
+            std::vector<std::vector<int>> &intcenters,
+            std::vector<std::vector<double>> &physcenters, std::vector<std::vector<double>> &info, const std::vector<int> &v,
+            const bool ismax, const std::pair<int, int> plane, const double threshold);
     int SearchOneCorePerpendicular(
             std::vector<double> &physcenter, std::vector<double> &info,
             const std::vector<int> &v, const double range, const bool ismax);

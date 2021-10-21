@@ -312,13 +312,26 @@ int PlungingMotion::ProcessCFDAirfoilData(int dir) {
 }
 
 int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
-    m_processVortexCoreCount = 0;
-    std::vector<std::vector<double> > cores;
-    ProcessVortexCore(flow, n, m_sigma[0], cores, true);
-    for(size_t i=1; i<m_sigma.size(); ++i) {
-        ProcessVortexCore(flow, n, m_sigma[i], cores, i+1==m_sigma.size());
+    std::vector<std::vector<int>> intcenters;
+    std::vector<std::vector<double>> physcenters;
+    std::vector<std::vector<double>> info;
+    std::vector<int> v = {-1, -1, 3, 2};
+    std::pair<int, int> plane = std::make_pair(2, 0);
+    double threshold = -0.1;
+
+    ProcessVorticity(flow);
+    flow.Extract2DVortex(intcenters, physcenters, info, v, plane, threshold);
+
+    std::ofstream vortexfile("vortex_"+std::to_string(n)+".dat");
+    vortexfile << "variables = px, py, pz, p, vx, vy, vz, r1, r2, Gamma\n";
+    for(size_t i=0; i<info.size(); ++i) {
+        for(size_t j=0; j<info[i].size(); ++j) {
+            vortexfile << info[i][j] << " ";
+        }
+        vortexfile << "\n";
     }
-    return cores.size();
+    vortexfile.close();
+    return info.size();
 }
 
 
