@@ -315,7 +315,7 @@ int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
     std::vector<std::vector<int>> intcenters;
     std::vector<std::vector<double>> physcenters;
     std::vector<std::vector<double>> info;
-    std::vector<int> v = {-1, -1, 3, 2};
+    std::vector<int> v = {0, 0, 4, 3};
     std::pair<int, int> plane = std::make_pair(2, 0);
     double threshold = -0.1;
 

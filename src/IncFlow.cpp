@@ -39,7 +39,7 @@ IncFlow::IncFlow(const IncFlow & flow)
 }
 
 int IncFlow::CalculateVorticity(int order) {
-    if(GetNumCoords()==2) {
+    if(GetVelocityDimension()==2) {
         return CalculateVorticity2D(order);
     } else if(GetNumCoords()==3) {
         return CalculateVorticity3D(order);
@@ -94,7 +94,7 @@ int IncFlow::CalculateVorticity2D(int order) {
     std::vector<std::vector<double> > u, ux(2), uy(2);
     u.push_back(m_phys[0]);
     u.push_back(m_phys[1]);
-    for(int i=0; i<3; ++i) {
+    for(int i=0; i<2; ++i) {
         ux[i].resize(m_Np);
         uy[i].resize(m_Np);
     }

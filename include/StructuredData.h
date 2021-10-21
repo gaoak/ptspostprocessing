@@ -64,7 +64,9 @@ public:
     inline void SetCoordValue(double v, size_t f, int i) {if(f<m_x.size()   ) m_x[f][i]    = v;};
     inline int GetNumPhys() {return m_phys.size();}
     inline int GetNumCoords() {return m_x.size();}
+    inline int GetVelocityDimension() {return m_velocityDim; }
 protected:
+    void UpdateVelocityDimension();
     int GetInterpDimension() const;
     int ParserCSVHeader(const char * header);
     int GenPoints(const std::vector<double> &range);
@@ -78,5 +80,6 @@ protected:
     int m_Np;
     CoordSystem m_axis;
     std::vector<double> m_dx;    //dimension 3
+    int m_velocityDim;
 };
 #endif
