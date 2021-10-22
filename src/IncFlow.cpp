@@ -34,8 +34,13 @@ IncFlow::IncFlow(const std::vector<int> &N, const std::vector<double> &range)
 }
 
 IncFlow::IncFlow(const IncFlow & flow)
-    : StructuredData(flow) {
+    : StructuredData(flow),m_body(flow.m_body) {
+}
+
+IncFlow& IncFlow::operator=(const IncFlow & flow) {
+    StructuredData::operator=(flow);
     m_body = flow.m_body;
+    return *this;
 }
 
 int IncFlow::CalculateVorticity(int order) {
