@@ -51,6 +51,7 @@ public:
     IncFlow(const std::vector<int> &N, const std::vector<double> &range,
             const std::vector<std::vector<double> > & axis);
     IncFlow(const IncFlow & flow);
+    IncFlow& operator=(const IncFlow & flow);
     int OverWriteBodyPoint(const std::vector<double> &u0, const std::vector<double> &pivot,
             const std::vector<double> &omega);
     int TransformCoord(const std::vector<double> &x0);

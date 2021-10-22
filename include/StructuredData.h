@@ -15,6 +15,7 @@ public:
     CoordSystem(const std::vector<double> &range);
     CoordSystem(const std::vector<double> &range, const std::vector<std::vector<double> > & axis);
     CoordSystem(const CoordSystem & coord);
+    CoordSystem& operator=(const CoordSystem & coord);
     std::vector<double> m_o;
     std::vector<std::vector<double> > m_e;
     void ToPhysCoord(std::vector<double> &x) const;
@@ -28,6 +29,7 @@ public:
                    const std::vector<std::vector<double> > & axis);
     StructuredData();
     StructuredData(const StructuredData & data);
+    StructuredData& operator=(const StructuredData & data);
     int OutputData(std::string filename, const bool info = true);
     int InputData(std::string filename, const bool info = true);
     int AddPhysics(std::string var, void * func);

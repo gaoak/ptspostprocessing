@@ -34,9 +34,14 @@ CoordSystem::CoordSystem(const std::vector<double> &o,
     }
 }
 
-CoordSystem::CoordSystem(const CoordSystem & coord) {
+CoordSystem& CoordSystem::operator=(const CoordSystem & coord) {
     m_o = coord.m_o;
     m_e = coord.m_e;
+    return *this;
+}
+
+CoordSystem::CoordSystem(const CoordSystem & coord) {
+    *this = coord;
 }
 
 void CoordSystem::ToPhysCoord(std::vector<double> &x) const {
@@ -82,7 +87,7 @@ StructuredData::StructuredData()
     m_velocityDim = -1;
 }
 
-StructuredData::StructuredData(const StructuredData & data) {
+StructuredData& StructuredData::operator=(const StructuredData & data) {
     m_x = data.m_x;
     m_phys = data.m_phys;
     m_N = data.m_N;
@@ -90,6 +95,11 @@ StructuredData::StructuredData(const StructuredData & data) {
     m_Np = data.m_Np;
     m_axis = data.m_axis;
     m_dx = data.m_dx;
+    return *this;
+}
+
+StructuredData::StructuredData(const StructuredData & data) {
+    *this = data;
 }
 
 int StructuredData::GenPoints(const std::vector<double> &range) {
