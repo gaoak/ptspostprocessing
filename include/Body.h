@@ -2,6 +2,7 @@
 
 class Body {
 public:
+    ~Body();
     Body();
     Body(std::string airfoil, std::vector<double> params);
     Body(const Body & b2);

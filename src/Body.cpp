@@ -23,6 +23,9 @@ Body::Body()
     m_AoA = 0.;
 }
 
+Body::~Body() {
+}
+
  Body::Body(const Body & b2)
      : m_airfoil(b2.m_airfoil) {
      m_AoA = b2.m_AoA;
