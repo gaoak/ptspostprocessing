@@ -15,6 +15,7 @@ public:
     CoordSystem(const std::vector<double> &range);
     CoordSystem(const std::vector<double> &range, const std::vector<std::vector<double> > & axis);
     CoordSystem(const CoordSystem & coord);
+    CoordSystem& operator=(const CoordSystem & coord);
     std::vector<double> m_o;
     std::vector<std::vector<double> > m_e;
     void ToPhysCoord(std::vector<double> &x) const;
@@ -28,6 +29,7 @@ public:
                    const std::vector<std::vector<double> > & axis);
     StructuredData();
     StructuredData(const StructuredData & data);
+    StructuredData& operator=(const StructuredData & data);
     int OutputData(std::string filename, const bool info = true);
     int InputData(std::string filename, const bool info = true);
     int AddPhysics(std::string var, void * func);
@@ -58,12 +60,15 @@ public:
     inline std::vector<int> GetN() {return m_N;}
     inline int GetTotPoints() {return m_Np;}
     inline std::string GetPhysVarName(int i) {return m_vars[(int)m_x.size()+i];}
-    inline double GetPhysValue(int f, int i) {return m_phys[f][i];}
-    inline double GetCoordValue(int f, int i) {return m_x[f][i];}
-    inline void SetPhysValue(double v, int f, int i) {m_phys[f][i] = v;}
-    inline void SetCoordValue(double v, int f, int i) {m_x[f][i] = v;};
+    inline double GetPhysValue(size_t f, int i)  {return f<m_phys.size() ? m_phys[f][i] : 0.;}
+    inline double GetCoordValue(size_t f, int i) {return f<m_x.size()    ? m_x[f][i]    : 0.;}
+    inline void SetPhysValue(double v, size_t f, int i)  {if(f<m_phys.size()) m_phys[f][i] = v;}
+    inline void SetCoordValue(double v, size_t f, int i) {if(f<m_x.size()   ) m_x[f][i]    = v;};
     inline int GetNumPhys() {return m_phys.size();}
+    inline int GetNumCoords() {return m_x.size();}
+    inline int GetVelocityDimension() {return m_velocityDim; }
 protected:
+    void UpdateVelocityDimension();
     int GetInterpDimension() const;
     int ParserCSVHeader(const char * header);
     int GenPoints(const std::vector<double> &range);
@@ -77,5 +82,6 @@ protected:
     int m_Np;
     CoordSystem m_axis;
     std::vector<double> m_dx;    //dimension 3
+    int m_velocityDim;
 };
 #endif

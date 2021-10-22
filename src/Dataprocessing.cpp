@@ -136,9 +136,11 @@ Derivative::Derivative() {
 }
 
 int Derivative::Diff(int N, const double * uu, double * du, double dx, int order) {
-    if(N<2) {
-        printf("error: array length is 1 when calculating derivative\n");
+    if(N==0) {
         return 0;
+    } else if(N==1) {
+        du[0] = 0.;
+        return 1;
     }
     dx = 1./dx;
     du[0] = dx * (uu[1] - uu[0]);

@@ -18,15 +18,19 @@ Body::Body(std::string airfoil, std::vector<double> param)
     }
 }
 
-Body::Body()
-    : m_airfoil("0000") {
+Body::Body() {
     m_AoA = 0.;
 }
 
- Body::Body(const Body & b2)
-     : m_airfoil(b2.m_airfoil) {
+Body& Body::operator=(const Body& b2) {
+     m_airfoil = b2.m_airfoil;
      m_AoA = b2.m_AoA;
      m_span = b2.m_span;
+     return *this;
+}
+
+ Body::Body(const Body & b2){
+     *this = b2;
  }
 
 bool Body::IsInBody(std::vector<double> p, double tol) {

@@ -125,18 +125,20 @@ void NormalizeVect(std::vector<double> &data) {
 void AddVect(const double a1, const std::vector<double> &a,
              const double b1, const std::vector<double> &b,
              std::vector<double> &res) {
-    if(res.size()<a.size()) {
-        res.resize(a.size());
+    size_t n = std::min(a.size(), b.size());
+    if(res.size()<n) {
+        res.resize(n);
     }
-    for(size_t i=0; i<a.size(); ++i) {
+    for(size_t i=0; i<n; ++i) {
         res[i] = a1*a[i] + b1*b[i];
     }
 }
 
 std::vector<double> AddVect(const double a1, const std::vector<double> &a,
              const double b1, const std::vector<double> &b) {
-    std::vector<double> res(a.size());
-    for(size_t i=0; i<a.size(); ++i) {
+    size_t n = std::min(a.size(), b.size());
+    std::vector<double> res(n);
+    for(size_t i=0; i<n; ++i) {
         res[i] = a1*a[i] + b1*b[i];
     }
     return res;

@@ -289,6 +289,55 @@ int PlungingMotion::ProcessCFDWingData(int dir) {
     return m_fileseries.size();
 }
 
+int PlungingMotion::ProcessCFDAirfoilData(int dir) {
+    std::vector<int> filen = m_fileseries;
+    if(dir<0) {
+        std::reverse(filen.begin(), filen.end());;
+    }
+    for(int k=0; k<(int)filen.size(); ++k) {
+        int n = filen[k];
+        IncFlow flow(m_airfoil, {m_AoA});
+        flow.InputData(GetInFileName(n));
+        if(m_airfoil.compare("0000")!=0) {
+            double v0 = PlungingVelocity(GetFilePhase(n), m_phi);
+            flow.OverWriteBodyPoint({0., v0}, {0., 0., 0.}, {0., 0., 0.});
+        }
+        if(m_translation) {
+            double h0 = PlungingLocation(GetFilePhase(n), m_phi);
+            flow.TransformCoord({0., h0, 0.});
+        }
+        ProcessAirfoilData(flow, n);
+    }
+    return m_fileseries.size();
+}
+
+int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
+    std::vector<std::vector<int>> intcenters;
+    std::vector<std::vector<double>> physcenters;
+    std::vector<std::vector<double>> info;
+    std::pair<int, int> plane = std::make_pair(2, 0);
+
+    ProcessVorticity(flow);
+    flow.Extract2DVortex(intcenters, physcenters, info, m_vortexcoreVar, plane, m_threshold);
+
+    std::ofstream vortexfile("vortex_"+std::to_string(n)+".dat");
+    vortexfile << "variables = px, py, pz, p, vx, vy, vz, r1, r2, Gamma";
+    for(size_t i=0; i<m_vortexcoreVar.size(); ++i) {
+        vortexfile << ", " << flow.GetPhysVarName(m_vortexcoreVar[i]);
+    }
+    vortexfile << "\n";
+    for(size_t i=0; i<info.size(); ++i) {
+        for(size_t j=0; j<info[i].size(); ++j) {
+            vortexfile << info[i][j] << " ";
+        }
+        vortexfile << "\n";
+    }
+    vortexfile.close();
+    flow.OutputData(GetOutFileName(n));
+    return info.size();
+}
+
+
 int PlungingMotion::ProcessVortexCore(IncFlow &rawflow, int n, double sigma,
         std::vector<std::vector<double> > &cores, bool outfield) {
     IncFlow flow = rawflow;

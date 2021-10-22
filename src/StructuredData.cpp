@@ -34,9 +34,14 @@ CoordSystem::CoordSystem(const std::vector<double> &o,
     }
 }
 
-CoordSystem::CoordSystem(const CoordSystem & coord) {
+CoordSystem& CoordSystem::operator=(const CoordSystem & coord) {
     m_o = coord.m_o;
     m_e = coord.m_e;
+    return *this;
+}
+
+CoordSystem::CoordSystem(const CoordSystem & coord) {
+    *this = coord;
 }
 
 void CoordSystem::ToPhysCoord(std::vector<double> &x) const {
@@ -74,13 +79,15 @@ StructuredData::StructuredData(const std::vector<int> &N, const std::vector<doub
     m_N = N;
     ReSetNp();
     GenPoints(range);
+    m_velocityDim = -1;
 }
 
 StructuredData::StructuredData()
     : m_axis() {
+    m_velocityDim = -1;
 }
 
-StructuredData::StructuredData(const StructuredData & data) {
+StructuredData& StructuredData::operator=(const StructuredData & data) {
     m_x = data.m_x;
     m_phys = data.m_phys;
     m_N = data.m_N;
@@ -88,6 +95,11 @@ StructuredData::StructuredData(const StructuredData & data) {
     m_Np = data.m_Np;
     m_axis = data.m_axis;
     m_dx = data.m_dx;
+    return *this;
+}
+
+StructuredData::StructuredData(const StructuredData & data) {
+    *this = data;
 }
 
 int StructuredData::GenPoints(const std::vector<double> &range) {
@@ -225,21 +237,21 @@ int StructuredData::OutputData(std::string filename, const bool info) {
 
 int StructuredData::ResetAxis() {
     std::vector<double> e0, e1, e2;
-    std::vector<double> x0 = {m_x[0][0], m_x[1][0], m_x[2][0]};
+    std::vector<double> x0 = {m_x[0][0], m_x[1][0], GetCoordValue(2, 0)};
     int i0 = 1;
-    e0 = {m_x[0][i0]-x0[0], m_x[1][i0]-x0[1], m_x[2][i0]-x0[2]};
-    if(m_N.size()>1) {
+    e0 = {m_x[0][i0]-x0[0], m_x[1][i0]-x0[1], GetCoordValue(2, i0)-x0[2]};
+    if(m_N.size()>1 && m_N[1]>1) {
         int i1 = Index(m_N, {0, 1, 0});
-        e1 = {m_x[0][i1]-x0[0], m_x[1][i1]-x0[1], m_x[2][i1]-x0[2]};
+        e1 = {m_x[0][i1]-x0[0], m_x[1][i1]-x0[1], GetCoordValue(2, i1)-x0[2]};
     } else {
         int imax = FindAbsMax(3, e0.data());
         e1 = {1.,1.,1.};
         e1[imax] = 0.;
         e1 = CrossVect(e0, e1);
     }
-    if(m_N.size()>2) {
+    if(m_N.size()>2 && m_N[2]>1) {
         int i2 = Index(m_N, {0, 0, 1});
-        e2 = {m_x[0][i2]-x0[0], m_x[1][i2]-x0[1], m_x[2][i2]-x0[2]};
+        e2 = {m_x[0][i2]-x0[0], m_x[1][i2]-x0[1], GetCoordValue(2, i2)-x0[2]};
     } else {
         e2 = CrossVect(e0, e1);
     }
@@ -315,6 +327,18 @@ int StructuredData::ShuffleIndex(std::map<int, int> ReIndex, std::vector<int> di
     return (m_x.size() + m_phys.size() ) * m_Np;
 }
 
+void StructuredData::UpdateVelocityDimension() {
+    m_velocityDim = 0;
+    std::vector<std::string> velocity = {"u", "v", "w"};
+    for(size_t i=0; i<m_phys.size(); ++i) {
+        if(m_vars[i+m_x.size()]==velocity[i]) {
+            ++m_velocityDim;
+        } else {
+            break;
+        }
+    }
+}
+
 int StructuredData::InputData(std::string filename, const bool info) {
     std::clock_t c_start = std::clock();
     std::vector<std::vector<double> > data;
@@ -357,6 +381,7 @@ int StructuredData::InputData(std::string filename, const bool info) {
         double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
         printf("Read file %s, cpu time %fs\n", filename.c_str(), time_elapsed_ms);
     }
+    UpdateVelocityDimension();
     return m_x.size() + m_phys.size();
 }
 
@@ -375,6 +400,9 @@ int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int,
     //range = {imin, imax, jmin, jmax, kmin, kmax}
     std::vector<int> range = Range;
     for(int i=0; i<3; ++i) {
+        if(plane.first==i) {
+            continue;
+        }
         if(range[2*i] < 0) {
             range[2*i] = 0;
         }
@@ -438,10 +466,6 @@ int StructuredData::ExtractPlane(const std::vector<double> &data, std::pair<int,
 }
 
 int StructuredData::Diff(std::vector<std::vector<double> > &u, std::vector<std::vector<double> > &du, int dir, int order) {
-    if(m_N[dir]==0) {
-        printf("error: cannot calculate finite difference in 1 data, dir %d\n", dir);
-        return 0;
-    }
     Derivative der;
     std::vector<int> N = m_N;
     if(dir) {
@@ -692,6 +716,7 @@ void StructuredData::clear() {
     m_N.clear();
     m_dx.clear();
     m_Np = 0;
+    m_velocityDim = -1;
 }
 
 int StructuredData::Smoothing(double sigma, std::vector<int> &field, bool inplace) {
