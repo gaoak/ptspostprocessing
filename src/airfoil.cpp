@@ -16,6 +16,10 @@ NACAmpxx::NACAmpxx(double m, double p, double t) {
 }
 
 NACAmpxx::NACAmpxx(const NACAmpxx & a) {
+    *this = a;
+}
+
+NACAmpxx& NACAmpxx::operator=(const NACAmpxx& a) {
     m_m = a.m_m;
     m_p = a.m_p;
     if(m_m<0.001) {
@@ -25,6 +29,7 @@ NACAmpxx::NACAmpxx(const NACAmpxx & a) {
     m_t = a.m_t;
 	calculateArcTable();
     m_rRoundTrailing = -1.;
+    return *this;
 }
 
 NACAmpxx::NACAmpxx(std::string name) {
@@ -41,6 +46,10 @@ NACAmpxx::NACAmpxx(std::string name) {
     }
     calculateArcTable();
     m_rRoundTrailing = -1.;
+}
+
+NACAmpxx::NACAmpxx():
+    NACAmpxx("0000") {
 }
 
 double NACAmpxx::findx(double s, int surf) {
