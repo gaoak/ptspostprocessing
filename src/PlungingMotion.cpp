@@ -316,10 +316,9 @@ int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
     std::vector<std::vector<double>> physcenters;
     std::vector<std::vector<double>> info;
     std::pair<int, int> plane = std::make_pair(2, 0);
-    double threshold = -0.1;
 
     ProcessVorticity(flow);
-    flow.Extract2DVortex(intcenters, physcenters, info, m_vortexcoreVar, plane, threshold);
+    flow.Extract2DVortex(intcenters, physcenters, info, m_vortexcoreVar, plane, m_threshold);
 
     std::ofstream vortexfile("vortex_"+std::to_string(n)+".dat");
     vortexfile << "variables = px, py, pz, p, vx, vy, vz, r1, r2, Gamma";
