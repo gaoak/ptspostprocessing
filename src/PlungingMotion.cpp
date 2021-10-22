@@ -315,15 +315,18 @@ int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
     std::vector<std::vector<int>> intcenters;
     std::vector<std::vector<double>> physcenters;
     std::vector<std::vector<double>> info;
-    std::vector<int> v = {0, 0, 4, 3};
     std::pair<int, int> plane = std::make_pair(2, 0);
     double threshold = -0.1;
 
     ProcessVorticity(flow);
-    flow.Extract2DVortex(intcenters, physcenters, info, v, plane, threshold);
+    flow.Extract2DVortex(intcenters, physcenters, info, m_vortexcoreVar, plane, threshold);
 
     std::ofstream vortexfile("vortex_"+std::to_string(n)+".dat");
-    vortexfile << "variables = px, py, pz, p, vx, vy, vz, r1, r2, Gamma\n";
+    vortexfile << "variables = px, py, pz, p, vx, vy, vz, r1, r2, Gamma";
+    for(size_t i=0; i<m_vortexcoreVar.size(); ++i) {
+        vortexfile << ", " << flow.GetPhysVarName(m_vortexcoreVar[i]);
+    }
+    vortexfile << "\n";
     for(size_t i=0; i<info.size(); ++i) {
         for(size_t j=0; j<info[i].size(); ++j) {
             vortexfile << info[i][j] << " ";
@@ -331,6 +334,7 @@ int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
         vortexfile << "\n";
     }
     vortexfile.close();
+    flow.OutputData(GetOutFileName(n));
     return info.size();
 }
 
