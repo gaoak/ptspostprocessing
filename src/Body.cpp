@@ -23,7 +23,11 @@ Body::Body()
     m_AoA = 0.;
 }
 
-Body::~Body() {
+Body& Body::operator=(const Body& b2) {
+     m_airfoil = b2.m_airfoil;
+     m_AoA = b2.m_AoA;
+     m_span = b2.m_span;
+     return *this;
 }
 
  Body::Body(const Body & b2)
