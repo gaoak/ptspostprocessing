@@ -1,3 +1,4 @@
+#process 2D airfoil data
 #plunging motion
 k 2.
 A 0.5

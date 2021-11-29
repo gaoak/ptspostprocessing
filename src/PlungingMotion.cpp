@@ -321,7 +321,7 @@ int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
     flow.Extract2DVortex(intcenters, physcenters, info, m_vortexcoreVar, plane, m_threshold);
 
     std::ofstream vortexfile("vortex_"+std::to_string(n)+".dat");
-    vortexfile << "variables = px, py, pz, p, vx, vy, vz, r1, r2, Gamma";
+    vortexfile << "variables = x, y, z, signal, vx, vy, vz, r1, r2, Gamma";
     for(size_t i=0; i<m_vortexcoreVar.size(); ++i) {
         vortexfile << ", " << flow.GetPhysVarName(m_vortexcoreVar[i]);
     }
