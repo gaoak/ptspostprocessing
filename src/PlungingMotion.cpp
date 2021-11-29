@@ -327,6 +327,9 @@ int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
     }
     vortexfile << "\n";
     for(size_t i=0; i<info.size(); ++i) {
+        if (flow.IsInBody(info[i], 10. * std::numeric_limits<double>::epsilon())) {
+            continue;
+        }
         for(size_t j=0; j<info[i].size(); ++j) {
             vortexfile << info[i][j] << " ";
         }

@@ -654,6 +654,10 @@ int IncFlow::CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> 
     return StructuredData::CopyAsSubDomain(Ns, Ne, skip, field, big);
 }
 
+bool IncFlow::IsInBody(std::vector<double> p, double tol) {
+    return m_body.IsInBody(p, tol);
+}
+
 int IncFlow::OverWriteBodyPoint(const std::vector<double> &u0, const std::vector<double> &pivot, const std::vector<double> &omega) {
     for(int i=0; i<m_Np; ++i) {
         std::vector<double> x = {m_x[0][i], m_x[1][i], GetCoordValue(2, i)};
