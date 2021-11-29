@@ -226,11 +226,11 @@ int IncFlow::Extract2DVortex(std::vector<std::vector<int>> &intcenters,
         std::vector<std::vector<double>> &info, const std::vector<int> &v,
         const std::pair<int, int> &plane, const double threshold) {
 
-    SearchAllCoreXYZplane(intcenters, physcenters, info, v, false, plane, threshold);
+    bool ismax = false;
+    SearchAllCoreXYZplane(intcenters, physcenters, info, v, ismax, plane, threshold);
 
     for(size_t i=0; i<intcenters.size(); ++i) {
         std::vector<double> tempinfo;
-        bool ismax = m_phys[v[plane.first]][Index(m_N, intcenters[i])] > 0.;
         SearchOneCoreXYZplane(intcenters[i], physcenters[i], tempinfo, v, 3., ismax, 2);
         info[i].insert(info[i].end(), tempinfo.begin(), tempinfo.end());
     }
