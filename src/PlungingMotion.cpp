@@ -229,7 +229,12 @@ int PlungingMotion::ProcessEXPWingData(int dir) {
     }
     for(int k=0; k<(int)filen.size(); ++k) {
         int n = filen[k];
-        IncFlow flow(m_airfoil, {m_AoA, m_span[0], m_span[1]});
+        std::vector<double> params;
+        params.push_back(m_AoA);
+        for(size_t l=0; l<m_span.size(); ++l) {
+            params.push_back(m_span[l]);
+        }
+        IncFlow flow(m_airfoil, params);
         flow.InputData(GetInFileName(n));
         if(m_translation) {
             double h0 = PlungingLocation(GetFilePhase(n), m_phi);
@@ -274,7 +279,12 @@ int PlungingMotion::ProcessCFDWingData(int dir) {
     }
     for(int k=0; k<(int)filen.size(); ++k) {
         int n = filen[k];
-        IncFlow flow(m_airfoil, {m_AoA, m_span[0], m_span[1]});
+        std::vector<double> params;
+        params.push_back(m_AoA);
+        for(size_t l=0; l<m_span.size(); ++l) {
+            params.push_back(m_span[l]);
+        }
+        IncFlow flow(m_airfoil, params);
         flow.InputData(GetInFileName(n));
         if(m_airfoil.compare("0000")!=0) {
             double v0 = PlungingVelocity(GetFilePhase(n), m_phi);

@@ -16,6 +16,11 @@ Body::Body(std::string airfoil, std::vector<double> param)
     } else {
         m_span.push_back(std::numeric_limits<double>::max());
     }
+    if(param.size()>=4) {
+        m_roundtip = param[3];
+    } else {
+        m_roundtip = -10000.;
+    }
 }
 
 Body::Body() {
@@ -39,6 +44,10 @@ bool Body::IsInBody(std::vector<double> p, double tol) {
     }
     p = transform(p, -m_AoA);
     if(p[0]<=0. || p[0]>=1.) return false;
+    if(m_roundtip>0.) {
+        double roundcurve = m_roundtip + sqrt(1 - (p[0]-1.)*(p[0]-1.) );
+        if(p[1] > roundcurve) return false;
+    }
     std::vector<double> foilup =  m_airfoil.up(p[0]);
     if(std::fabs(foilup[0] - p[0]) > 1E-6) {
         printf("error: asymmetric airfoil not supported\n");

@@ -11,4 +11,5 @@ protected:
     NACAmpxx m_airfoil;
     double m_AoA;
     std::vector<double> m_span;
+    double m_roundtip;
 };
