@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
             double sum = 0.;
             for(int j=0; j<N[0]-1; ++j)
             {
-                sum += data[v][j+offset];
+                sum += data[v][j+offset] * data[v][j+offset];
             }
             sum = sqrt(sum / (N[0]-1));
             energy << sum << " ";
