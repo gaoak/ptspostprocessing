@@ -3,6 +3,7 @@
 #include<cmath>
 #include<algorithm>
 #include<set>
+#include<fstream>
 #include "FileIO.h"
 #include "Util.h"
 using namespace std;
@@ -87,5 +88,32 @@ int main(int argc, char *argv[]) {
         offset1 += Nsp[0];
     }
     OutputTec360_binary("historyspectral.plt", vsp, Nsp, datasp, 0);
+
+    //do summation
+    ofstream energy("energy.dat");
+    energy << "variables = ";
+    for(size_t i=0; i<variables.size(); ++i)
+    {
+        energy << variables[i] << " ";
+    }
+    energy << "\n";
+    int offset = 0;
+    for (int i=0; i<N[1]; ++i)
+    {
+        energy << data[0][offset] << " " << data[1][offset] << " ";
+        for(size_t v=2; v<variables.size(); ++v)
+        {
+            double sum = 0.;
+            for(int j=0; j<N[0]-1; ++j)
+            {
+                sum += data[v][j+offset];
+            }
+            sum = sqrt(sum / (N[0]-1));
+            energy << sum << " ";
+        }
+        energy << "\n";
+        offset += N[0];
+    }
+    energy.close();
     return 0;
 }
