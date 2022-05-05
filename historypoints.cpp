@@ -60,8 +60,8 @@ int main(int argc, char *argv[]) {
     double etime = 0.05;
     sscanf(argv[3], "%lf", &etime);
 
-    std::vector<std::vector<double> > data;
-    std::vector<int> N;
+    std::vector<std::vector<double> > data; // size [nvar + 1][all data], data[0] is z location
+    std::vector<int> N; // [number of points][number of time steps]
     InputHistoryPointsLine(pointfilename, stime, etime, N, data);
     std::vector<std::string> variables = {"z", "t", "u", "v", "w", "p"};
     OutputTec360_binary("history.plt", variables, N, data, 0);
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     //do spectral
     std::vector<int> Nsp = {N[0]/2+1, N[1]};
     std::vector<std::string> vsp = {"beta", "t", "w"};
-    std::vector<std::vector<double> > datasp(3);
+    std::vector<std::vector<double> > datasp(3); //beta, time, spectral
     for(size_t i=0; i<datasp.size(); ++i)
     {
         datasp[i].resize(Nsp[0]*Nsp[1]);
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
     OutputTec360_binary("historyspectral.plt", vsp, Nsp, datasp, 0);
 
     //do summation
-    ofstream energy("energy.dat");
+    ofstream energy("energy.dat"); // spanwise L2 normal at each time
     energy << "variables = ";
     for(size_t i=0; i<variables.size(); ++i)
     {
