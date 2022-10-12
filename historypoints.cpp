@@ -14,6 +14,7 @@ int InputHistoryPointsLine(const std::string filename, double stime, double etim
     std::ifstream file(filename.c_str());
     if(!file.is_open()) {
         printf("error: unable to open file %s\n", filename.c_str());
+        exit(-1);
     }
     char buffer[1000];
     // read header

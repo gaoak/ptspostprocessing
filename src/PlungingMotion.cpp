@@ -11,6 +11,7 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     std::ifstream conf(dataconfigue.c_str());
     if(!conf.is_open()) {
         printf("error: unable to open configue file %s\n", dataconfigue.c_str());
+        exit(-1);
     }
     char buffer[1000];
     std::map<std::string, std::string> param;
