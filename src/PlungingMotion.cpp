@@ -3,6 +3,7 @@
 #include<cmath>
 #include<algorithm>
 #include<set>
+#include <limits>
 #include "Util.h"
 #include "PlungingMotion.h"
 
