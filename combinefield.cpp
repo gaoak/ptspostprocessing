@@ -34,10 +34,12 @@ int main(int argc, char *argv[]) {
     for(int i=0; i<appdflow.GetNumPhys(); ++i) {
         field[i] = 0.;
     }
-    appdflow.InterpolateFrom(baseflow, field);
-    for(int i=0; i<appdflow.GetNumPhys(); ++i) {
-        if (addall || !baseflow.HasField(appdflow.GetPhysVarName(i))) {
-            baseflow.AddPhysics(appdflow.GetPhysVarName(i), appdflow.GetPhys(i));
+    StructuredData interpedappdflow;
+    interpedappdflow = baseflow;
+    interpedappdflow.InterpolateFrom(appdflow, field);
+    for(int i=0; i<interpedappdflow.GetNumPhys(); ++i) {
+        if (addall || !baseflow.HasField(interpedappdflow.GetPhysVarName(i))) {
+            baseflow.AddPhysics(interpedappdflow.GetPhysVarName(i), interpedappdflow.GetPhys(i));
         }
     }
     baseflow.OutputData("comb_" + baseflowname);
