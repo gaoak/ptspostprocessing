@@ -8,7 +8,10 @@
 using namespace std;
 /************
  * description
- * 
+ * produce the disturbed flow by
+ * adding the amplified linear mode to the baseflow
+ * Usage:
+ * stabilitymode baseflow.plt amplitude mode.plt
  ***********/
 
 double func(std::vector<double> p) {
@@ -19,6 +22,7 @@ double func(std::vector<double> p) {
 int main(int argc, char *argv[]) {
     if (argc<4) {
         printf("argc is %d [<4]\n", argc);
+        exit(-1);
     }
     string baseflowname(argv[1]);
     double amplitude = 0.05;

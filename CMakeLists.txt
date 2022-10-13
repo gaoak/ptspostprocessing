@@ -43,9 +43,13 @@ target_link_libraries(checkcode LIBPROCESSING)
 add_executable(dumppts dumppts.cpp)
 target_link_libraries(dumppts LIBPROCESSING)
 
-# target
+# target, baseflow + amplitude * mode
 add_executable(stabilitymode stabilitymode.cpp)
 target_link_libraries(stabilitymode LIBPROCESSING)
+
+# target, baseflow + amplitude * mode
+add_executable(combinefield combinefield.cpp)
+target_link_libraries(combinefield LIBPROCESSING)
 
 # target z-t plot
 add_executable(hispts historypoints.cpp)

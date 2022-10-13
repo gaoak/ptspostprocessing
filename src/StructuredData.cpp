@@ -201,6 +201,15 @@ int StructuredData::AddPhysics(std::string var, const std::vector<double> &data)
     return (int)data.size();
 }
 
+int StructuredData::HasField(std::string var) {
+    for(size_t i=0; i<m_vars.size(); ++i) {
+        if (var==m_vars[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 double StructuredData::GetPhysNorm(int f, int p) {
     double sum = NormVect(m_phys[f], p);
     return sum/m_Np;
