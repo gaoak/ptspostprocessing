@@ -3,6 +3,7 @@
 #include<string>
 #include<vector>
 #include<fstream>
+#include<map>
 #ifdef TEC360USEDOUBLE
 #define TEC360USEDOUBLE 1
 #else
@@ -22,6 +23,9 @@ int OutputCSV(const std::string filename, const std::vector<std::string> &variab
                  const std::vector<int> &N, const std::vector<std::vector<double> > &data);
 
 int ParserCSVHeader(const char * header, std::vector<std::string> &vars);
+
+int InputTec360_binary(const std::string filename, const std::vector<int> &N,
+    std::vector<std::vector<double> > &data, int &isdouble);
 
 int InputTec360_binary(const std::string filename, std::vector<std::string> &variables,
                  std::vector<int> &N, std::vector<std::vector<double> > &data,

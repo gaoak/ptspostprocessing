@@ -54,3 +54,7 @@ target_link_libraries(combinefield LIBPROCESSING)
 # target z-t plot
 add_executable(hispts historypoints.cpp)
 target_link_libraries(hispts LIBPROCESSING)
+
+# target process vortex wake
+add_executable(processwake VortexWake.cpp)
+target_link_libraries(processwake LIBPROCESSING)

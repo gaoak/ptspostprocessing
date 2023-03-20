@@ -4,6 +4,10 @@
 #include "FileIO.h"
 #include "Util.h"
 
+static float EOHMARKER = 357.0f;
+
+static float ZONEMARKER = 299.0f;
+
 int OutputCSV(const std::string filename, const std::vector<std::string> &variables,
                  const std::vector<int> &N, const std::vector<std::vector<double> > &data) {
     std::ofstream file(filename.c_str());
@@ -112,8 +116,8 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
     {
         BinaryWrite(odata, variables[i]);
     }
-    float marker299I = 299.0f;
-    odata.write((char*)&marker299I, 4);
+    float zonemarker299I = ZONEMARKER;
+    odata.write((char*)&zonemarker299I, 4);
     //zone title
     std::string zonetitle("ZONE 0");
     BinaryWrite(odata, zonetitle);
@@ -137,10 +141,10 @@ int OutputTec360_binary(const std::string filename, const std::vector<std::strin
     }
 
     odata.write((char*)&zero, 4);
-    float marker357 = 357.0f;
-    odata.write((char*)&marker357, 4);
-    float marker299II = 299.0f;
-    odata.write((char*)&marker299II, 4);
+    float eohmarker357 = EOHMARKER;
+    odata.write((char*)&eohmarker357, 4);
+    float zonemarker299II = ZONEMARKER;
+    odata.write((char*)&zonemarker299II, 4);
     std::vector<int> binarydatatype(nvar, 1 + (isdouble>0));
     odata.write((char*)binarydatatype.data(), 4*nvar);
     odata.write((char*)&zero, 4);
@@ -246,6 +250,15 @@ int InputCSV(const std::string filename, std::vector<std::string> &variables,
     return ncoor;
 }
 
+/***
+ * Input: filename
+ * Output:
+ * N: structured data size Nx Ny Nz
+ * data: data
+ * isdouble: data type
+ * variables is reordered as vm[place in data] = place in variable
+ * variables starts with x, y, z, ...
+***/
 int InputTec360_binary(const std::string filename, std::vector<std::string> &variables,
                  std::vector<int> &N, std::vector<std::vector<double> > &data, int &isdouble,
                  std::map<int, int> &vm) {
@@ -287,9 +300,9 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
         }
         variables.push_back(vname);
     }
-    float marker299I=0.0f;
-    while(marker299I!=299.0f) {
-        indata.read((char*)&marker299I, 4);
+    float zonemarker299I=0.0f;
+    while(zonemarker299I!=ZONEMARKER) {
+        indata.read((char*)&zonemarker299I, 4);
     }
     //zone title
     std::string zonentitle;
@@ -317,13 +330,13 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
     N.resize(3);
     indata.read((char*)N.data(), 3*4);
     indata.read((char*)&zero, 4);
-    float marker357=0.0f;
-    while(marker357!=357.0f) {
-        indata.read((char*)&marker357, 4);
+    float eohmarker357=0.0f;
+    while(eohmarker357!=EOHMARKER) {
+        indata.read((char*)&eohmarker357, 4);
     }
-    float marker299II = 0.0f;
-    while(marker299II!=299.0f) {
-        indata.read((char*)&marker299II, 4);
+    float zonemarker299II = 0.0f;
+    while(zonemarker299II!=ZONEMARKER) {
+        indata.read((char*)&zonemarker299II, 4);
     }
     std::vector<int> binarydatatype(nvar);
     indata.read((char*)binarydatatype.data(), 4*nvar);
@@ -361,4 +374,78 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
     }
     indata.close();
     return ncoor;
+}
+
+int InputTec360_binary(const std::string filename, const std::vector<int> &N,
+    std::vector<std::vector<double> > &data, int &isdouble) {
+    std::ifstream indata;
+    indata.open(filename, std::ios::binary);
+    if(!indata.is_open())
+    {
+        printf("error unable to open file %s\n", filename.c_str());
+        return -1;
+    }
+    float eohmarker357=0.0f;
+    while(eohmarker357!=EOHMARKER) {
+        indata.read((char*)&eohmarker357, 4);
+    }
+    float zonemarker299I=0.0f;
+    while(zonemarker299I!=ZONEMARKER) {
+        indata.read((char*)&zonemarker299I, 4);
+    }
+    std::vector<int> binarydatatype;
+    int type;
+    while(1)
+    {
+        indata.read((char*)&type, 4);
+        if(type==1 || type==2)
+        {
+            binarydatatype.push_back(type);
+        }
+        else
+        {
+            break;
+        }
+    }
+    indata.read((char*)&type, 4);
+    int Np, datanum;
+    Np = N[0] * N[1] * N[2];
+    data.resize(binarydatatype.size());
+    for(size_t i=0; i<binarydatatype.size(); ++i) {
+        data[i].resize(Np);
+    }
+    datanum = Np * binarydatatype.size();
+    if(isdouble) {
+        std::vector<double> vardata(datanum);
+        indata.read((char*)vardata.data(), datanum * 8);
+        int count0 = 0, count1 = 0;
+        for(int k=0; k<N[2]; ++k) {
+            for(int j=0; j<N[1]; ++j) {
+                for(int i=0; i<N[0]; ++i) {
+                    for(size_t n=0; n<binarydatatype.size(); ++n) {
+                        data[n][count1] = vardata[count0];
+                        ++count0;
+                    }
+                    ++count1;
+                }
+            }
+        }
+    } else {
+        std::vector<float> vardata(datanum);
+        indata.read((char*)vardata.data(), datanum * 4);
+        int count0 = 0, count1 = 0;
+        for(int k=0; k<N[2]; ++k) {
+            for(int j=0; j<N[1]; ++j) {
+                for(int i=0; i<N[0]; ++i) {
+                    for(size_t n=0; n<binarydatatype.size(); ++n) {
+                        data[n][count1] = vardata[count0];
+                        ++count0;
+                    }
+                    ++count1;
+                }
+            }
+        }
+    }
+    indata.close();
+    return datanum;
 }
