@@ -409,31 +409,19 @@ int Load_FSILBM2DZone(std::ifstream &indata, const std::vector<int> &N,
     if(isdouble) {
         std::vector<double> vardata(datanum);
         indata.read((char*)vardata.data(), datanum * 8);
-        int count0 = 0, count1 = 0;
-        for(int k=0; k<N[2]; ++k) {
-            for(int j=0; j<N[1]; ++j) {
-                for(int i=0; i<N[0]; ++i) {
-                    for(size_t n=0; n<binarydatatype.size(); ++n) {
-                        data[n][count1] = vardata[count0];
-                        ++count0;
-                    }
-                    ++count1;
-                }
+        int count0 = -1;
+        for(int k=0; k<Np; ++k) {
+            for(size_t n=0; n<binarydatatype.size(); ++n) {
+                data[n][k] = vardata[++count0];
             }
         }
     } else {
         std::vector<float> vardata(datanum);
         indata.read((char*)vardata.data(), datanum * 4);
-        int count0 = 0, count1 = 0;
-        for(int k=0; k<N[2]; ++k) {
-            for(int j=0; j<N[1]; ++j) {
-                for(int i=0; i<N[0]; ++i) {
-                    for(size_t n=0; n<binarydatatype.size(); ++n) {
-                        data[n][count1] = vardata[count0];
-                        ++count0;
-                    }
-                    ++count1;
-                }
+        int count0 = -1;
+        for(int k=0; k<Np; ++k) {
+            for(size_t n=0; n<binarydatatype.size(); ++n) {
+                data[n][k] = vardata[++count0];
             }
         }
     }
