@@ -43,7 +43,7 @@ double ProcessWakeData(const std::vector<DataPack> & zones, std::string message)
     }
     double totalenstrophy = Integration(dx, dy, enstrophy) / Area;
     double totalkinetic = Integration(dx, dy, kinetic) / Area;
-    std::cout << scientific << "Value: " << totalenstrophy << ", " << totalkinetic << ", " << message << std::endl;
+    std::cout << scientific << totalenstrophy << " " << totalkinetic << " " << message << std::endl;
     return 0;
 }
 
@@ -76,6 +76,30 @@ double Integration(const std::vector<double> &dx, const std::vector<double> &dy,
     return sum * 0.25;
 }
 
+std::string processMessage(std::string message) {
+    if(message.size()==0) {
+        return message;
+    }
+    string cholder = "KD.";
+    vector<size_t> holder(cholder.size(), 0);
+    size_t underline = message.find('_');
+    if(underline == string::npos) {
+        return "";
+    }
+    for(size_t i=0; i<cholder.size(); ++i) {
+        holder[i] = message.find(cholder[i], underline);
+        if(holder[i] == string::npos) {
+            return "";
+        }
+    }
+    string res = message.substr(holder[0]+1, holder[1] - holder[0]-1) + " ";
+    res += message.substr(holder[1]+2, holder[2] - holder[1]-2) + " ";
+    if(message[0]=='v' || message[0]=='V') {
+        res += "override";
+    }
+    return res;
+}
+
 int main(int argc, char* argv[]) {
   string filename("0.plt");
   string message;
@@ -96,6 +120,7 @@ int main(int argc, char* argv[]) {
   InputTec360_FSILBM2D(filename, zones);
   ShiftIndex<double>(zones[0].N, zones[0].data, 1);
 
+  message = processMessage(message);
   ProcessWakeData(zones, message);
 
   return 0;
