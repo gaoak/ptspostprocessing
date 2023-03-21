@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     baseflow.InputData(baseflowname, true);
     modeflow.InputData(modename, true);
     if (modeflow.GetNumPhys()==2) {
-        modeflow.AddPhysics("w", (void*)func);
+        modeflow.AddPhysics("w", (void(*)())func);
     }
     for (int f=0; f<baseflow.GetNumPhys() - 1; ++f) { //no p
         for (int p=0; p < baseflow.GetTotPoints(); ++p) {

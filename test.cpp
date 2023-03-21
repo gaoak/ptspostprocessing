@@ -112,7 +112,7 @@ int test_structuredData() {
     StructuredData sdata(N, range);
     sdata.OutputData("coor.csv");
     sdata.OutputData("coor.plt");
-    sdata.AddPhysics("sin", (void*) sinfunc);
+    sdata.AddPhysics("sin", (void(*)()) sinfunc);
     double sum = sdata.GetPhysNorm(0,2);
     printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-0.238695)<1E-6].c_str());
     std::vector<int> field = {0};
@@ -125,7 +125,7 @@ int test_structuredData() {
     sum = sdata.GetPhysNorm(1,2);
     printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-9.70294)<1E-5].c_str());
 
-    sdata.AddPhysics("deriv", (void*) deriv);
+    sdata.AddPhysics("deriv", (void(*)()) deriv);
     sum = sdata.GetPhysNorm(2,2);
     printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-9.71776)<1E-5].c_str());
     std::map<int, double> def = {{2, 2.*M_PI}, {3, 2.*M_PI}};
@@ -171,7 +171,7 @@ int test_structuredData() {
     printf("test structuredData %g, %s\n", sum, testresults[fabs(sum-16.9691)<1E-4].c_str());
     //3D rotation data
     sdata = StructuredData(N, range, {{1,1,0.},{-1,1,0},{1,1,1}});
-    sdata.AddPhysics("sin", (void*) sinfunc2d);
+    sdata.AddPhysics("sin", (void(*)()) sinfunc2d);
     field = {0};
     sdata.Smoothing(0.02, field, true);
     sdata.OutputData("3drot.plt");
@@ -185,7 +185,7 @@ int test_structuredData() {
     printf("test structuredData 2d %s\n", testresults[fabs(sdata2d.GetCoordValue(1, 0)+0.5)<1E-4].c_str());
     sdata2d.OutputData("2d.plt");
     sdata2d = StructuredData(N2d, range2d, {{1,1},{-1,1}});
-    sdata2d.AddPhysics("sin", (void*) sinfunc2d);
+    sdata2d.AddPhysics("sin", (void(*)()) sinfunc2d);
     field = {0};
     sdata2d.Smoothing(0.02, field, true);
     sdata2d.OutputData("2drot.plt");
@@ -271,8 +271,8 @@ int test_subdomain() {
 int test_interpolation() {
     std::map<int, double> field = {{0,0.},{1,0},{2,0},{3,0},{4,0}};
     StructuredData sdata({17,17,17},{-0.5,2.,-0.5,2.,0,5.5}), data2;
-    sdata.AddPhysics("linear", (void*)linear);
-    sdata.AddPhysics("sin", (void*)sinfunc);
+    sdata.AddPhysics("linear", (void(*)())linear);
+    sdata.AddPhysics("sin", (void(*)())sinfunc);
     double sum = sdata.GetPhysNorm(0,2);
     printf("test interpolation %g, %s\n", sum, testresults[fabs(sum-4.06189)<1E-5].c_str());
     sum = sdata.GetPhysNorm(1,2);

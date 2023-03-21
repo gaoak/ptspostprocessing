@@ -174,7 +174,7 @@ int StructuredData::ReSetNp() {
     return m_Np;
 }
 
-int StructuredData::AddPhysics(std::string var, void * func) {
+int StructuredData::AddPhysics(std::string var, void func()) {
     double(*physfun)(std::vector<double>) = (double(*)(std::vector<double>))func;
     m_vars.push_back(var);
     int nphys = m_phys.size();

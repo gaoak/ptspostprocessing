@@ -32,7 +32,7 @@ public:
     StructuredData& operator=(const StructuredData & data);
     int OutputData(std::string filename, const bool info = true);
     int InputData(std::string filename, const bool info = true);
-    int AddPhysics(std::string var, void * func);
+    int AddPhysics(std::string var, void func());
     int AddPhysics(std::string var, const std::vector<double> &data);
     int RemovePhysics(int i);
     int Smoothing(double sigma, std::vector<int> &field, bool inplace = true);
