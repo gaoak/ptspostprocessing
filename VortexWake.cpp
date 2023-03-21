@@ -11,7 +11,7 @@ using namespace std;
 double Integration(const std::vector<double> &dx, const std::vector<double> &dy, const std::vector<double> &data);
 int ExtractDxDy(const std::vector<DataPack> & zones, std::vector<double> &dx, std::vector<double> &dy);
 
-double ProcessWakeData(const std::vector<DataPack> & zones) {
+double ProcessWakeData(const std::vector<DataPack> & zones, std::string message) {
     int Np = zones[0].data[0].size();
     int Idx = 0, Idy = 1, Idu = 3, Idv = 4, Idvor = 5;
     double xmin = -50, xmax = 250., ymin = -50., ymax = 50.;
@@ -43,7 +43,7 @@ double ProcessWakeData(const std::vector<DataPack> & zones) {
     }
     double totalenstrophy = Integration(dx, dy, enstrophy) / Area;
     double totalkinetic = Integration(dx, dy, kinetic) / Area;
-    std::cout << scientific << "Value: " << totalenstrophy << ", " << totalkinetic << std::endl;
+    std::cout << scientific << "Value: " << totalenstrophy << ", " << totalkinetic << ", " << message << std::endl;
     return 0;
 }
 
@@ -78,8 +78,12 @@ double Integration(const std::vector<double> &dx, const std::vector<double> &dy,
 
 int main(int argc, char* argv[]) {
   string filename("0.plt");
+  string message;
   if(argc>1) {
     filename = argv[1];
+  }
+  if(argc>2) {
+    message = argv[2];
   }
   std::vector<std::string> variables = {"x", "y", "p", "u", "v", "W_z"};
   std::vector<DataPack>  zones(3);
@@ -92,7 +96,7 @@ int main(int argc, char* argv[]) {
   InputTec360_FSILBM2D(filename, zones);
   ShiftIndex<double>(zones[0].N, zones[0].data, 1);
 
-  ProcessWakeData(zones);
+  ProcessWakeData(zones, message);
 
   return 0;
 }
