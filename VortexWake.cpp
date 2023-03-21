@@ -13,17 +13,21 @@ int ExtractDxDy(const std::vector<DataPack> & zones, std::vector<double> &dx, st
 
 double ProcessWakeData(const std::vector<DataPack> & zones) {
     int Np = zones[0].data[0].size();
-    int Idx = 0, Idy = 1, Idu = 2, Idv = 3, Idvor = 5;
-    double xmin = -5, xmax = 25., ymin = -5., ymax = 5.;
+    int Idx = 0, Idy = 1, Idu = 3, Idv = 4, Idvor = 5;
+    double xmin = -50, xmax = 250., ymin = -50., ymax = 50.;
     double x0 = zones[1].data[0][0];
     double y0 = zones[1].data[1][0];
-    double Area = (ymax - ymin) * (xmax - xmin);
+    std::vector<double> dx, dy;
+    ExtractDxDy(zones, dx, dy);
     xmin += x0;
     xmax += x0;
     ymin += y0;
     ymax += y0;
-    std::vector<double> dx, dy;
-    ExtractDxDy(zones, dx, dy);
+    xmin = max(xmin, zones[0].data[0][0]);
+    ymin = max(ymin, zones[0].data[1][0]);
+    xmax = min(xmax, zones[0].data[0][Np-1]);
+    ymax = min(ymax, zones[0].data[1][Np-1]);
+    double Area = (ymax - ymin) * (xmax - xmin);
     std::vector<double> enstrophy(Np, 0.);
     std::vector<double> kinetic(Np, 0.);
     for(int i=0; i<Np; ++i) {
@@ -39,29 +43,31 @@ double ProcessWakeData(const std::vector<DataPack> & zones) {
     }
     double totalenstrophy = Integration(dx, dy, enstrophy) / Area;
     double totalkinetic = Integration(dx, dy, kinetic) / Area;
-    std::cout << "Value: " << totalenstrophy << ", " << totalkinetic << std::endl;
+    std::cout << scientific << "Value: " << totalenstrophy << ", " << totalkinetic << std::endl;
     return 0;
 }
 
 int ExtractDxDy(const std::vector<DataPack> & zones, std::vector<double> &dx, std::vector<double> &dy) {
     std::vector<int> N = zones[0].N;
     int Idx = 0, Idy = 1;
-    dx.resize(N[0]);
-    dy.resize(N[1]);
-    for(int i=0; i<N[0]; ++i) {
+    dx.resize(N[0], 0.);
+    dy.resize(N[1], 0.);
+    for(int i=0; i<N[0]-1; ++i) {
         dx[i] = zones[0].data[Idx][i+1] - zones[0].data[Idx][i];
     }
-    for(int j=0; j<N[1]; ++j) {
+    dx[N[0]-1] = 0.;
+    for(int j=0; j<N[1]-1; ++j) {
         dy[j] = zones[0].data[Idy][(j+1)*N[0]] - zones[0].data[Idy][j*N[0]];
     }
+    dy[N[1]-1] = 0.;
     return 0;
 }
 
 double Integration(const std::vector<double> &dx, const std::vector<double> &dy, const std::vector<double> &data) {
     double sum = 0.;
     int offset = 0;
-    for(size_t i=0; i<dx.size(); ++i) {
-        for(size_t j=0; j<dy.size();++j, ++offset) {
+    for(size_t j=0; j<dy.size();++j) {
+        for(size_t i=0; i<dx.size(); ++i, ++offset) {
             if(i && j) {
                 sum += (dx[i-1] + dx[i]) * (dy[j-1] + dy[j]) * data[offset];
             }
@@ -75,7 +81,7 @@ int main(int argc, char* argv[]) {
   if(argc>1) {
     filename = argv[1];
   }
-  std::vector<std::string> variables = {"x", "y", "u", "v", "p", "W_z"};
+  std::vector<std::string> variables = {"x", "y", "p", "u", "v", "W_z"};
   std::vector<DataPack>  zones(3);
   zones[0].N = {985, 1, 4497};
   zones[1].N = {101, 1, 1};
