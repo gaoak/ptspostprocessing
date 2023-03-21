@@ -87,15 +87,11 @@ int main(int argc, char* argv[]) {
   zones[1].N = {101, 1, 1};
   zones[2].N = {101, 1, 1};
   std::vector<std::vector<double>> dataBody;
-  int isdouble = 0;
   std::map<int, int> vm;
 
   InputTec360_FSILBM2D(filename, zones);
   ShiftIndex<double>(zones[0].N, zones[0].data, 1);
 
-  for(size_t z = 0; z < zones.size(); ++z) {
-    OutputTec360_binary("field" + to_string(z) + ".plt", variables, zones[z].N, zones[z].data, isdouble);
-  }
   ProcessWakeData(zones);
 
   return 0;
