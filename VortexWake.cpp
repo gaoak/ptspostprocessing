@@ -14,7 +14,7 @@ int ExtractDxDy(const std::vector<DataPack> & zones, std::vector<double> &dx, st
 double ProcessWakeData(const std::vector<DataPack> & zones, std::string message) {
     int Np = zones[0].data[0].size();
     int Idx = 0, Idy = 1, Idu = 3, Idv = 4, Idvor = 5;
-    double xmin = -50, xmax = 250., ymin = -50., ymax = 50.;
+    double xmin = -5, xmax = 25., ymin = -5., ymax = 5.;
     double x0 = zones[1].data[0][0];
     double y0 = zones[1].data[1][0];
     std::vector<double> dx, dy;
