@@ -9,6 +9,14 @@
 #else
 #define TEC360USEDOUBLE 0
 #endif
+
+struct DataPack;
+
+struct DataPack {
+    std::vector<int> N;
+    std::vector<std::vector<double> > data;
+};
+
 int BinaryWrite(std::ofstream &ofile, std::string str);
 
 int OutputTec360_ascii(const std::string filename, const std::vector<std::string> &variables,
@@ -24,8 +32,7 @@ int OutputCSV(const std::string filename, const std::vector<std::string> &variab
 
 int ParserCSVHeader(const char * header, std::vector<std::string> &vars);
 
-int InputTec360_binary(const std::string filename, const std::vector<int> &N,
-    std::vector<std::vector<double> > &data, int &isdouble);
+int InputTec360_FSILBM2D(const std::string filename, std::vector<DataPack> &zones);
 
 int InputTec360_binary(const std::string filename, std::vector<std::string> &variables,
                  std::vector<int> &N, std::vector<std::vector<double> > &data,

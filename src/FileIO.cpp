@@ -376,19 +376,9 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
     return ncoor;
 }
 
-int InputTec360_binary(const std::string filename, const std::vector<int> &N,
-    std::vector<std::vector<double> > &data, int &isdouble) {
-    std::ifstream indata;
-    indata.open(filename, std::ios::binary);
-    if(!indata.is_open())
-    {
-        printf("error unable to open file %s\n", filename.c_str());
-        return -1;
-    }
-    float eohmarker357=0.0f;
-    while(eohmarker357!=EOHMARKER) {
-        indata.read((char*)&eohmarker357, 4);
-    }
+int Load_FSILBM2DZone(std::ifstream &indata, const std::vector<int> &N,
+    std::vector<std::vector<double> > &data) {
+    int isdouble;
     float zonemarker299I=0.0f;
     while(zonemarker299I!=ZONEMARKER) {
         indata.read((char*)&zonemarker299I, 4);
@@ -407,6 +397,7 @@ int InputTec360_binary(const std::string filename, const std::vector<int> &N,
             break;
         }
     }
+    isdouble = binarydatatype[0] == 2;
     indata.read((char*)&type, 4);
     int Np, datanum;
     Np = N[0] * N[1] * N[2];
@@ -446,6 +437,26 @@ int InputTec360_binary(const std::string filename, const std::vector<int> &N,
             }
         }
     }
+    return 0;
+}
+
+int InputTec360_FSILBM2D(const std::string filename, std::vector<DataPack> &zones) {
+    std::ifstream indata;
+    indata.open(filename, std::ios::binary);
+    if(!indata.is_open())
+    {
+        printf("error unable to open file %s\n", filename.c_str());
+        return -1;
+    }
+    float eohmarker357=0.0f;
+    while(eohmarker357!=EOHMARKER) {
+        indata.read((char*)&eohmarker357, 4);
+    }
+
+    for(auto &z : zones) {
+        Load_FSILBM2DZone(indata, z.N, z.data);
+    }
+
     indata.close();
-    return datanum;
+    return 0;
 }
