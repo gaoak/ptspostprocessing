@@ -217,3 +217,32 @@ void Interpolation::CalcWeight2D(const std::vector<double> &x1, std::vector<doub
     w[2] = x0[0] * x1[1];
     w[3] = x1[0] * x1[1];
 }
+
+/***
+ * linear interpolation
+***/
+void Interpolation1DNonuniform::CalcWeight1D(const std::vector<double> &xi,
+    std::vector<double> &x, std::vector<int> &index,
+    std::vector<std::vector<double>> &weight) {
+    index.resize(x.size());
+    weight.clear();
+    if(xi.size()<2) {
+        //original mesh only has one point
+        return;
+    }
+    for(size_t i=0; i < x.size(); ++i) {
+        auto lowerbnd = std::lower_bound(xi.begin(), xi.end(), x);
+        int id = std::distance(xi.begin(), lowerbnd);
+        if(id == 0) {
+            id = 1;
+        }
+        if(lowerbnd == xi.end()) {
+            id = x.size() - 1;
+        }
+        index[i] = id;
+        std::vector<double> p(2);
+        p[0] = (xi[id] - x[i]    )/(xi[id]-xi[id-1]);
+        p[1] = (x[i]   - xi[id-1])/(xi[id]-xi[id-1]);
+        weight.push_back(p);
+    }
+}

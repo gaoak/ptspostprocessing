@@ -40,4 +40,9 @@ public:
                            std::vector<double> &w);
 };
 
+class Interpolation1DNonuniform {
+public:
+    static void CalcWeight1D(const std::vector<double> &xi, std::vector<double> &x, std::vector<int> &index, std::vector<std::vector<double>> &weight);
+};
+
 #endif

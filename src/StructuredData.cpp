@@ -788,3 +788,17 @@ int StructuredData::MaskBoundary(double sigma, std::vector<int> &field, std::map
     }
     return field.size() * m_Np;
 }
+
+/***
+ * volume integral of data over the whole domain, using rectangle rule
+***/
+double StructuredData::Integrate(const std::vector<double> &data) {
+    double sum = 0.;
+    for(size_t j=0; j<data.size();++j) {
+        sum += data[j];
+    }
+    for(size_t j=0; j<m_dx.size(); ++j) {
+        sum *= m_dx[j];
+    }
+    return sum;
+}

@@ -9,6 +9,9 @@
 #include<tuple>
 #include "Util.h"
 
+/***
+ * coordinate systems, origin, basis vectors
+***/
 class CoordSystem {
 public:
     CoordSystem();
@@ -22,6 +25,9 @@ public:
     void ToCompCoord(std::vector<double> &x) const;
 };
 
+/***
+ * structured data on the uniform grid
+***/
 class StructuredData {
 public:
     StructuredData(const std::vector<int> &N, const std::vector<double> &range);
@@ -52,6 +58,7 @@ public:
     int InterpolateFrom(const StructuredData & origin, std::map<int,double> field);
     int InterpolatePoint (const std::vector<double> & x, std::map<int, double> field,
                         std::map<int, double> &value) const;
+    double Integrate(const std::vector<double> &data);
     void clear();
     int ShuffleIndex(std::map<int, int> ReIndex, std::vector<int> dir,
             std::map<int, int> pm);

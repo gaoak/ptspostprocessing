@@ -3,6 +3,7 @@
 #include<cmath>
 #include <fftw3.h>
 #include "Util.h"
+#include "Dataprocessing.h"
 
 int getRealPowerSpectral(const double *data, double *spectral,
     double *beta, double Tlen, int Nfft)
@@ -372,4 +373,36 @@ void invIndex(const std::vector<int> &N, int index, std::vector<int> & res) {
         index = index % res[i-1];
     }
     res[0] = index;
+}
+
+int Interpolation(std::vector<std::vector<double>> &x, std::vector<std::vector<double>> &x1,
+    std::vector<std::vector<double>> &u, std::vector<std::vector<double>> &u1) {
+    std::vector<int> Np(x.size(), 1);
+    std::vector<int> Ntotal(x.size(), 1);
+    for(size_t i = 0; i < x.size(); ++i) {
+        Np[i] = x[i].size();
+        for(size_t j = 0; j < x.size(); ++j) {
+            if (i != j) {
+                Ntotal[i] *= x[j].size();
+            }
+        }
+    }
+    u1 = u;
+    for(size_t dim = 0; dim < x.size(); ++dim) {
+        std::vector<int> index;
+        std::vector<std::vector<double>> weight;
+        Interpolation1DNonuniform::CalcWeight1D(x[dim], x1[dim], index, weight);
+        for(int v=0; v<(int)u.size(); ++v) {
+            std::vector<double> swap(Np[dim]);
+            for(int i=0; i<Np[i]; ++i) {
+                UpdateWeight(sigma[dir]);
+                for(int d=0; d<(int)sdata.size(); ++d) {
+                    for(int p=0; p<Np[dir]; ++p) {
+                        DoSmooth(N[dir], swap[d].data()+p*N[dir]);
+                    }
+                }
+            }
+            ShiftIndex<double>(sN, swap, -1);
+        }
+    }
 }
