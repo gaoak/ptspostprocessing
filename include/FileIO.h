@@ -1,5 +1,5 @@
-#ifndef FILEIO_H
-#define FILEIO_H
+#ifndef HEADERFILEFILEIO_H
+#define HEADERFILEFILEIO_H
 #include<string>
 #include<vector>
 #include<fstream>
@@ -12,10 +12,7 @@
 
 struct DataPack;
 
-struct DataPack {
-    std::vector<int> N;
-    std::vector<std::vector<double> > data;
-};
+
 
 int BinaryWrite(std::ofstream &ofile, std::string str);
 

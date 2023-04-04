@@ -1,6 +1,7 @@
 #include "FileIO.h"
 #include "Util.h"
 #include "LBMData.h"
+#include "StructuredData.h"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -111,18 +112,24 @@ int main(int argc, char* argv[]) {
     message = argv[2];
   }
   std::vector<std::string> variables = {"x", "y", "p", "u", "v", "W_z"};
-  std::vector<DataPack>  zones(3);
-  zones[0].N = {985, 1, 4497};
-  zones[1].N = {101, 1, 1};
-  zones[2].N = {101, 1, 1};
-  std::vector<std::vector<double>> dataBody;
-  std::map<int, int> vm;
-
-  InputTec360_FSILBM2D(filename, zones);
-  ShiftIndex<double>(zones[0].N, zones[0].data, 1);
-
-  message = processMessage(message);
-  ProcessWakeData(zones, message);
-
+  std::vector<std::vector<int>> Ns = {{985, 1, 4497}, {101, 1, 1}, {101, 1, 1}};
+  LBMData lbmfile(filename, Ns);
+  const std::vector<int> N{201, 101, 1};
+  const std::vector<double> range{0., 2., 0., 1., 0., 1};
+  std::vector<std::vector<double>> x1(3);
+  std::vector<std::vector<double>> u1;
+  for(int d=0; d<3; ++d) {
+      x1[d].resize(N[d]);
+      double det = N[d]==1? 1. : range[2*d+1]/(N[d]-1);
+      for(int i=0; i<N[d]; ++i) {
+        x1[d][i] = range[2*d] + i * det;
+      }
+  }
+  StructuredData uniform(N, range);
+  lbmfile.Interpolation(x1, u1);
+  for(size_t i=2; i<variables.size(); ++i) {
+    uniform.AddPhysics(variables[i], u1[i]);
+  }
+  uniform.OutputData("Uniform_" + filename);
   return 0;
 }

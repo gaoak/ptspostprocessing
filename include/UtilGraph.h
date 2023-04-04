@@ -1,5 +1,5 @@
-#ifndef UTILGRAPH_H
-#define UTILGRAPH_H
+#ifndef HEADERFILEUTILGRAPH_H
+#define HEADERFILEUTILGRAPH_H
 #include<vector>
 int Fill2DGraph(const std::vector<int> &rawN, std::vector<double> &value, const std::vector<int> &init,
                 const double &eps, bool monotone);

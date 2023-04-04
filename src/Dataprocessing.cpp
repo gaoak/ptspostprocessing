@@ -6,6 +6,7 @@
 #include <limits>
 #include "Dataprocessing.h"
 #include "Util.h"
+#include <algorithm>
 
 KernelSmooth::KernelSmooth() {
     UpdateWeight();
@@ -219,19 +220,21 @@ void Interpolation::CalcWeight2D(const std::vector<double> &x1, std::vector<doub
 }
 
 /***
- * linear interpolation
+ * linear interpolation zone, xi[index-1], x, xi[index]
+ * linear interpolation weight, weight[0],  , weight[1]
 ***/
 void Interpolation1DNonuniform::CalcWeight1D(const std::vector<double> &xi,
     std::vector<double> &x, std::vector<int> &index,
     std::vector<std::vector<double>> &weight) {
-    index.resize(x.size());
+    index.resize(x.size(), 0);
     weight.clear();
     if(xi.size()<2) {
         //original mesh only has one point
+        index.clear();
         return;
     }
     for(size_t i=0; i < x.size(); ++i) {
-        auto lowerbnd = std::lower_bound(xi.begin(), xi.end(), x);
+        auto lowerbnd = std::lower_bound(xi.begin(), xi.end(), x[i]);
         int id = std::distance(xi.begin(), lowerbnd);
         if(id == 0) {
             id = 1;

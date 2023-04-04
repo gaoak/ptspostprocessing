@@ -1,3 +1,5 @@
+#ifndef HEADERFILEBODY_H
+#define HEADERFILEBODY_H
 #include "airfoil.h"
 
 class Body {
@@ -13,3 +15,4 @@ protected:
     std::vector<double> m_span;
     double m_roundtip;
 };
+#endif

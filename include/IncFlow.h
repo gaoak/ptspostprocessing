@@ -1,5 +1,5 @@
-#ifndef INCFLOW_H
-#define INCFLOW_H
+#ifndef HEADERFILEINCFLOW_H
+#define HEADERFILEINCFLOW_H
 #include "StructuredData.h"
 #include "Body.h"
 #include<set>

@@ -1,5 +1,5 @@
-#ifndef STRUCTUREDDATA_H
-#define STRUCTUREDDATA_H
+#ifndef HEADERFILESTRUCTUREDDATA_H
+#define HEADERFILESTRUCTUREDDATA_H
 #include<string>
 #include<vector>
 #include<cmath>
@@ -11,6 +11,7 @@
 
 /***
  * coordinate systems, origin, basis vectors
+ * range (x0, lengthx, y0, lengthy, z0, lengthz)
 ***/
 class CoordSystem {
 public:

@@ -1,5 +1,5 @@
-#ifndef PLUNGINGDATA_H
-#define PLUNGINGDATA_H
+#ifndef HEADERFILEPLUNGINGDATA_H
+#define HEADERFILEPLUNGINGDATA_H
 #include<string>
 #include "IncFlow.h"
 class PlungingMotion {

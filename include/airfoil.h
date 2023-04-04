@@ -1,5 +1,5 @@
-#ifndef AIRFOIL_H
-#define AIRFOIL_H
+#ifndef HEADERFILEAIRFOIL_H
+#define HEADERFILEAIRFOIL_H
 #include<vector>
 #include<string>
 class NACAmpxx {

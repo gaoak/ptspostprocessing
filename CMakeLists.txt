@@ -59,3 +59,7 @@ target_link_libraries(hispts LIBPROCESSING)
 # target process vortex wake
 add_executable(processwake VortexWake.cpp)
 target_link_libraries(processwake LIBPROCESSING)
+
+# target process LBM data
+add_executable(processLBM processLBM.cpp)
+target_link_libraries(processLBM LIBPROCESSING)

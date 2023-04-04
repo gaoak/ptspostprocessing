@@ -3,7 +3,7 @@
 #include<map>
 #include "FileIO.h"
 #include "Util.h"
-
+#include "LBMData.h"
 static float EOHMARKER = 357.0f;
 
 static float ZONEMARKER = 299.0f;

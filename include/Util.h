@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef HEADERFILEUTIL_H
+#define HEADERFILEUTIL_H
 #include<string>
 #include<vector>
 //overloading functions
@@ -235,6 +235,4 @@ int getRealPowerSpectral(const double *data, double *spectral,
 int doRealFFT(const double *data, double *spectral,
     double *beta,double Tlen, int Nfft);
 
-int Interpolation(std::vector<std::vector<double>> &x, std::vector<std::vector<double>> &x1,
-    std::vector<std::vector<double>> &u, std::vector<std::vector<double>> &u1);
 #endif

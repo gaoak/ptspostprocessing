@@ -1,6 +1,7 @@
-#ifndef DATAPROCESS_H
-#define DATAPROCESS_H
+#ifndef HEADERFILEDATAPROCESS_H
+#define HEADERFILEDATAPROCESS_H
 #include<vector>
+#include<map>
 #define GAUSS 0
 class KernelSmooth {
 public:
