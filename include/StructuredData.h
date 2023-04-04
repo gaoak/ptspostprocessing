@@ -65,8 +65,11 @@ public:
             std::map<int, int> pm);
     int ResetAxis();
     int HasField(std::string var);
+    int GetPhysID(std::string v); //get the physics id from the given variable name, -1 is returned if not found
     std::vector<double> GetRange();
     inline std::vector<int> GetN() {return m_N;}
+    inline std::vector<double> GetOrigion() {return m_axis.m_o;}
+    inline std::vector<double> GetDetx() {return m_dx;}
     inline int GetTotPoints() {return m_Np;}
     inline std::string GetPhysVarName(int i) {return m_vars[(int)m_x.size()+i];}
     inline std::vector<double> & GetPhys(int i) {return m_phys[i]; }

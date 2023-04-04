@@ -374,3 +374,18 @@ void invIndex(const std::vector<int> &N, int index, std::vector<int> & res) {
     }
     res[0] = index;
 }
+
+bool startWithNumber(const char *str, int len) {
+    size_t i=0;
+    for(; i<len; ++i) {
+        if(str[i]!=' ') break;
+    }
+    if(str[i]=='+' || str[i]=='-' || str[i]=='.' || (str[i]>=0 && str[i]<=9)) {
+        return true;
+    }
+    return false;
+}
+
+bool startWithNumber(std::string &str) {
+    return startWithNumber(str.c_str(), str.size());
+}

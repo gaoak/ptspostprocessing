@@ -38,4 +38,5 @@ int InputTec360_binary(const std::string filename, std::vector<std::string> &var
 int InputCSV(const std::string filename, std::vector<std::string> &variables,
                  std::vector<int> &N, std::vector<std::vector<double> > &data,
                  int &isdouble, std::map<int, int> &vm);
+int InputPoints_ascii(const std::string filename, std::vector<std::vector<double> > &data);
 #endif

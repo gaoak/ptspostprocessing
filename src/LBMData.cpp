@@ -1,7 +1,7 @@
 #include "LBMData.h"
 #include "FileIO.h"
 #include "Dataprocessing.h"
-
+#include "StructuredData.h"
 int LBMData::Extractxy() {
     std::vector<int> N = m_zones[0].N;
     std::vector<int> Nl(N.size(), 1);
@@ -28,6 +28,20 @@ LBMData::LBMData(const std::string filename, const std::vector<std::vector<int>>
   InputTec360_FSILBM2D(filename, m_zones);
   ShiftIndex<double>(m_zones[0].N, m_zones[0].data, 1);
   Extractxy();
+}
+
+int LBMData::Interpolation(StructuredData &data, std::vector<std::vector<double>> &u1) {
+    std::vector<double> o = data.GetOrigion();
+    std::vector<double> dx = data.GetDetx();
+    std::vector<int> N = data.GetN();
+    std::vector<std::vector<double>> x1(N.size());
+    for(size_t dim = 0; dim<N.size(); ++dim) {
+        x1[dim].resize(N[dim]);
+        for(int i=0; i<N[dim]; ++i) {
+            x1[dim][i] = o[dim] + dx[dim] * i;
+        }
+    }
+    return Interpolation(m_x, m_zones[0].data, x1, u1);
 }
 
 int LBMData::Interpolation(std::vector<std::vector<double>> &x1, std::vector<std::vector<double>> &u1) {

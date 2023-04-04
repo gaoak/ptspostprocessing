@@ -1,7 +1,7 @@
 #include "FileIO.h"
 #include "Util.h"
 #include "LBMData.h"
-#include "StructuredData.h"
+#include "IncFlow.h"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -103,6 +103,43 @@ std::string processMessage(std::string message) {
 }
 
 int main(int argc, char* argv[]) {
+  string phifilename, lbmfilename, bndfilename0, bndfilename1;
+  if(argc<5) {
+    cout << "4 input files requred: phi field[uniform grid, integration field], LBM field, boundary line with x y a and n, boundary line with phi" << std::endl;
+    return argc - 5;
+  }
+  phifilename = argv[1];
+  lbmfilename = argv[2];
+  bndfilename0 = argv[3];
+  bndfilename1 = argv[4];
+  // load uniform grid of phi file
+  IncFlow baseflow;
+  baseflow.InputData(phifilename);
+  // load LBM file
+  std::vector<std::string> variables = {"x", "y", "p", "u", "v", "W_z"};
+  std::vector<std::vector<int>> Ns = {{985, 1, 4497}, {101, 1, 1}, {101, 1, 1}};
+  LBMData lbmfile(lbmfilename, Ns);
+  std::vector<std::vector<double>> u1;
+  lbmfile.Interpolation(baseflow, u1);
+  baseflow.AddPhysics(variables[3], u1[3]);
+  baseflow.AddPhysics(variables[4], u1[4]);
+  baseflow.CalculateVorticity();
+  //baseflow.OutputData("combinedfile.plt");
+  // load boundary file x, y, nx, ny, ax, ay
+  std::vector<std::vector<double> > bnddata0;
+  InputPoints_ascii(bndfilename0, bnddata0);
+  ;
+  // get volume integral
+  std::vector<double> Qfield    = baseflow.GetPhys(baseflow.GetPhysID("Q"));
+  std::vector<double> Phi0field = baseflow.GetPhys(baseflow.GetPhysID("Phi0"));
+  for(size_t i=0; i<Qfield.size(); ++i) {
+    Qfield[i] *= Phi0field[i];
+  }
+  double volumeforce = 2.0 * baseflow.Integrate(Qfield);
+  return 0;
+}
+
+int LoadPhiField(int argc, char* argv[]) {
   string filename("0.plt");
   string message;
   if(argc>1) {
@@ -111,25 +148,8 @@ int main(int argc, char* argv[]) {
   if(argc>2) {
     message = argv[2];
   }
-  std::vector<std::string> variables = {"x", "y", "p", "u", "v", "W_z"};
-  std::vector<std::vector<int>> Ns = {{985, 1, 4497}, {101, 1, 1}, {101, 1, 1}};
-  LBMData lbmfile(filename, Ns);
-  const std::vector<int> N{201, 101, 1};
-  const std::vector<double> range{0., 2., 0., 1., 0., 1};
-  std::vector<std::vector<double>> x1(3);
-  std::vector<std::vector<double>> u1;
-  for(int d=0; d<3; ++d) {
-      x1[d].resize(N[d]);
-      double det = N[d]==1? 1. : range[2*d+1]/(N[d]-1);
-      for(int i=0; i<N[d]; ++i) {
-        x1[d][i] = range[2*d] + i * det;
-      }
-  }
-  StructuredData uniform(N, range);
-  lbmfile.Interpolation(x1, u1);
-  for(size_t i=2; i<variables.size(); ++i) {
-    uniform.AddPhysics(variables[i], u1[i]);
-  }
-  uniform.OutputData("Uniform_" + filename);
+  StructuredData file;
+  file.InputData(filename);
+  file.OutputData("test_"+filename);
   return 0;
 }

@@ -235,4 +235,7 @@ int getRealPowerSpectral(const double *data, double *spectral,
 int doRealFFT(const double *data, double *spectral,
     double *beta,double Tlen, int Nfft);
 
+bool startWithNumber(const std::string &str);
+
+bool startWithNumber(const char *str, size_t len);
 #endif

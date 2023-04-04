@@ -250,6 +250,30 @@ int InputCSV(const std::string filename, std::vector<std::string> &variables,
     return ncoor;
 }
 
+int InputPoints_ascii(const std::string filename, std::vector<std::vector<double> > &data) {
+    std::ifstream file(filename.c_str());
+    if(!file.is_open()) {
+        printf("error: unable to open file %s\n", filename.c_str());
+    }
+    data.clear();
+    char buffer[1000];
+    file.getline(buffer, sizeof(buffer));
+    while(!file.eof()) {
+        if(!startWithNumber(buffer, sizeof(buffer))) continue;
+        std::vector<double> value;
+        parserDouble(buffer, value);
+        if(data.size()==0) {
+            data.resize(value.size());
+        }
+        for(size_t i=0; i<data.size(); ++i) {
+            data[i].push_back(value[i]);
+        }
+        file.getline(buffer, sizeof(buffer));
+    }
+    file.close();
+    return data.size();
+}
+
 /***
  * Input: filename
  * Output:

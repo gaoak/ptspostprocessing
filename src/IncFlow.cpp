@@ -44,9 +44,10 @@ IncFlow& IncFlow::operator=(const IncFlow & flow) {
 }
 
 int IncFlow::CalculateVorticity(int order) {
-    if(GetVelocityDimension()==2) {
+    UpdateVelocityDimension();
+    if(GetInterpDimension()==2 || GetVelocityDimension()==2) {
         return CalculateVorticity2D(order);
-    } else if(GetNumCoords()==3) {
+    } else if(GetInterpDimension()==3 && GetVelocityDimension()==3) {
         return CalculateVorticity3D(order);
     } else {
         return -1;
@@ -55,9 +56,9 @@ int IncFlow::CalculateVorticity(int order) {
 
 int IncFlow::CalculateVorticity3D(int order) {
     std::vector<std::vector<double> > u, ux(3), uy(3), uz(3);
-    u.push_back(m_phys[0]);
-    u.push_back(m_phys[1]);
-    u.push_back(m_phys[2]);
+    u.push_back(m_phys[GetPhysID("u")]);
+    u.push_back(m_phys[GetPhysID("v")]);
+    u.push_back(m_phys[GetPhysID("w")]);
     for(int i=0; i<3; ++i) {
         ux[i].resize(m_Np);
         uy[i].resize(m_Np);
@@ -97,8 +98,8 @@ int IncFlow::CalculateVorticity3D(int order) {
 
 int IncFlow::CalculateVorticity2D(int order) {
     std::vector<std::vector<double> > u, ux(2), uy(2);
-    u.push_back(m_phys[0]);
-    u.push_back(m_phys[1]);
+    u.push_back(m_phys[GetPhysID("u")]);
+    u.push_back(m_phys[GetPhysID("v")]);
     for(int i=0; i<2; ++i) {
         ux[i].resize(m_Np);
         uy[i].resize(m_Np);
@@ -123,6 +124,57 @@ int IncFlow::CalculateVorticity2D(int order) {
             ux[0][i]*ux[0][i] + ux[1][i]*uy[0][i] +
             uy[0][i]*ux[1][i] + uy[1][i]*uy[1][i]
         );
+    }
+}
+int IncFlow::CalculateForcePartition2D(int order) {
+    std::vector<std::vector<double> > u, ux(2), uy(2);
+    u.push_back(m_phys[GetPhysID("u")]);
+    u.push_back(m_phys[GetPhysID("v")]);
+    for(int i=0; i<2; ++i) {
+        ux[i].resize(m_Np);
+        uy[i].resize(m_Np);
+    }
+    Diff(u, ux, 0, order);
+    Diff(u, uy, 1, order);
+    int id;
+    //strain rate tensor, D
+    m_vars.push_back("Dxx");
+    id = m_phys.size();
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    for(int i=0; i<m_Np; ++i) {
+        m_phys[id][i] = ux[0][i];
+    }
+    m_vars.push_back("Dxy");
+    id = m_phys.size();
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    for(int i=0; i<m_Np; ++i) {
+        m_phys[id][i] = 0.5 * (ux[1][i] + uy[0][i]);
+    }
+    m_vars.push_back("Dyy");
+    id = m_phys.size();
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    for(int i=0; i<m_Np; ++i) {
+        m_phys[id][i] = uy[1][i];
+    }
+    //diffusion
+    std::vector<std::vector<double> > uxx(2), uyy(2);
+    for(int i=0; i<2; ++i) {
+        uxx[i].resize(m_Np);
+        uyy[i].resize(m_Np);
+    }
+    Diff(ux, uxx, 0, order);
+    Diff(uy, uyy, 1, order);
+    m_vars.push_back("uLaplace");
+    id = m_phys.size();
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    for(int i=0; i<m_Np; ++i) {
+        m_phys[id][i] = uxx[0][i] + uyy[0][i];
+    }
+    m_vars.push_back("vLaplace");
+    id = m_phys.size();
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    for(int i=0; i<m_Np; ++i) {
+        m_phys[id][i] = uxx[1][i] + uyy[1][i];
     }
     return m_Np;
 }

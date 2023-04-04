@@ -8,7 +8,7 @@
 #include<map>
 #include<tuple>
 #include "Util.h"
-
+#include "StructuredData.h"
 struct DataPack {
     std::vector<int> N;
     std::vector<std::vector<double> > data;
@@ -20,6 +20,7 @@ struct DataPack {
 class LBMData {
 public:
     LBMData(const std::string filename, const std::vector<std::vector<int>> &N);
+    int Interpolation(StructuredData &data, std::vector<std::vector<double>> &u1);
     int Interpolation(std::vector<std::vector<double>> &x1, std::vector<std::vector<double>> &u1);
 protected:
     int Interpolation(std::vector<std::vector<double>> &x, std::vector<std::vector<double>> &u,

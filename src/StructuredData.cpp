@@ -215,6 +215,15 @@ double StructuredData::GetPhysNorm(int f, int p) {
     return sum/m_Np;
 }
 
+int StructuredData::GetPhysID(std::string v) {
+    for(size_t i=0; i<m_vars.size(); ++i) {
+        if(v==m_vars[i]) {
+            return (int)i - (int)m_x.size();
+        }
+    }
+    return -1;
+}
+
 int StructuredData::OutputData(std::string filename, const bool info) {
     std::clock_t c_start = std::clock();
     int isdouble = TEC360USEDOUBLE;
@@ -338,12 +347,13 @@ int StructuredData::ShuffleIndex(std::map<int, int> ReIndex, std::vector<int> di
 
 void StructuredData::UpdateVelocityDimension() {
     m_velocityDim = 0;
-    std::vector<std::string> velocity = {"u", "v", "w"};
+    std::set<std::string> velocity;
+    velocity.insert("u");
+    velocity.insert("v");
+    velocity.insert("w");
     for(size_t i=0; i<m_phys.size(); ++i) {
-        if(m_vars[i+m_x.size()]==velocity[i]) {
+        if(velocity.find(m_vars[i+m_x.size()])!=velocity.end()) {
             ++m_velocityDim;
-        } else {
-            break;
         }
     }
 }
@@ -500,6 +510,7 @@ int StructuredData::GetInterpDimension() const {
     return dim;
  }
 
+//Evaluate values of field[physics index, default value] at one point x
 int StructuredData::InterpolatePoint(const std::vector<double> & x, std::map<int, double> field,
                                     std::map<int, double> &value) const {
     value = field;
