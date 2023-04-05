@@ -1,7 +1,8 @@
 #include "LineData.h"
 #include "FileIO.h"
 #include <set>
-int LineData::OutputData(std::string filename, const bool info) {
+
+int LineData::OutputData(std::string filename) {
     std::vector<std::vector<double> > data = m_x;
     for(size_t i=0; i<m_phys.size(); ++i) {
         data.push_back(m_phys[i]);
@@ -53,7 +54,7 @@ int LineData::RemovePhysics(int i) {
 }
 
 int LineData::InterpolateFrom(const StructuredData & origin, std::map<int,double> field) {
-    std::vector<double> x(m_x.size());
+    std::vector<double> x(origin.GetNumCoords(), 0.);
     std::vector<std::vector<double>> data(field.size());
     for(int i=0; i<m_Np; ++i) {
         for(size_t d=0; d<m_x.size(); ++d) {
@@ -94,6 +95,7 @@ int LineData::updateIntegrationWeight(const bool closed) {
         m_weight[0] += 0.5 * seg[m_Np - 1];
         m_weight[m_Np-1] += 0.5 * seg[m_Np - 1];
     }
+    return 0;
 }
 
 double LineData::Integrate(const std::vector<double> &data) {

@@ -9,17 +9,18 @@
 #include<tuple>
 #include "Util.h"
 #include "StructuredData.h"
-
+#include "IncFlow.h"
 class LineData {
 public:
     LineData(){};
-    int OutputData(std::string filename, const bool info = true);
+    int OutputData(std::string filename);
     int InputData(std::string filename, std::vector<std::string> &vars, const bool closed = true);
     int AddPhysics(std::string var, const std::vector<double> &data);
     int RemovePhysics(int i);
     int InterpolateFrom(const StructuredData & origin, std::map<int,double> field);
     double Integrate(const std::vector<double> &data);
     int GetPhysID(std::string v); //get the physics id from the given variable name, -1 is returned if not found
+    inline std::string GetPhysVarName(int i) const {return m_vars[(int)m_x.size()+i];}
     inline int GetTotPoints() {return m_Np;}
     inline std::vector<double> & GetPhys(int i) {return m_phys[i]; }
     inline int GetNumPhys() {return m_phys.size();}

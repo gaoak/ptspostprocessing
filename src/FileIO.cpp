@@ -56,7 +56,7 @@ int OutputTec360_ascii(const std::string filename, const std::vector<std::string
     std::ofstream ofile(filename.c_str());
     ofile << "variables = " << varlist << std::endl;
     int Np = 0;
-    if(data.size()==0) {
+    if(data.size()) {
         Np = data[0].size();
     }
     for(int i=0; i<Np; ++i) {
