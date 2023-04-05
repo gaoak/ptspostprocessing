@@ -375,7 +375,7 @@ void invIndex(const std::vector<int> &N, int index, std::vector<int> & res) {
     res[0] = index;
 }
 
-bool startWithNumber(const char *str, int len) {
+bool startWithNumber(const char *str, size_t len) {
     size_t i=0;
     for(; i<len; ++i) {
         if(str[i]!=' ') break;

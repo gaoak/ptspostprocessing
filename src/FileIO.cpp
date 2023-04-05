@@ -259,7 +259,10 @@ int InputPoints_ascii(const std::string filename, std::vector<std::vector<double
     char buffer[1000];
     file.getline(buffer, sizeof(buffer));
     while(!file.eof()) {
-        if(!startWithNumber(buffer, sizeof(buffer))) continue;
+        if(!startWithNumber(buffer, sizeof(buffer))) {
+            file.getline(buffer, sizeof(buffer));
+            continue;
+        }
         std::vector<double> value;
         parserDouble(buffer, value);
         if(data.size()==0) {
@@ -271,6 +274,7 @@ int InputPoints_ascii(const std::string filename, std::vector<std::vector<double
         file.getline(buffer, sizeof(buffer));
     }
     file.close();
+    std::cout << "Read file " << filename << std::endl;
     return data.size();
 }
 

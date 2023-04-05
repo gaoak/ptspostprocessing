@@ -124,18 +124,20 @@ int main(int argc, char* argv[]) {
   baseflow.AddPhysics(variables[3], u1[3]);
   baseflow.AddPhysics(variables[4], u1[4]);
   baseflow.CalculateVorticity();
-  //baseflow.OutputData("combinedfile.plt");
+  baseflow.CalculateForcePartition2D();
+  baseflow.OutputData("combinedfile.plt");
   // load boundary file x, y, nx, ny, ax, ay
   std::vector<std::vector<double> > bnddata0;
   InputPoints_ascii(bndfilename0, bnddata0);
   ;
   // get volume integral
   std::vector<double> Qfield    = baseflow.GetPhys(baseflow.GetPhysID("Q"));
-  std::vector<double> Phi0field = baseflow.GetPhys(baseflow.GetPhysID("Phi0"));
+  std::vector<double> Phi0field = baseflow.GetPhys(baseflow.GetPhysID("phi0"));
   for(size_t i=0; i<Qfield.size(); ++i) {
     Qfield[i] *= Phi0field[i];
   }
   double volumeforce = 2.0 * baseflow.Integrate(Qfield);
+  cout << "volume force is " << volumeforce << endl;
   return 0;
 }
 

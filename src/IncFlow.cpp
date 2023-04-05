@@ -125,6 +125,7 @@ int IncFlow::CalculateVorticity2D(int order) {
             uy[0][i]*ux[1][i] + uy[1][i]*uy[1][i]
         );
     }
+    return m_Np;
 }
 int IncFlow::CalculateForcePartition2D(int order) {
     std::vector<std::vector<double> > u, ux(2), uy(2);

@@ -221,6 +221,7 @@ int StructuredData::GetPhysID(std::string v) {
             return (int)i - (int)m_x.size();
         }
     }
+    printf("Field %s not found.\n", v.c_str());
     return -1;
 }
 
