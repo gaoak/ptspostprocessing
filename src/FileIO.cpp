@@ -47,6 +47,28 @@ int ParserCSVHeader(const char * header, std::vector<std::string> &vars) {
     return vars.size();
 }
 
+int OutputTec360_ascii(const std::string filename, const std::vector<std::string> &variables, const std::vector<std::vector<double> > &data)
+{
+    std::string varlist = variables[0];
+    for(size_t i=1; i<variables.size(); ++i) {
+        varlist += "," + variables[i];
+    }
+    std::ofstream ofile(filename.c_str());
+    ofile << "variables = " << varlist << std::endl;
+    int Np = 0;
+    if(data.size()==0) {
+        Np = data[0].size();
+    }
+    for(int i=0; i<Np; ++i) {
+        for(size_t j=0; j<data.size(); ++j) {
+            ofile << data[j][i] << " ";
+        }
+        ofile << "\n";
+    }
+    ofile.close();
+    return 0;
+}
+
 int OutputTec360_ascii(const std::string filename, const std::vector<std::string> &variables,
                  const std::vector<int> &rawN, const std::vector<std::vector<double> > &data,
                  int isdouble)

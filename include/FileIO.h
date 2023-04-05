@@ -12,7 +12,8 @@
 
 struct DataPack;
 
-
+int OutputTec360_ascii(const std::string filename, const std::vector<std::string> &variables,
+                const std::vector<std::vector<double> > &data);
 
 int BinaryWrite(std::ofstream &ofile, std::string str);
 
