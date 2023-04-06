@@ -12,7 +12,7 @@
 #include <iostream>
 using namespace std;
 
-int LoadLBMFields(std::string lbmfilename, IncFlow &baseflow) {
+std::string LoadLBMFields(std::string lbmfilename, IncFlow &baseflow) {
     std::vector<std::string> variables = {"x", "y", "p", "u", "v", "W_z"};
     std::vector<std::vector<int>> Ns = {{985, 1, 4497}, {101, 1, 1}, {101, 1, 1}};
     LBMData lbmfile(lbmfilename, Ns);
@@ -22,7 +22,7 @@ int LoadLBMFields(std::string lbmfilename, IncFlow &baseflow) {
     baseflow.AddPhysics(variables[4], u1[4]);
     baseflow.CalculateVorticity();
     baseflow.CalculateForcePartition2D();
-    baseflow.OutputData("combinedfile.plt");
+    //baseflow.OutputData("combinedfile.plt");
 
     std::vector<double> Qfield    = baseflow.GetPhys(baseflow.GetPhysID("Q"));
     std::vector<double> Phi0field = baseflow.GetPhys(baseflow.GetPhysID("phi0"));
@@ -30,11 +30,10 @@ int LoadLBMFields(std::string lbmfilename, IncFlow &baseflow) {
         Qfield[i] *= Phi0field[i];
     }
     double volumeforce = 2.0 * baseflow.Integrate(Qfield);
-    cout << "volume force is " << volumeforce << endl;
-    return 0;
+    return to_string(volumeforce);
 }
 
-int LoadBoundaryFields(std::string bndfilename0, std::string bndfilename1, IncFlow &baseflow, double nu) {
+std::string LoadBoundaryFields(std::string bndfilename0, std::string bndfilename1, IncFlow &baseflow, double nu) {
     LineData boundfield, tmpfield;
     std::vector<std::string> bndvars{"x", "y", "nx", "ny", "ax", "ay"};
     boundfield.InputData(bndfilename0, bndvars, true);
@@ -50,7 +49,7 @@ int LoadBoundaryFields(std::string bndfilename0, std::string bndfilename1, IncFl
     addfield[baseflow.GetPhysID("uLaplace")] = 0.;
     addfield[baseflow.GetPhysID("vLaplace")] = 0.;
     boundfield.InterpolateFrom(baseflow, addfield);
-    boundfield.OutputData("test_" + bndfilename0);
+    //boundfield.OutputData("test_" + bndfilename0);
     // do integration
     std::vector<double> nx = boundfield.GetPhys(boundfield.GetPhysID("nx"));
     std::vector<double> ny = boundfield.GetPhys(boundfield.GetPhysID("ny"));
@@ -71,8 +70,9 @@ int LoadBoundaryFields(std::string bndfilename0, std::string bndfilename1, IncFl
     double acceforce = boundfield.Integrate(acceleration);
     double fricforce = boundfield.Integrate(friction);
     double diffforce = boundfield.Integrate(diffusion);
-    printf("Boundary integrals: friction force %f, acceleration force %f, viscous pressure force %f\n", fricforce, acceforce, diffforce);
-    return 0;
+    char buffer[1000];
+    sprintf(buffer, "%f %f %f", fricforce, acceforce, diffforce);
+    return std::string(buffer);
 }
 
 int main(int argc, char* argv[]) {
@@ -83,16 +83,18 @@ int main(int argc, char* argv[]) {
   }
   phifilename = argv[1];
   lbmfilename = argv[2];
-  bndfilename0 = argv[3];
-  bndfilename1 = argv[4];
+  bndfilename0 = argv[3]; // x, y, nx, ny, ax, ay
+  bndfilename1 = argv[4]; // x, y, z, phi0
   // load uniform grid of phi file
   IncFlow baseflow;
   baseflow.InputData(phifilename);
   // work flow 1, load LBM file and compute Q, Dxx, Dxy, Dyy, Laplace u, Laplace v
-  LoadLBMFields(lbmfilename, baseflow);
+  std::string volumeres = LoadLBMFields(lbmfilename, baseflow);
   // work flow 2, load boundary file x, y, nx, ny, ax, ay
   double nu = 1/200.;
-  LoadBoundaryFields(bndfilename0, bndfilename1, baseflow, nu);
+  std::string bndres = LoadBoundaryFields(bndfilename0, bndfilename1, baseflow, nu);
   
+  printf("Volume force; friction force; acceleration force; viscous pressure force\n");
+  printf("RESULT %s %s\n", volumeres.c_str(), bndres.c_str());
   return 0;
 }
