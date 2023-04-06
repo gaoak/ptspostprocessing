@@ -30,7 +30,9 @@ std::string LoadLBMFields(std::string lbmfilename, IncFlow &baseflow) {
         Qfield[i] *= Phi0field[i];
     }
     double volumeforce = 2.0 * baseflow.Integrate(Qfield);
-    return to_string(volumeforce);
+    char buffer[1000];
+    sprintf(buffer, "%25.14f ", volumeforce);
+    return std::string(buffer);
 }
 
 std::string LoadBoundaryFields(std::string bndfilename0, std::string bndfilename1, IncFlow &baseflow, double nu) {
@@ -71,7 +73,7 @@ std::string LoadBoundaryFields(std::string bndfilename0, std::string bndfilename
     double fricforce = boundfield.Integrate(friction);
     double diffforce = boundfield.Integrate(diffusion);
     char buffer[1000];
-    sprintf(buffer, "%f %f %f", fricforce, acceforce, diffforce);
+    sprintf(buffer, "%25.14f %25.14f %25.14f", fricforce, acceforce, diffforce);
     return std::string(buffer);
 }
 
