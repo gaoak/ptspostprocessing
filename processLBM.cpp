@@ -58,7 +58,7 @@ std::string LoadBoundaryFields(std::string bndfilename0, std::string bndfilename
     std::vector<double> ax = boundfield.GetPhys(boundfield.GetPhysID("ax"));
     std::vector<double> ay = boundfield.GetPhys(boundfield.GetPhysID("ay"));
     std::vector<double> Dxx = boundfield.GetPhys(boundfield.GetPhysID("Dxx"));
-    std::vector<double> Dxy = boundfield.GetPhys(boundfield.GetPhysID("Dxx"));
+    std::vector<double> Dxy = boundfield.GetPhys(boundfield.GetPhysID("Dxy"));
     std::vector<double> uLaplace = boundfield.GetPhys(boundfield.GetPhysID("uLaplace"));
     std::vector<double> vLaplace = boundfield.GetPhys(boundfield.GetPhysID("vLaplace"));
     std::vector<double> acceleration(phi0.size(), 0);

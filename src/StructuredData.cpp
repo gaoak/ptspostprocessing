@@ -283,7 +283,13 @@ int StructuredData::ResetAxis() {
     m_axis = CoordSystem(x0, e);
     m_dx.resize(m_N.size());
     for(int i=0; i<(int)m_N.size(); ++i) {
-        m_dx[i] = std::sqrt(DotVect(e[i], e[i]));
+        if(m_N[i]>1) {
+            m_dx[i] = std::sqrt(DotVect(e[i], e[i]));
+        } else if(m_N[i]==1) {
+            m_dx[i] = 1.;
+        } else {
+            m_dx[i] = std::nan("1");
+        }
     }
     return 0;
 }
