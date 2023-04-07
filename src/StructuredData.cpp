@@ -810,6 +810,7 @@ double StructuredData::Integrate(const std::vector<double> &data) {
         sum += data[j];
     }
     for(size_t j=0; j<m_dx.size(); ++j) {
+        if(m_N[j]==1) continue;
         sum *= m_dx[j];
     }
     return sum;
