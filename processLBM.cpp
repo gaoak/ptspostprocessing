@@ -66,7 +66,7 @@ std::string LoadBoundaryFields(std::string bndfilename0, std::string bndfilename
     std::vector<double> diffusion(phi0.size(), 0);
     for(size_t i=0; i<phi0.size(); ++i) {
         acceleration[i] = -(ax[i] * nx[i] + ay[i] * ny[i]) * phi0[i];
-        friction[i] = nu * (Dxx[i] * nx[i] + Dxy[i] * ny[i]);
+        friction[i] = 2. * nu * (Dxx[i] * nx[i] + Dxy[i] * ny[i]);
         diffusion[i] = nu * (uLaplace[i] * nx[i] + vLaplace[i] * ny[i]) * phi0[i];
     }
     double acceforce = boundfield.Integrate(acceleration);

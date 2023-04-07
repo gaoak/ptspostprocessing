@@ -114,6 +114,8 @@ int StructuredData::GenPoints(const std::vector<double> &range) {
     for(int i=0; i<(int)m_N.size(); ++i) {
         if(m_N[i]>1) {
             m_dx[i] = range[2*i+1] /(m_N[i]-1);
+        } else if(m_N[i]==1) {
+            m_dx[i] = 1.;
         } else {
             m_dx[i] = std::nan("1");
         }
