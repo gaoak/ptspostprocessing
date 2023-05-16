@@ -294,10 +294,34 @@ int StructuredData::ResetAxis() {
     return 0;
 }
 
+int StructuredData::DoSpanwiseAverage() {
+    int m_Np = m_N[0] * m_N[1];
+    double scale = 1./m_N[2];
+    for(size_t i=0; i<m_x.size(); ++i) {
+        m_x[i].resize(m_Np);
+    }
+    for(size_t i=0; i<m_phys.size(); ++i) {
+        for(int n=1; n<m_N[2]; ++n) {
+            int offset = n*m_Np;
+            for(int p=0; p<m_Np; ++p) {
+                m_phys[i][p] += m_phys[i][p + offset];
+            }
+        }
+        for(int p=0; p<m_Np; ++p) {
+            m_phys[i][p] *= scale;
+        }
+        m_phys[i].resize(m_Np);
+    }
+    m_N[2] = 1;
+    return m_Np;
+}
+
 int StructuredData::ShuffleIndex(std::map<int, int> ReIndex, std::vector<int> dir,
         std::map<int, int> pm) {
-    //only shuffle index, not change variable order
-    //place ReIndex[i] to i
+    //shuffle index and change variable order
+    //For coordinates, place i to ReIndex[i]
+    //Force physics variables, place i to pm[i]
+    // dir -1 inverts the orignal index
     int dim = m_x.size();
     std::map<int, int> RI;
     std::set<int> sec, fir;

@@ -9,6 +9,7 @@ public:
     Body(const Body & b2);
     Body& operator=(const Body& b2);
     bool IsInBody(std::vector<double> p, double tol);
+    bool IsBelowBody(std::vector<double> p, double tol);
 protected:
     NACAmpxx m_airfoil;
     double m_AoA;

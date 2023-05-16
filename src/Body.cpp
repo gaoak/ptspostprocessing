@@ -58,3 +58,14 @@ bool Body::IsInBody(std::vector<double> p, double tol) {
         return false;
     }
 }
+
+bool Body::IsBelowBody(std::vector<double> p, double tol) {
+    if(p[2]+tol<m_span[0] || p[2]-tol>m_span[1]) {
+        return false;
+    }
+    if(p[0]<0 && p[1]<-0.1) return true;
+    if(p[0]<1.1 && p[1]<-0.5) return true;
+    if(p[0]<=0. || p[0]>=1.) return false;
+    double y = p[0]*tan(-m_AoA);
+    return p[1] <= y + tol;
+}

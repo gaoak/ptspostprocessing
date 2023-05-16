@@ -21,6 +21,9 @@ protected:
             bool outfield = false);
     int GenerateFileSeries();
     int TransformBathCoord(IncFlow &flow, int n);
+    int TransformBathVarsName(IncFlow &flow);
+    int DoSpanwiseAverage(IncFlow &flow, int n, bool outfield);
+    int MaskExpData(IncFlow &flow);
     double GetFilePhase(int n);
     double PlungingVelocity(double phase, double phi);
     double PlungingLocation(double phase, double phi);

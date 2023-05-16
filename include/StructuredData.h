@@ -67,11 +67,13 @@ public:
     int HasField(std::string var);
     int GetPhysID(std::string v); //get the physics id from the given variable name, -1 is returned if not found
     std::vector<double> GetRange();
+    int DoSpanwiseAverage();
     inline std::vector<int> GetN() const {return m_N;}
     inline std::vector<double> GetOrigion() {return m_axis.m_o;}
     inline std::vector<double> GetDetx() const {return m_dx;}
     inline int GetTotPoints() const {return m_Np;}
     inline std::string GetPhysVarName(int i) const {return m_vars[(int)m_x.size()+i];}
+    inline void SetPhysVarName(int i, std::string name) {m_vars[(int)m_x.size()+i] = name;}
     inline std::vector<double> & GetPhys(int i) {return m_phys[i]; }
     inline double GetPhysValue(size_t f, int i)  const {return f<m_phys.size() ? m_phys[f][i] : 0.;}
     inline double GetCoordValue(size_t f, int i) const {return f<m_x.size()    ? m_x[f][i]    : 0.;}

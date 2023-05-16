@@ -199,15 +199,16 @@ int PlungingMotion::TransformBathCoord(IncFlow &flow, int n) {
     std::clock_t c_start = std::clock();
     int Np = flow.GetTotPoints();
     double Uref = 1./0.1734;
+    double Lref = 1./62.71;
     double h0 = PlungingLocation(GetFilePhase(n), m_phi) + 0.075588159998172;
     for(int i=0; i<Np; ++i) {
-        double x = flow.GetCoordValue(0, i);
-        double y = flow.GetCoordValue(1, i);
-        double z = flow.GetCoordValue(2, i);
+        double x = flow.GetCoordValue(0, i)*Lref;
+        double y = flow.GetCoordValue(1, i)*Lref;
+        double z = flow.GetCoordValue(2, i)*Lref;
         double u = flow.GetPhysValue(0, i);
         double v = flow.GetPhysValue(1, i);
         double w = flow.GetPhysValue(2, i);
-        flow.SetCoordValue(-x, 0, i);
+        flow.SetCoordValue(x, 0, i);
         flow.SetCoordValue(5.-y, 1, i);
         flow.SetCoordValue(z-h0, 2, i);
         flow.SetPhysValue(-u*Uref, 0, i);
@@ -216,12 +217,37 @@ int PlungingMotion::TransformBathCoord(IncFlow &flow, int n) {
     }
     std::map<int, int> vm = {{2, 1}, {1, 2}, {0,0}};
     std::vector<int> dir = {-1, -1, 1};
-    std::map<int, int> pm = {{0,0},{1,2},{2,1},{3,3}};
+    std::map<int, int> pm = {{0,0},{1,2},{2,1}};
     flow.ShuffleIndex(vm, dir, pm);
     std::clock_t c_end = std::clock();
     double time_elapsed_ms = (c_end-c_start) * 1. / CLOCKS_PER_SEC;
     printf("transform Bath exp data, cpu time %fs\n", time_elapsed_ms);
     return 3*Np;
+}
+
+int PlungingMotion::TransformBathVarsName(IncFlow &flow) {
+    for(int n=0; n<flow.GetNumPhys(); ++n) {
+        std::string str = flow.GetPhysVarName(n);
+        for(auto &c : str) {
+            c = std::tolower(c);
+        }
+        flow.SetPhysVarName(n, str);
+    }
+    return flow.GetNumPhys();
+}
+
+int PlungingMotion::DoSpanwiseAverage(IncFlow &flow, int n, bool outfield) {
+    flow.DoSpanwiseAverage();
+    std::string prefix = "SpanAvg_";
+    if(m_outputformat.size() && outfield) {
+        flow.OutputData(prefix + GetOutFileName(n));
+    }
+    return flow.GetNumPhys();
+}
+
+int PlungingMotion::MaskExpData(IncFlow &flow) {
+    flow.MaskExpData();
+    return flow.GetNumPhys();
 }
 
 int PlungingMotion::ProcessEXPWingData(int dir) {
@@ -238,12 +264,15 @@ int PlungingMotion::ProcessEXPWingData(int dir) {
         }
         IncFlow flow(m_airfoil, params);
         flow.InputData(GetInFileName(n));
+        TransformBathVarsName(flow);
         if(m_translation) {
             double h0 = PlungingLocation(GetFilePhase(n), m_phi);
             flow.TransformCoord({0., h0, 0.});
         }
         TransformBathCoord(flow, n);
         ProcessFiniteWingData(flow, n);
+        MaskExpData(flow);
+        DoSpanwiseAverage(flow, n, true);
     }
     return m_fileseries.size();
 }
@@ -353,9 +382,9 @@ int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
 }
 
 
-int PlungingMotion::ProcessVortexCore(IncFlow &rawflow, int n, double sigma,
+int PlungingMotion::ProcessVortexCore(IncFlow &flow, int n, double sigma,
         std::vector<std::vector<double> > &cores, bool outfield) {
-    IncFlow flow = rawflow;
+    //IncFlow flow = rawflow;
     ProcessSmoothing(flow, sigma);
     if(m_calculateVorticityQ) {
         ProcessVorticity(flow);

@@ -727,3 +727,15 @@ int IncFlow::OverWriteBodyPoint(const std::vector<double> &u0, const std::vector
     }
     return m_Np;
 }
+
+int IncFlow::MaskExpData() {
+    for(int i=0; i<m_Np; ++i) {
+        std::vector<double> x = {m_x[0][i], m_x[1][i], GetCoordValue(2, i)};
+        if(m_body.IsInBody(x, 10. * std::numeric_limits<double>::epsilon()) || m_body.IsBelowBody(x, 10. * std::numeric_limits<double>::epsilon())) {
+            for (size_t d=0; d<m_phys.size(); ++d) {
+                m_phys[d][i] = 0.;
+            }
+        }
+    }
+    return m_phys.size();
+}

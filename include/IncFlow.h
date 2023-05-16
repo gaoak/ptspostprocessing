@@ -73,6 +73,7 @@ public:
             std::vector<std::vector<double>> &info, const std::vector<int> &v,
             const std::pair<int, int> &plane, const double threshold);
     bool IsInBody(std::vector<double> p, double tol);
+    int MaskExpData();
 protected:
     int ExtractVortexParam2Dplane(
             const std::vector<int> &N, const std::vector<double> &dx, std::vector<int> core,
