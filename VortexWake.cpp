@@ -31,6 +31,8 @@ double ProcessWakeData(const std::vector<DataPack> & zones, std::string message)
     double Area = (ymax - ymin) * (xmax - xmin);
     std::vector<double> enstrophy(Np, 0.);
     std::vector<double> kinetic(Np, 0.);
+    std::vector<double> circPlus(Np, 0.);
+    std::vector<double> circMinus(Np, 0.);
     for(int i=0; i<Np; ++i) {
         double x = zones[0].data[Idx][i];
         double y = zones[0].data[Idy][i];
@@ -40,11 +42,18 @@ double ProcessWakeData(const std::vector<DataPack> & zones, std::string message)
         if(xmin < x && x < xmax && ymin < y && y < ymax) {
             enstrophy[i] = 0.5 * W_z * W_z;
             kinetic[i] = 0.5 * (u*u + v*v);
+            if(W_z>0) {
+                circPlus[i] = W_z;
+            } else {
+                circMinus[i] = -W_z;
+            }
         }
     }
     double totalenstrophy = Integration(dx, dy, enstrophy) / Area;
     double totalkinetic = Integration(dx, dy, kinetic) / Area;
-    std::cout << scientific << totalenstrophy << " " << totalkinetic << " " << message << std::endl;
+    double totalCircPlus = Integration(dx, dy, circPlus) / Area;
+    double totalCircMinus = Integration(dx, dy, circMinus) / Area;
+    std::cout << scientific << totalenstrophy << " " << totalkinetic << " " << totalCircPlus << " " << totalCircMinus << " " << message << std::endl;
     return 0;
 }
 
