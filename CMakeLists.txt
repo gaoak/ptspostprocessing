@@ -63,3 +63,7 @@ target_link_libraries(processwake LIBPROCESSING)
 # target process LBM data
 add_executable(processLBM processLBM.cpp)
 target_link_libraries(processLBM LIBPROCESSING)
+
+# target process Lagrangian points
+add_executable(processLag processLag.cpp)
+target_link_libraries(processLag LIBPROCESSING)
