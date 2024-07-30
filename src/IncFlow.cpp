@@ -93,6 +93,24 @@ int IncFlow::CalculateVorticity3D(int order) {
             uz[0][i]*ux[2][i] + uz[1][i]*uy[2][i] + uz[2][i]*uz[2][i]
         );
     }
+
+    // Delta Criterion
+    m_vars.push_back("Delta");
+    id = m_phys.size();
+    int idQ = id - 1;
+    m_phys.push_back(std::vector<double>(m_Np, 0.));
+    for(int i=0; i<m_Np; ++i) {
+        double P = ux[0][i] + uy[1][i] + uz[2][i];
+        double Q = m_phys[idQ][i];
+        double R = - ux[0][i]*( uz[1][i]*uy[2][i] - uy[1][i]*uz[2][i] )
+                   - uy[0][i]*( ux[1][i]*uz[2][i] - ux[2][i]*uz[1][i] )
+                   - uz[0][i]*( ux[2][i]*uy[1][i] - ux[1][i]*uy[2][i] );
+        double Q2 =   Q - P*P/3.;
+        double R2 = - R + (2./27.)*P*P*P - Q*P/3.;
+        double Delta = Q2 * Q2 * Q2 + 27. * 0.25 * R2 * R2;
+        //double Delta = Q * Q * Q + 27. * 0.25 * R * R;
+        m_phys[id][i] = (Delta>0?1:-1)*pow(fabs(Delta), 1./3.);
+    }
     return m_Np;
 }
 
