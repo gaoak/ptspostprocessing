@@ -67,3 +67,7 @@ target_link_libraries(processLBM LIBPROCESSING)
 # target process Lagrangian points
 add_executable(processLag processLag.cpp)
 target_link_libraries(processLag LIBPROCESSING)
+
+# target process Nektar points
+add_executable(processNektar processNektar.cpp)
+target_link_libraries(processNektar LIBPROCESSING)
