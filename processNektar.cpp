@@ -18,7 +18,11 @@ std::string LoadPhiFields(std::string phifilename, IncFlow &baseflow) {
     for(int i=0; i<phifile.GetNumPhys();++i) {
       baseflow.AddPhysics(phifile.GetPhysVarName(i), phifile.GetPhys(i));
     }
-    baseflow.OutputData("combinedfile.plt");
+    if(baseflow.GetPhysID("W_z")==-1) {
+      cout << "compute vorticity." << endl;
+      baseflow.CalculateVorticity();
+      baseflow.OutputData("combinedfile.plt");
+    }
 
     std::vector<double> W_zfield    = baseflow.GetPhys(baseflow.GetPhysID("W_z"));
     std::vector<double> ufield    = baseflow.GetPhys(baseflow.GetPhysID("u"));
