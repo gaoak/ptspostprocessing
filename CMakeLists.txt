@@ -67,3 +67,7 @@ target_link_libraries(processLBM LIBPROCESSING)
 # target process Lagrangian points
 add_executable(processLag processLag.cpp)
 target_link_libraries(processLag LIBPROCESSING)
+
+# target process channel flow
+add_executable(processChannel ChannelFlow.cpp)
+target_link_libraries(processChannel LIBPROCESSING)
