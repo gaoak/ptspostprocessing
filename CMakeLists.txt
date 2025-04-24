@@ -75,3 +75,8 @@ target_link_libraries(processChannel LIBPROCESSING)
 # target process Nektar points
 add_executable(processNektar processNektar.cpp)
 target_link_libraries(processNektar LIBPROCESSING)
+
+
+# target process Nektar kinetic budget
+add_executable(processKinetic processNekKinetic.cpp)
+target_link_libraries(processKinetic LIBPROCESSING)

@@ -259,10 +259,10 @@ int StructuredData::OutputData(std::string filename, const bool info) {
 int StructuredData::ResetAxis() {
     std::vector<double> e0, e1, e2;
     std::vector<double> x0 = {m_x[0][0], m_x[1][0], GetCoordValue(2, 0)};
-    int i0 = 1;
+    int i0 = m_N[0] - 1;
     e0 = {m_x[0][i0]-x0[0], m_x[1][i0]-x0[1], GetCoordValue(2, i0)-x0[2]};
     if(m_N.size()>1 && m_N[1]>1) {
-        int i1 = Index(m_N, {0, 1, 0});
+        int i1 = Index(m_N, {0, m_N[1] - 1, 0});
         e1 = {m_x[0][i1]-x0[0], m_x[1][i1]-x0[1], GetCoordValue(2, i1)-x0[2]};
     } else {
         int imax = FindAbsMax(3, e0.data());
@@ -284,7 +284,7 @@ int StructuredData::ResetAxis() {
     m_dx.resize(m_N.size());
     for(int i=0; i<(int)m_N.size(); ++i) {
         if(m_N[i]>1) {
-            m_dx[i] = std::sqrt(DotVect(e[i], e[i]));
+            m_dx[i] = std::sqrt(DotVect(e[i], e[i])) / (m_N[i] - 1);
         } else if(m_N[i]==1) {
             m_dx[i] = 1.;
         } else {
