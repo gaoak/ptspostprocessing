@@ -71,3 +71,7 @@ target_link_libraries(processLag LIBPROCESSING)
 # target process channel flow
 add_executable(processChannel ChannelFlow.cpp)
 target_link_libraries(processChannel LIBPROCESSING)
+
+# target process Nektar points
+add_executable(processNektar processNektar.cpp)
+target_link_libraries(processNektar LIBPROCESSING)

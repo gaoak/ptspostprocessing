@@ -14,7 +14,7 @@ using namespace std;
 
 std::string LoadLBMFields(std::string lbmfilename, IncFlow &baseflow) {
     std::vector<std::string> variables = {"x", "y", "p", "u", "v", "W_z"};
-    std::vector<std::vector<int>> Ns = {{985, 1, 4497}, {101, 1, 1}, {101, 1, 1}};
+    std::vector<std::vector<int>> Ns = {{2001, 1, 4001}, {201, 1, 1}};
     LBMData lbmfile(lbmfilename, Ns);
     std::vector<std::vector<double>> u1;
     lbmfile.Interpolation(baseflow, u1);
