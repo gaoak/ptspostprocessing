@@ -48,6 +48,7 @@ void processField(IncFlow &baseflow) {
     inttauum[i] *= dy;
   }
   ofstream ofile("surface.dat");
+  ofile << std::scientific << std::setprecision(20);
   ofile << "variables = x, kflux, press, visc\n";
   for(int i=0; i<N[0]; ++i) {
     ofile << baseflow.GetCoordValue(0, i) << " " << intkux[i] << " " << intpu[i] << " " << inttauum[i] << "\n";
