@@ -380,7 +380,7 @@ bool startWithNumber(const char *str, size_t len) {
     for(; i<len; ++i) {
         if(str[i]!=' ') break;
     }
-    if(str[i]=='+' || str[i]=='-' || str[i]=='.' || (str[i]>=0 && str[i]<=9)) {
+    if(str[i]=='+' || str[i]=='-' || str[i]=='.' || (str[i]>='0' && str[i]<='9')) {
         return true;
     }
     return false;
