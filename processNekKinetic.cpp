@@ -157,8 +157,12 @@ void processField(IncFlow &baseflow) {
 }
 
 void processField2(IncFlow &baseflow, int m) {
+  vector<double> x = baseflow.GetCoord(baseflow.GetCoordID("x"));
+  vector<double> y = baseflow.GetCoord(baseflow.GetCoordID("y"));
   double mu = 1. / 100.;
   map<string, vector<double>> phi;
+  phi["x"] = x;
+  phi["y"] = y;
   if(m==0) {
     CalculatePhi0(phi);
   } else {
@@ -166,8 +170,6 @@ void processField2(IncFlow &baseflow, int m) {
   }
   vector<int> N = baseflow.GetN();
   int Np = N[0] * N[1] * N[2];
-  vector<double> x = baseflow.GetCoord(baseflow.GetCoordID("x"));
-  vector<double> y = baseflow.GetCoord(baseflow.GetCoordID("y"));
   vector<double> u = baseflow.GetPhys(baseflow.GetPhysID("u"));
   vector<double> v = baseflow.GetPhys(baseflow.GetPhysID("v"));
   vector<double> p = baseflow.GetPhys(baseflow.GetPhysID("p"));
