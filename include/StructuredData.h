@@ -66,6 +66,7 @@ public:
     int ResetAxis();
     int HasField(std::string var);
     int GetPhysID(std::string v); //get the physics id from the given variable name, -1 is returned if not found
+    int GetCoordID(std::string v);
     std::vector<double> GetRange();
     inline std::vector<int> GetN() const {return m_N;}
     inline std::vector<double> GetOrigion() {return m_axis.m_o;}
@@ -73,6 +74,7 @@ public:
     inline int GetTotPoints() const {return m_Np;}
     inline std::string GetPhysVarName(int i) const {return m_vars[(int)m_x.size()+i];}
     inline std::vector<double> & GetPhys(int i) {return m_phys[i]; }
+    inline std::vector<double> & GetCoord(int i) {return m_x[i]; }
     inline double GetPhysValue(size_t f, int i)  const {return f<m_phys.size() ? m_phys[f][i] : 0.;}
     inline double GetCoordValue(size_t f, int i) const {return f<m_x.size()    ? m_x[f][i]    : 0.;}
     inline void SetPhysValue(double v, size_t f, int i) {if(f<m_phys.size()) m_phys[f][i] = v;}

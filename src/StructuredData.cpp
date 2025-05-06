@@ -227,6 +227,16 @@ int StructuredData::GetPhysID(std::string v) {
     return -1;
 }
 
+int StructuredData::GetCoordID(std::string v) {
+    for(size_t i=0; i<m_x.size(); ++i) {
+        if(v==m_vars[i]) {
+            return (int)i;
+        }
+    }
+    printf("Field %s not found.\n", v.c_str());
+    return -1;
+}
+
 int StructuredData::OutputData(std::string filename, const bool info) {
     std::clock_t c_start = std::clock();
     int isdouble = TEC360USEDOUBLE;

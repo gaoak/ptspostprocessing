@@ -166,13 +166,15 @@ void processField2(IncFlow &baseflow, int m) {
   }
   vector<int> N = baseflow.GetN();
   int Np = N[0] * N[1] * N[2];
+  vector<double> x = baseflow.GetCoord(baseflow.GetCoordID("x"));
+  vector<double> y = baseflow.GetCoord(baseflow.GetCoordID("y"));
   vector<double> u = baseflow.GetPhys(baseflow.GetPhysID("u"));
   vector<double> v = baseflow.GetPhys(baseflow.GetPhysID("v"));
   vector<double> p = baseflow.GetPhys(baseflow.GetPhysID("p"));
-  vector<double> ux = baseflow.GetPhys(baseflow.GetPhysID("ux"));
-  vector<double> uy = baseflow.GetPhys(baseflow.GetPhysID("uy"));
-  vector<double> vx = baseflow.GetPhys(baseflow.GetPhysID("vx"));
-  vector<double> vy = baseflow.GetPhys(baseflow.GetPhysID("vy"));
+  vector<double> ux = baseflow.GetPhys(baseflow.GetPhysID("u_x"));
+  vector<double> uy = baseflow.GetPhys(baseflow.GetPhysID("u_y"));
+  vector<double> vx = baseflow.GetPhys(baseflow.GetPhysID("v_x"));
+  vector<double> vy = baseflow.GetPhys(baseflow.GetPhysID("v_y"));
   vector<double> om(Np, 0.), lx(Np, 0.), ly(Np, 0.), Txx(Np, 0), Txy(Np, 0.), Tyy(Np, 0.);
   vector<double> taux(Np, 0.), tauy(Np, 0.);
   for(int i=0; i<Np; ++i) {
@@ -185,40 +187,111 @@ void processField2(IncFlow &baseflow, int m) {
     lx[i] = -om[i] * v[i];
     ly[i] = om[i] * u[i];
   }
+  map<string, vector<double>> data;
+  data["px"].resize(Np, 0.);
+  data["py"].resize(Np, 0.);
+  data["taux"].resize(Np, 0.);
+  data["tauy"].resize(Np, 0.);
+  data["ftx"].resize(Np, 0.);
+  data["fty"].resize(Np, 0.);
+  data["fsx"].resize(Np, 0.);
+  data["fsy"].resize(Np, 0.);
+  data["lx"].resize(Np, 0.);
+  data["ly"].resize(Np, 0.);
+  vector<double> fsx(Np, 0.), fsy(Np, 0.);
+  for(int i=0; i<Np; ++i) {
+    fsx[i] = u[i]*ux[i]+v[i]*uy[i];
+    fsy[i] = u[i]*vx[i]+v[i]*vy[i];
+    data["px"][i] = -p[i];
+    data["taux"][i] = taux[i];
+    data["tauy"][i] = tauy[i];
+    data["ftx"][i] = x[i]*u[i] + y[i]*v[i] - x[i] * u[i];
+    data["fty"][i] = - x[i] * v[i];
+    data["fsx"][i] = x[i]*fsx[i] + y[i]*fsy[i] - x[i] * fsx[i];
+    data["fsy"][i] = - x[i] * fsy[i];
+    data["lx"][i] = -x[i]*lx[i] - y[i]*ly[i] + x[i] * lx[i];
+    data["ly"][i] = x[i] * ly[i];
+  }
+  map<string, vector<double>> wdata;
+  wdata["pwx"].resize(Np, 0.);
+  wdata["pwy"].resize(Np, 0.);
+  wdata["tauwx"].resize(Np, 0.);
+  wdata["tauwy"].resize(Np, 0.);
+  wdata["fwtx"].resize(Np, 0.);
+  wdata["fwty"].resize(Np, 0.);
+  wdata["fwsx"].resize(Np, 0.);
+  wdata["fwsy"].resize(Np, 0.);
+  wdata["lwx"].resize(Np, 0.);
+  wdata["lwy"].resize(Np, 0.);
   vector<double> fwtx(Np, 0.), fwty(Np, 0.);
   vector<double> fwsx(Np, 0.), fwsy(Np, 0.);
   vector<double> lwx(Np, 0.), lwy(Np, 0.);
   for(int i=0; i<Np; ++i) {
-    lwx[i] = lx[i] * phi["px_x"][i] + ly[i] * phi["px_y"][i];
-    lwy[i] = lx[i] * phi["py_x"][i] + ly[i] * phi["py_y"][i];
     fwtx[i] = u[i] * phi["px_x"][i] + v[i] * phi["px_y"][i];
     fwty[i] = u[i] * phi["py_x"][i] + v[i] * phi["py_y"][i];
-    fwsx[i] = (ux[i]*u[i]+vx[i]*v[i]) * phi["px_x"][i] + (uy[i]*u[i]+vy[i]*v[i]) * phi["px_y"][i] + Txx[i]*phi["px_xx"][i] + 2.*Txy[i]*phi["px_xy"][i] + Tyy[i] *phi["px_yy"][i];
-    fwsy[i] = (ux[i]*u[i]+vx[i]*v[i]) * phi["py_x"][i] + (uy[i]*u[i]+vy[i]*v[i]) * phi["py_y"][i] + Txx[i]*phi["py_xx"][i] + 2.*Txy[i]*phi["py_xy"][i] + Tyy[i] *phi["py_yy"][i];
+    fwsx[i] = fsx[i] * phi["px_x"][i] + fsy[i] * phi["px_y"][i] +
+              Txx[i]*phi["px_xx"][i] + 2.0 * Txy[i]*phi["px_xy"][i] + Tyy[i]*phi["px_yy"][i];
+    fwsy[i] = fsx[i] * phi["py_x"][i] + fsy[i] * phi["py_y"][i] +
+              Txx[i]*phi["py_xx"][i] + 2.0 * Txy[i]*phi["py_xy"][i] + Tyy[i]*phi["py_yy"][i];
+    lwx[i] = lx[i] * phi["px_x"][i] + ly[i] * phi["px_y"][i];
+    lwy[i] = lx[i] * phi["py_x"][i] + ly[i] * phi["py_y"][i];
+    wdata["pwx"][i] = -p[i]*phi["px_x"][i];
+    wdata["pwy"][i] = -p[i]*phi["py_x"][i];
+    wdata["tauwx"][i] = taux[i] * phi["px_x"][i] + tauy[i] * phi["px_y"][i];
+    wdata["tauwy"][i] = taux[i] * phi["py_x"][i] + tauy[i] * phi["py_y"][i];
+    wdata["fwtx"][i] = x[i]*fwtx[i] + y[i]*fwty[i] - x[i] * fwtx[i];
+    wdata["fwty"][i] = - x[i] * fwty[i];
+    wdata["fwsx"][i] = x[i]*fwsx[i] + y[i]*fwsy[i] - x[i] * fwsx[i];
+    wdata["fwsy"][i] = - x[i] * fwsy[i];
+    wdata["lwx"][i] = -x[i]*lwx[i] - y[i]*lwy[i] + x[i] * lwx[i];
+    wdata["lwy"][i] = x[i] * lwy[i];
   }
-  // integrate
-  vector<double> intkux(N[0], 0.);
-  vector<double> intpu(N[0], 0.);
-  vector<double> inttauum(N[0], 0.);
+  map<string, vector<double>> result, wresult;
+  for(auto &it : data) {
+    result[it.first].resize(N[0], 0.);
+  }
+  for(auto &it : wdata) {
+    wresult[it.first].resize(N[0], 0.);
+  }
   double dy = baseflow.GetDetx()[1];
   for(int i=0; i<N[0]; ++i) {
     for(int j=0; j<N[1]; ++j) {
       int ind = Index(N,{i,j,0});
-      intkux[i] += kux[ind];
-      intpu[i] += pu[ind];
-      inttauum[i] += tauum[ind];
+      for(auto &it : result) {
+        it.second[i] += data[it.first][ind];
+      }
+      for(auto &it : wresult) {
+        it.second[i] += wdata[it.first][ind];
+      }
     }
   }
   for(int i=0; i<N[0]; ++i) {
-    intkux[i] *= dy;
-    intpu[i] *= dy;
-    inttauum[i] *= dy;
+    for(auto &it : result) {
+        it.second[i] *= dy;
+      }
+    for(auto &it : wresult) {
+      it.second[i] *= dy;
+    }
   }
   ofstream ofile("surface.dat");
   ofile << std::scientific << std::setprecision(20);
-  ofile << "variables = x, kflux, press, visc\n";
+  ofile << "variables = x,";
+  for(auto &it : result) {
+    ofile << " " << it.first;
+  }
+  for(auto &it : wresult) {
+    ofile << " " << it.first;
+  }
+  ofile << "\n";
   for(int i=0; i<N[0]; ++i) {
-    ofile << baseflow.GetCoordValue(0, i) << " " << intkux[i] << " " << intpu[i] << " " << inttauum[i] << "\n";
+    ofile << baseflow.GetCoordValue(0, i);
+    for(auto &it : result) {
+      ofile << " " << it.second[i];
+    }
+    for(auto &it : wresult) {
+      ofile << " " << it.second[i];
+    }
+    ofile << "\n";
   }
   ofile.close();
 }
@@ -233,7 +306,7 @@ int main(int argc, char* argv[]) {
   IncFlow baseflow;
   baseflow.InputData(flowfilename);
   printf("processing file %s\n", argv[1]);
-  processField2(baseflow);
+  processField2(baseflow, 1);
   printf("Finished.\n");
   return 0;
 }
