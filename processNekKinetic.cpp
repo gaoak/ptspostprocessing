@@ -175,6 +175,8 @@ void processField2(IncFlow &baseflow, int m) {
   vector<double> vy = baseflow.GetPhys(baseflow.GetPhysID("v_y"));
   vector<double> muLu = baseflow.GetPhys(baseflow.GetPhysID("muLu"));
   vector<double> muLv = baseflow.GetPhys(baseflow.GetPhysID("muLv"));
+  vector<double> ax = baseflow.GetPhys(baseflow.GetPhysID("ax"));
+  vector<double> ay = baseflow.GetPhys(baseflow.GetPhysID("ay"));
   vector<double> om(Np, 0.), lx(Np, 0.), ly(Np, 0.), Txx(Np, 0), Txy(Np, 0.),
       Tyy(Np, 0.);
   vector<double> taux(Np, 0.), tauy(Np, 0.);
@@ -189,68 +191,43 @@ void processField2(IncFlow &baseflow, int m) {
     ly[i] = om[i] * u[i];
   }
   map<string, vector<double>> data;
-  data["px"].resize(Np, 0.);
-  data["py"].resize(Np, 0.);
   data["taux"].resize(Np, 0.);
   data["tauy"].resize(Np, 0.);
-  data["ftx"].resize(Np, 0.);
-  data["fty"].resize(Np, 0.);
-  data["fsx"].resize(Np, 0.);
-  data["fsy"].resize(Np, 0.);
-  data["lx"].resize(Np, 0.);
-  data["ly"].resize(Np, 0.);
   data["mulux"].resize(Np, 0.);
   data["muluy"].resize(Np, 0.);
-  vector<double> fsx(Np, 0.), fsy(Np, 0.);
+  data["lx"].resize(Np, 0.);
+  data["ly"].resize(Np, 0.);
   for (int i = 0; i < Np; ++i) {
-    fsx[i] = u[i] * ux[i] + v[i] * uy[i];
-    fsy[i] = u[i] * vx[i] + v[i] * vy[i];
-    data["px"][i] = -p[i];
     data["taux"][i] = taux[i];
     data["tauy"][i] = tauy[i];
-    data["ftx"][i] = y[i] * v[i];
-    data["fty"][i] = -x[i] * v[i];
-    data["fsx"][i] = y[i] * fsy[i];
-    data["fsy"][i] = -x[i] * fsy[i];
-    data["lx"][i] = -y[i] * ly[i];
-    data["ly"][i] = x[i] * ly[i];
     data["mulux"][i] = y[i] * muLv[i];
     data["muluy"][i] = -x[i] * muLv[i];
+    data["lx"][i] = -y[i] * ly[i];
+    data["ly"][i] = x[i] * ly[i];
   }
   map<string, vector<double>> wdata;
   wdata["pwx"].resize(Np, 0.);
   wdata["pwy"].resize(Np, 0.);
   wdata["tauwx"].resize(Np, 0.);
   wdata["tauwy"].resize(Np, 0.);
-  wdata["fwtx"].resize(Np, 0.);
-  wdata["fwty"].resize(Np, 0.);
-  wdata["fwsx"].resize(Np, 0.);
-  wdata["fwsy"].resize(Np, 0.);
+  wdata["fwx"].resize(Np, 0.);
+  wdata["fwy"].resize(Np, 0.);
   wdata["lwx"].resize(Np, 0.);
   wdata["lwy"].resize(Np, 0.);
-  vector<double> fwtx(Np, 0.), fwty(Np, 0.);
-  vector<double> fwsx(Np, 0.), fwsy(Np, 0.);
-  vector<double> lwx(Np, 0.), lwy(Np, 0.);
+  vector<double> fwy(Np, 0.);
+  vector<double> lwy(Np, 0.);
   for (int i = 0; i < Np; ++i) {
-    fwtx[i] = u[i] * phi["px_x"][i] + v[i] * phi["px_y"][i];
-    fwty[i] = u[i] * phi["py_x"][i] + v[i] * phi["py_y"][i];
-    fwsx[i] = fsx[i] * phi["px_x"][i] + fsy[i] * phi["px_y"][i] +
-              Txx[i] * phi["px_xx"][i] + 2.0 * Txy[i] * phi["px_xy"][i] +
-              Tyy[i] * phi["px_yy"][i];
-    fwsy[i] = fsx[i] * phi["py_x"][i] + fsy[i] * phi["py_y"][i] +
+    fwy[i] = ax[i] * phi["py_x"][i] + ay[i] * phi["py_y"][i] +
               Txx[i] * phi["py_xx"][i] + 2.0 * Txy[i] * phi["py_xy"][i] +
               Tyy[i] * phi["py_yy"][i];
-    lwx[i] = lx[i] * phi["px_x"][i] + ly[i] * phi["px_y"][i];
     lwy[i] = lx[i] * phi["py_x"][i] + ly[i] * phi["py_y"][i];
     wdata["pwx"][i] = -p[i] * phi["px_x"][i];
     wdata["pwy"][i] = -p[i] * phi["py_x"][i];
     wdata["tauwx"][i] = taux[i] * phi["px_x"][i] + tauy[i] * phi["px_y"][i];
     wdata["tauwy"][i] = taux[i] * phi["py_x"][i] + tauy[i] * phi["py_y"][i];
-    wdata["fwtx"][i] = x[i] * fwtx[i] + y[i] * fwty[i] - x[i] * fwtx[i];
-    wdata["fwty"][i] = -x[i] * fwty[i];
-    wdata["fwsx"][i] = x[i] * fwsx[i] + y[i] * fwsy[i] - x[i] * fwsx[i];
-    wdata["fwsy"][i] = -x[i] * fwsy[i];
-    wdata["lwx"][i] = -x[i] * lwx[i] - y[i] * lwy[i] + x[i] * lwx[i];
+    wdata["fwx"][i] = y[i] * fwy[i];
+    wdata["fwy"][i] = -x[i] * fwy[i];
+    wdata["lwx"][i] = - y[i] * lwy[i];
     wdata["lwy"][i] = x[i] * lwy[i];
   }
   map<string, vector<double>> result, wresult;
@@ -282,12 +259,12 @@ void processField2(IncFlow &baseflow, int m) {
   }
   ofstream ofile("surface.dat");
   ofile << std::scientific << std::setprecision(20);
-  ofile << "variables = x,";
+  ofile << "variables = x";
   for (auto &it : result) {
-    ofile << " " << it.first;
+    ofile << ", " << it.first;
   }
   for (auto &it : wresult) {
-    ofile << " " << it.first;
+    ofile << ", " << it.first;
   }
   ofile << "\n";
   for (int i = 0; i < N[0]; ++i) {
