@@ -41,8 +41,8 @@ void CalculatePhi(int m, map<string, vector<double>> &phi) {
   double c1 = c0 * m;
   double c2 = c0 * m * (m + 1);
   for (int i = 0; i < np; ++i) {
-    double r = std::hypot(x[i], y[i]);
-    double t = std::atan2(x[i], y[i]);
+    double r = std::hypot(y[i], x[i]);
+    double t = std::atan2(y[i], x[i]);
     double ir = 1. / r;
     double irm = std::pow(ir, m);
     double irm1 = irm * ir;
@@ -90,8 +90,8 @@ void CalculatePhi0(map<string, vector<double>> &phi) {
   phi["py_yx"] = phi["py_xy"];
   double a0 = 0.5;
   for (int i = 0; i < np; ++i) {
-    double r = std::hypot(x[i], y[i]);
-    double t = std::atan2(x[i], y[i]);
+    double r = std::hypot(y[i], x[i]);
+    double t = std::atan2(y[i], x[i]);
     double ir = 1. / r;
     double ir2 = ir * ir;
     double k0 = a0;
