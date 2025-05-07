@@ -180,6 +180,7 @@ void processField2(IncFlow &baseflow, int m) {
   vector<double> om(Np, 0.), lx(Np, 0.), ly(Np, 0.), Txx(Np, 0), Txy(Np, 0.),
       Tyy(Np, 0.);
   vector<double> taux(Np, 0.), tauy(Np, 0.);
+  vector<double> ut(Np, 0.), vt(Np, 0.);
   for (int i = 0; i < Np; ++i) {
     om[i] = vx[i] - uy[i];
     Txx[i] = mu * ux[i] * 2.;
@@ -189,6 +190,8 @@ void processField2(IncFlow &baseflow, int m) {
     tauy[i] = Txy[i];
     lx[i] = -om[i] * v[i];
     ly[i] = om[i] * u[i];
+    ut[i] = ax[i] - u[i] * ux[i] - v[i] * uy[i];
+    vt[i] = ay[i] - u[i] * vx[i] - v[i] * vy[i];
   }
   map<string, vector<double>> data;
   data["taux"].resize(Np, 0.);
@@ -214,12 +217,16 @@ void processField2(IncFlow &baseflow, int m) {
   wdata["fwy"].resize(Np, 0.);
   wdata["lwx"].resize(Np, 0.);
   wdata["lwy"].resize(Np, 0.);
+  wdata["FEx"].resize(Np, 0.);
+  wdata["FEy"].resize(Np, 0.);
+  wdata["WPSx"].resize(Np, 0.);
+  wdata["WPSy"].resize(Np, 0.);
   vector<double> fwy(Np, 0.);
   vector<double> lwy(Np, 0.);
   for (int i = 0; i < Np; ++i) {
     fwy[i] = ax[i] * phi["py_x"][i] + ay[i] * phi["py_y"][i] +
-              Txx[i] * phi["py_xx"][i] + 2.0 * Txy[i] * phi["py_xy"][i] +
-              Tyy[i] * phi["py_yy"][i];
+             Txx[i] * phi["py_xx"][i] + 2.0 * Txy[i] * phi["py_xy"][i] +
+             Tyy[i] * phi["py_yy"][i];
     lwy[i] = lx[i] * phi["py_x"][i] + ly[i] * phi["py_y"][i];
     wdata["pwx"][i] = -p[i] * phi["px_x"][i];
     wdata["pwy"][i] = -p[i] * phi["py_x"][i];
@@ -227,8 +234,24 @@ void processField2(IncFlow &baseflow, int m) {
     wdata["tauwy"][i] = taux[i] * phi["py_x"][i] + tauy[i] * phi["py_y"][i];
     wdata["fwx"][i] = y[i] * fwy[i];
     wdata["fwy"][i] = -x[i] * fwy[i];
-    wdata["lwx"][i] = - y[i] * lwy[i];
+    wdata["lwx"][i] = -y[i] * lwy[i];
     wdata["lwy"][i] = x[i] * lwy[i];
+    wdata["FEx"][i] =
+        -ut[i] * phi["px"][i] -
+        2. * mu * (u[i] * phi["px_xx"][i] + v[i] * phi["px_xy"][i]) -
+        p[i] * phi["px_x"][i] + Txx[i] * phi["px_x"][i] +
+        Txy[i] * phi["px_y"][i] +
+        0.5 * (u[i] * u[i] + v[i] * v[i]) * phi["px_x"][i];
+    wdata["FEy"][i] =
+        -ut[i] * phi["py"][i] -
+        2. * mu * (u[i] * phi["py_xx"][i] + v[i] * phi["py_xy"][i]) -
+        p[i] * phi["py_x"][i] + Txx[i] * phi["py_x"][i] +
+        Txy[i] * phi["py_y"][i] +
+        0.5 * (u[i] * u[i] + v[i] * v[i]) * phi["py_x"][i];
+    wdata["WPSx"][i] =
+        (-ax[i] + muLu[i]) * phi["px"][i] - p[i] * phi["px_x"][i];
+    wdata["WPSy"][i] =
+        (-ax[i] + muLu[i]) * phi["py"][i] - p[i] * phi["py_x"][i];
   }
   map<string, vector<double>> result, wresult;
   for (auto &it : data) {
