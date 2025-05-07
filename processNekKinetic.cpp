@@ -241,13 +241,13 @@ void processField2(IncFlow &baseflow, int m) {
         2. * mu * (u[i] * phi["px_xx"][i] + v[i] * phi["px_xy"][i]) -
         p[i] * phi["px_x"][i] + Txx[i] * phi["px_x"][i] +
         Txy[i] * phi["px_y"][i] +
-        0.5 * (u[i] * u[i] + v[i] * v[i]) * phi["px_x"][i];
+        0.5 * (u[i] * u[i] + v[i] * v[i] - 1.) * phi["px_x"][i];
     wdata["FEy"][i] =
         -ut[i] * phi["py"][i] -
         2. * mu * (u[i] * phi["py_xx"][i] + v[i] * phi["py_xy"][i]) -
         p[i] * phi["py_x"][i] + Txx[i] * phi["py_x"][i] +
         Txy[i] * phi["py_y"][i] +
-        0.5 * (u[i] * u[i] + v[i] * v[i]) * phi["py_x"][i];
+        0.5 * (u[i] * u[i] + v[i] * v[i] - 1.) * phi["py_x"][i];
     wdata["WPSx"][i] =
         (-ax[i] + muLu[i]) * phi["px"][i] - p[i] * phi["px_x"][i];
     wdata["WPSy"][i] =
