@@ -307,11 +307,15 @@ int main(int argc, char *argv[]) {
     cout << "1 input files requred: flow field" << std::endl;
     return argc - 5;
   }
+  int m = 1;
+  if (argc>=3) {
+    m = stoi(argv[2]);
+  }
   flowfilename = argv[1];
   IncFlow baseflow;
   baseflow.InputData(flowfilename);
   printf("processing file %s\n", argv[1]);
-  processField2(baseflow, 1);
+  processField2(baseflow, m);
   printf("Finished.\n");
   return 0;
 }
