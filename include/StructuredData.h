@@ -91,6 +91,7 @@ protected:
     int Diff(std::vector<std::vector<double> > &u,
              std::vector<std::vector<double> > &du, int dir, int order);
     std::vector<std::vector<double> > m_x; // i first, then j, k last
+    std::vector<std::vector<double> > m_x1; // i first, then j, k last
     std::vector<std::vector<double> > m_phys; //physics fields
     std::vector<int> m_N;        //dimension 3
     std::vector<std::string> m_vars;

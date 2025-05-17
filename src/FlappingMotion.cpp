@@ -5,9 +5,9 @@
 #include<set>
 #include <limits>
 #include "Util.h"
-#include "PlungingMotion.h"
+#include "FlappingMotion.h"
 
-PlungingMotion::PlungingMotion(std::string dataconfigue) {
+FlappingMotion::FlappingMotion(std::string dataconfigue) {
     std::ifstream conf(dataconfigue.c_str());
     if(!conf.is_open()) {
         printf("error: unable to open configue file %s\n", dataconfigue.c_str());
@@ -23,15 +23,34 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
             param[p[0]] = p[1];
         }
     }
-    if(param.count("k")) {
-        m_k = StringToDouble(param["k"]);
+    if(param.count("f")) {
+        m_f = StringToDouble(param["f"]);
     } else {
-        m_k = 0.;
+        m_f = 0.;
     }
-    if(param.count("A")) {
-        m_A = StringToDouble(param["A"]);
+    if(param.count("v0")) {
+        parserDouble(param["v0"].c_str(), m_v0);
     } else {
-        m_A = 0.;
+        m_v0.resize(2, 0.);
+    }
+    if(param.count("pivot")) {
+        parserDouble(param["pivot"].c_str(), m_pivot);
+    }
+    else
+    {
+        m_pivot.resize(3, 0.);
+    }
+    if(param.count("bodyLocation")) {
+        parserDouble(param["bodyLocation"].c_str(), m_bodyLocation);
+    }
+    else
+    {
+        m_bodyLocation.resize(3, 0.);
+    }
+    if(param.count("Amp")) {
+        m_Amp = StringToDouble(param["Amp"]);
+    } else {
+        m_Amp = 0.;
     }
     if(param.count("phi")) {
         m_phi = StringToDouble(param["phi"]);
@@ -133,18 +152,18 @@ PlungingMotion::PlungingMotion(std::string dataconfigue) {
     }
 }
 
-double PlungingMotion::GetFilePhase(int n) {
+double FlappingMotion::GetFilePhase(int n) {
     return m_phase[0] + m_phase[1] * (n - m_file[0]) / m_file[1];
 }
 
-std::string PlungingMotion::GetInFileName(int n) {
+std::string FlappingMotion::GetInFileName(int n) {
     char buffer[100];
     sprintf(buffer, m_inputformat.c_str(), n);
     std::string res(buffer);
     return res;
 }
 
-std::string PlungingMotion::GetOutFileName(int n) {
+std::string FlappingMotion::GetOutFileName(int n) {
     char buffer[100];
     if(m_outputformat.size()) {
         sprintf(buffer, m_outputformat.c_str(), n);
@@ -155,16 +174,15 @@ std::string PlungingMotion::GetOutFileName(int n) {
     return res;
 }
 
-double PlungingMotion::PlungingVelocity(double phase, double phi) {
-    return -m_k*m_A*sin(phase*2.*M_PI + phi);
+double FlappingMotion::FlappingAngularVelocity(double phase, double phi) {
+    return -2*M_PI*m_f*m_Amp*sin(phase*2.*M_PI + phi);
 }
 
-double PlungingMotion::PlungingLocation(double phase, double phi) {
-    return 0.5*m_A*cos(phase*2.*M_PI + phi);
-    //0.5 A cos(2 k t + phi)
+double FlappingMotion::FlappingAngularAmp(double phase, double phi) {
+    return m_Amp*cos(phase*2.*M_PI + phi);
 }
 
-int PlungingMotion::Dumppoints() {
+int FlappingMotion::Dumppoints() {
     int count  = 0;
     for(auto f=m_fileseries.begin(); f!=m_fileseries.end(); ++f) {
         IncFlow flow(m_N, m_range, m_airfoil, {m_AoA});
@@ -174,7 +192,7 @@ int PlungingMotion::Dumppoints() {
     return count;
 }
 
-int PlungingMotion::GenerateFileSeries() {
+int FlappingMotion::GenerateFileSeries() {
     m_fileseries.clear();
     if(m_file.size()<3 || m_file[1]==0) {
         return 0;
@@ -191,7 +209,7 @@ int PlungingMotion::GenerateFileSeries() {
     return m_fileseries.size();
 }
 
-int PlungingMotion::TransformBathCoord(IncFlow &flow, int n) {
+int FlappingMotion::TransformBathCoord(IncFlow &flow, int n) {
     // after = before
     // y = z
     // x = -x
@@ -199,7 +217,7 @@ int PlungingMotion::TransformBathCoord(IncFlow &flow, int n) {
     std::clock_t c_start = std::clock();
     int Np = flow.GetTotPoints();
     double Uref = 1./0.1734;
-    double h0 = PlungingLocation(GetFilePhase(n), m_phi) + 0.075588159998172;
+    double h0 = FlappingAngularAmp(GetFilePhase(n), m_phi) + 0.075588159998172;
     for(int i=0; i<Np; ++i) {
         double x = flow.GetCoordValue(0, i);
         double y = flow.GetCoordValue(1, i);
@@ -224,7 +242,7 @@ int PlungingMotion::TransformBathCoord(IncFlow &flow, int n) {
     return 3*Np;
 }
 
-int PlungingMotion::ProcessEXPWingData(int dir) {
+int FlappingMotion::ProcessEXPWingData(int dir) {
     std::vector<int> filen = m_fileseries;
     if(dir<0) {
         std::reverse(filen.begin(), filen.end());;
@@ -238,17 +256,17 @@ int PlungingMotion::ProcessEXPWingData(int dir) {
         }
         IncFlow flow(m_airfoil, params);
         flow.InputData(GetInFileName(n));
-        if(m_translation) {
-            double h0 = PlungingLocation(GetFilePhase(n), m_phi);
-            flow.TransformCoord({0., h0, 0.}, 0.,{0., 0., 0.,});
-        }
+        // if(m_translation) {
+        //     double h0 = FlappingAngularAmp(GetFilePhase(n), m_phi);
+        //     flow.TransformCoord({0., h0, 0.});
+        // }
         TransformBathCoord(flow, n);
         ProcessFiniteWingData(flow, n);
     }
     return m_fileseries.size();
 }
 
-int PlungingMotion::Resampling(IncFlow &flow) {
+int FlappingMotion::Resampling(IncFlow &flow) {
     if(m_N.size()==0 && m_range.size()==0) {
         return 0;
     }
@@ -274,7 +292,7 @@ int PlungingMotion::Resampling(IncFlow &flow) {
     return 1;
 }
 
-int PlungingMotion::ProcessCFDWingData(int dir) {
+int FlappingMotion::ProcessCFDWingData(int dir) {
     std::vector<int> filen = m_fileseries;
     if(dir<0) {
         std::reverse(filen.begin(), filen.end());;
@@ -282,6 +300,7 @@ int PlungingMotion::ProcessCFDWingData(int dir) {
     for(int k=0; k<(int)filen.size(); ++k) {
         int n = filen[k];
         std::vector<double> params;
+        // m_AoA = theta;
         params.push_back(m_AoA);
         for(size_t l=0; l<m_span.size(); ++l) {
             params.push_back(m_span[l]);
@@ -289,41 +308,40 @@ int PlungingMotion::ProcessCFDWingData(int dir) {
         IncFlow flow(m_airfoil, params);
         flow.InputData(GetInFileName(n));
         if(m_airfoil.compare("0000")!=0) {
-            double v0 = PlungingVelocity(GetFilePhase(n), m_phi);
-            flow.OverWriteBodyPoint({0., v0, 0.}, {0., 0., 0.}, {0., 0., 0.});
+            double omega = FlappingAngularVelocity(GetFilePhase(n), m_phi);
+            flow.OverWriteBodyPoint({m_v0[0], m_v0[1], 0.}, {m_pivot[0], m_pivot[1], m_pivot[2]}, {0., 0., omega});
         }
-        if(m_translation) {
-            double h0 = PlungingLocation(GetFilePhase(n), m_phi);
-            flow.TransformCoord({0., h0, 0.}, 0.,{0., 0., 0.,});
-        }
+        double theta = FlappingAngularAmp(GetFilePhase(n), m_phi);
+        flow.TransformCoord({m_bodyLocation[0], m_bodyLocation[1], m_bodyLocation[2]}, theta, {m_pivot[0], m_pivot[1], m_pivot[2]});
+
         ProcessFiniteWingData(flow, n);
     }
     return m_fileseries.size();
 }
 
-int PlungingMotion::ProcessCFDAirfoilData(int dir) {
+int FlappingMotion::ProcessCFDAirfoilData(int dir) {
     std::vector<int> filen = m_fileseries;
     if(dir<0) {
         std::reverse(filen.begin(), filen.end());;
     }
     for(int k=0; k<(int)filen.size(); ++k) {
         int n = filen[k];
-        IncFlow flow(m_airfoil, {m_AoA});
+        std::vector<double> params;
+        double theta = FlappingAngularAmp(GetFilePhase(n), m_phi);
+        params.push_back(theta);
+        IncFlow flow(m_airfoil, {theta});
         flow.InputData(GetInFileName(n));
+        flow.OutputData(GetOutFileName(n));
         if(m_airfoil.compare("0000")!=0) {
-            double v0 = PlungingVelocity(GetFilePhase(n), m_phi);
-            flow.OverWriteBodyPoint({0., v0}, {0., 0., 0.}, {0., 0., 0.});
-        }
-        if(m_translation) {
-            double h0 = PlungingLocation(GetFilePhase(n), m_phi);
-            flow.TransformCoord({0., h0, 0.}, 0.,{0., 0., 0.,});
+            double omega = FlappingAngularVelocity(GetFilePhase(n), m_phi);
+            flow.OverWriteBodyPoint({m_v0[0], m_v0[1]}, {m_pivot[0], m_pivot[1], m_pivot[2]}, {0., 0., omega});
         }
         ProcessAirfoilData(flow, n);
     }
     return m_fileseries.size();
 }
 
-int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
+int FlappingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
     std::vector<std::vector<int>> intcenters;
     std::vector<std::vector<double>> physcenters;
     std::vector<std::vector<double>> info;
@@ -353,7 +371,7 @@ int PlungingMotion::ProcessAirfoilData(IncFlow &flow, int n) {
 }
 
 
-int PlungingMotion::ProcessVortexCore(IncFlow &rawflow, int n, double sigma,
+int FlappingMotion::ProcessVortexCore(IncFlow &rawflow, int n, double sigma,
         std::vector<std::vector<double> > &cores, bool outfield) {
     IncFlow flow = rawflow;
     ProcessSmoothing(flow, sigma);
@@ -415,7 +433,7 @@ int PlungingMotion::ProcessVortexCore(IncFlow &rawflow, int n, double sigma,
     return (int)cores.size();
 }
 
-int PlungingMotion::ProcessFiniteWingData(IncFlow &flow, int n) {
+int FlappingMotion::ProcessFiniteWingData(IncFlow &flow, int n) {
     m_processVortexCoreCount = 0;
     std::vector<std::vector<double> > cores;
     ProcessVortexCore(flow, n, m_sigma[0], cores, true);
@@ -425,7 +443,7 @@ int PlungingMotion::ProcessFiniteWingData(IncFlow &flow, int n) {
     return cores.size();
 }
 
-int PlungingMotion::ProcessSmoothing(IncFlow &flow, double sigma) {
+int FlappingMotion::ProcessSmoothing(IncFlow &flow, double sigma) {
     if(sigma>0.) {
         std::clock_t c_start = std::clock();
         std::vector<int> field;
@@ -440,7 +458,7 @@ int PlungingMotion::ProcessSmoothing(IncFlow &flow, double sigma) {
     return 1;
 }
 
-int PlungingMotion::ProcessVorticity(IncFlow &flow) {
+int FlappingMotion::ProcessVorticity(IncFlow &flow) {
     //vorticity Q
     //u, v, w, p, W_x, W_y, W_z, Q
     
@@ -452,7 +470,7 @@ int PlungingMotion::ProcessVorticity(IncFlow &flow) {
     return 1;
 }
 
-std::string PlungingMotion::GetVortexCoreFileName(int n) {
+std::string FlappingMotion::GetVortexCoreFileName(int n) {
     char buffer[100];
     if(m_vortexcorefileformat.size()) {
         sprintf(buffer, m_vortexcorefileformat.c_str(), n);

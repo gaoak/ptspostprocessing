@@ -69,6 +69,9 @@ int IncFlow::CalculateVorticity3D(int order) {
     Diff(u, uz, 2, order);
     int id;
     //W_x
+    // m_vars.pop_back();
+    // m_vars.pop_back();
+    // m_vars.pop_back();
     m_vars.push_back("W_x");
     m_vars.push_back("W_y");
     m_vars.push_back("W_z");
@@ -198,11 +201,27 @@ int IncFlow::CalculateForcePartition2D(int order) {
     return m_Np;
 }
 
-int IncFlow::TransformCoord(const std::vector<double> &x0) {
-    for(int k=0; k<GetNumCoords(); ++k) {
-        m_axis.m_o[k] += x0[k];
+int IncFlow::TransformCoord(const std::vector<double> &x0, const double theta, const std::vector<double> &pivot) {
+    double sz = sin(theta), cz = cos(theta);
+    double temp[2];
+    for (int k = 0; k < 3; ++k)
+    {
         for(int i=0; i<m_Np; ++i) {
-            m_x[k][i] += x0[k];
+            m_x1[k][i] = m_x[k][i] - pivot[k];
+            
+        }
+    }
+    for (int i=0; i<m_Np; ++i)
+    {
+        temp[0] = cz * m_x1[0][i] - sz * m_x1[1][i];
+        temp[1] = sz * m_x1[0][i] + cz * m_x1[1][i];
+        m_x1[0][i] = temp[0];
+        m_x1[1][i] = temp[1];
+    }
+    for (int k = 0; k < 3; ++k)
+    {
+        for(int i=0; i<m_Np; ++i) {
+            m_x1[k][i] += pivot[k] + x0[k];
         }
     }
     return m_Np;

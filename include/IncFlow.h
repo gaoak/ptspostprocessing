@@ -54,7 +54,7 @@ public:
     IncFlow& operator=(const IncFlow & flow);
     int OverWriteBodyPoint(const std::vector<double> &u0, const std::vector<double> &pivot,
             const std::vector<double> &omega);
-    int TransformCoord(const std::vector<double> &x0);
+    int TransformCoord(const std::vector<double> &x0, const double theta, const std::vector<double> &pivot);
     int ExtractCoreByPoint(std::vector<std::vector<double> > & cores, std::set<int> &searched,
             std::vector<double> &inputcenter, const std::vector<int> vf,
             const int field = -4, const bool stoponwall = true, const double threshold = 0.,

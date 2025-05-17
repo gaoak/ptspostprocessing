@@ -89,6 +89,7 @@ StructuredData::StructuredData()
 
 StructuredData& StructuredData::operator=(const StructuredData & data) {
     m_x = data.m_x;
+    m_x1 = data.m_x1;
     m_phys = data.m_phys;
     m_N = data.m_N;
     m_vars = data.m_vars;
@@ -247,10 +248,16 @@ int StructuredData::OutputData(std::string filename, const bool info) {
     for(size_t i=0; i<m_phys.size(); ++i) {
         data.push_back(m_phys[i]);
     }
+    for(size_t i=0; i<m_x1.size(); ++i) {
+        data.push_back(m_x1[i]);
+    }
     std::string ext = filename.substr(filename.size()-4, 4);
     if(0 == ext.compare(".dat")) {
         OutputTec360_ascii(filename, m_vars, m_N, data, isdouble);
     } else if(0 == ext.compare(".plt")) {
+        m_vars.push_back("xCoord");
+        m_vars.push_back("yCoord");
+        m_vars.push_back("zCoord");
         OutputTec360_binary(filename, m_vars, m_N, data, isdouble);
     } else if(0 == ext.compare(".csv")) {
         OutputCSV(filename, m_vars, m_N, data);
@@ -396,16 +403,43 @@ int StructuredData::InputData(std::string filename, const bool info) {
     ReSetNp();
     //copy data
     m_x.clear();
-    m_phys.resize((int)vars.size()-ncoor);
-    m_vars.resize(vars.size());
+    m_x1.clear();
+    m_phys.resize((int)vars.size() - 2*ncoor);
+    m_vars.resize((int)vars.size());
     for(int i=0; i<(int)vars.size(); ++i) {
         m_vars[vm[i]] = vars[i];
-        if(vm[i]<ncoor) {
+        if(vm[i] < ncoor){
             m_x.push_back(data[i]);
-        } else {
-            m_phys[vm[i]-ncoor] = data[i];
+        }
+        else if(ncoor <= vm[i] && vm[i] < ((int)vars.size() - ncoor)) {
+            m_phys[vm[i] - ncoor] = data[i];
+        }
+        else{      
+            m_x1.push_back(data[i]);
         }
     }
+    int count = 0;
+    auto it = vm.end();
+     while (count < 3 && it != vm.begin()) {
+        --it;
+        auto toErase = it;
+        ++it; 
+        vm.erase(toErase);
+        ++count;
+    }
+    m_vars.pop_back();
+    m_vars.pop_back();
+    m_vars.pop_back();
+    // m_phys.resize((int)vars.size() - ncoor);
+    // m_vars.resize(vars.size());
+    // for(int i=0; i<(int)vars.size(); ++i) {
+    //     m_vars[vm[i]] = vars[i];
+    //     if(vm[i]<ncoor) {
+    //         m_x.push_back(data[i]);
+    //     } else {
+    //         m_phys[vm[i]-ncoor] = data[i];
+    //     }
+    // }
     //reset axis
     ResetAxis();
     std::vector<int> dir(m_N.size(), 1);
@@ -750,6 +784,7 @@ int StructuredData::CopyAsSubDomain(const std::vector<int> &Ns, const std::vecto
 
 void StructuredData::clear() {
     m_x.clear();
+    m_x1.clear();
     m_phys.clear();
     m_vars.clear();
     m_N.clear();

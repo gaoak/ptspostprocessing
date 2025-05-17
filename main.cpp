@@ -1,6 +1,6 @@
 #include<string>
 #include<vector>
-#include "PlungingMotion.h"
+#include "FlappingMotion.h"
 using namespace std;
 
 int main(int argc, char *argv[]) {
@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
             mode = 2;
         }
     }
-    PlungingMotion plungdata(dataconfigue);
+    FlappingMotion flapdata(dataconfigue);
     int dir = 1;
     for(int c=1; c<argc; ++c) {
         if(0==string("processinverse").compare(argv[c])) {
@@ -25,11 +25,11 @@ int main(int argc, char *argv[]) {
         }
     }
     if(mode==1) {
-        plungdata.ProcessEXPWingData(dir);
+        flapdata.ProcessEXPWingData(dir);
     } else if(mode==0) {
-        plungdata.ProcessCFDWingData(dir);
+        flapdata.ProcessCFDWingData(dir);
     } else if(mode==2) {
-        plungdata.ProcessCFDAirfoilData(dir);
+        flapdata.ProcessCFDAirfoilData(dir);
     }
     printf("finished\n");
     return 0;
