@@ -13,57 +13,124 @@
 
 using namespace std;
 
+double sum(vector<int> &N, vector<double> &data, int is, int neli, int js, int nelj) {
+  vector<double> sumy(nelj+1, 0.);
+  for(int j=0; j<=nelj; ++j) {
+    int offset = Index(N, {is, j+js, 0});
+    sumy[j] = 0.5 * (data[offset] + data[offset + neli]);
+    for(int i=1; i<neli; ++i) {
+      sumy[j] += data[offset + i];
+    }
+  }
+  double sum = 0.5 * (sumy[0] + sumy[nelj]);
+  for(int j=1; j<nelj; ++j) {
+    sum += sumy[j];
+  }
+  return sum;
+}
+
 // Nt, x number elements X y number elements
 // 256 x 256
-void CalculateVolumeWeight(IncFlow &wfield, vector<int> Nt, vector<vector<double>> &data) {
+void CalculateWeight(IncFlow &wfield, vector<int> Nt, vector<vector<double>> &data, vector<vector<double>> &bnd) {
   // Number of grid points, 4097 x 4097
-  wfield.GetDetx
-  double area;
+  vector<double> dx = wfield.GetDetx();
   vector<int> N = wfield.GetN();
   vector<int> dN = N;
   int Npts = 1;
+  double area = 1.;
   for(size_t i=0; i<N.size(); ++i) {
     Npts *= Nt[i];
     dN[i] = (N[i] - 1) / Nt[i];
+    area *= dx[i];
   }
+  // volume weight
   data.resize(4);
   for(auto &it : data) {
-    it.resize(Npts);
+    it.resize(Npts, 0.);
   }
   vector<double> u = wfield.GetPhys(wfield.GetPhysID("u"));
   vector<double> v = wfield.GetPhys(wfield.GetPhysID("v"));
   vector<double> muLu = wfield.GetPhys(wfield.GetPhysID("muLu"));
   vector<double> muLv = wfield.GetPhys(wfield.GetPhysID("muLv"));
   for(int j=0; j<Nt[1]; ++j) {
+    int js = j * dN[1];
     for(int i=0; i<Nt[0]; ++i) {
       int is = i * dN[0];
-      int js = j * dN[1];
-      double sum = ;
       int id = i + j * Nt[0];
-      data[0][id] = sum;
+      data[0][id] = -sum(N, u, is, dN[0], js, dN[1]) * area;
+      data[1][id] = -sum(N, v, is, dN[0], js, dN[1]) * area;
+      data[2][id] = sum(N, muLu, is, dN[0], js, dN[1]) * area;
+      data[3][id] = sum(N, muLv, is, dN[0], js, dN[1]) * area;
     }
+  }
+  // bnd weight
+  double mu = 1./100.;
+  vector<double> ux = wfield.GetPhys(wfield.GetPhysID("u_x"));
+  vector<double> uy = wfield.GetPhys(wfield.GetPhysID("u_y"));
+  vector<double> vx = wfield.GetPhys(wfield.GetPhysID("v_x"));
+  vector<double> vy = wfield.GetPhys(wfield.GetPhysID("v_y"));
+  vector<double> Txx(ux.size(), 0.), Txy(ux.size(), 0.), Tyy(ux.size(), 0.);
+  for (size_t i = 0; i < ux.size(); ++i) {
+    Txx[i] = mu * ux[i] * 2.;
+    Txy[i] = mu * (uy[i] + vx[i]);
+    Tyy[i] = mu * vy[i] * 2.;
+  }
+  int Nbndp = 2 * (Nt[0] + Nt[1]);
+  bnd.resize(2);
+  for(auto &it : bnd) {
+    it.resize(Nbndp, 0.);
+  }
+  int of = 0;
+  for(int i=0; i<Nt[0]; ++i) {
+    int idu = i * dN[0];
+    bnd[0][i+of] = 0.5 * (Txy[idu] + Txy[idu + dN[0]]);
+    bnd[1][i+of] = 0.5 * (Tyy[idu] + Tyy[idu + dN[0]]);
+    for(int k=1; k<dN[0]; ++k) {
+      bnd[0][i+of] += Txy[idu + k];
+      bnd[1][i+of] += Tyy[idu + k];
+    }
+    bnd[0][i+of] *= dx[0];
+    bnd[1][i+of] *= dx[0];
+  }
+  of = Nt[0];
+  for(int i=0; i<Nt[0]; ++i) {
+    int idu = i * dN[0] + (N[1] - 1) * N[0];
+    bnd[0][i+of] = 0.5 * (Txy[idu] + Txy[idu + dN[0]]);
+    bnd[1][i+of] = 0.5 * (Tyy[idu] + Tyy[idu + dN[0]]);
+    for(int k=1; k<dN[0]; ++k) {
+      bnd[0][i+of] += Txy[idu + k];
+      bnd[1][i+of] += Tyy[idu + k];
+    }
+    bnd[0][i+of] *= -dx[0];
+    bnd[1][i+of] *= -dx[0];
+  }
+  of = Nt[0] * 2;
+  for(int j=0; j<Nt[1]; ++j) {
+    int idu = j * dN[1] * N[0];
+    bnd[0][j+of] = 0.5 * (Txx[idu] + Txx[idu + N[0] * dN[1]]);
+    bnd[1][j+of] = 0.5 * (Txy[idu] + Txy[idu + N[0] * dN[1]]);
+    for(int k=1; k<dN[1]; ++k) {
+      bnd[0][j+of] += Txx[idu + N[0] * k];
+      bnd[1][j+of] += Txy[idu + N[0] * k];
+    }
+    bnd[0][j+of] *= dx[1];
+    bnd[1][j+of] *= dx[1];
+  }
+  of = Nt[0] * 2 + Nt[1];
+  for(int j=0; j<Nt[1]; ++j) {
+    int idu = N[0] - 1 + j * dN[1] * N[0];
+    bnd[0][j+of] = 0.5 * (Txx[idu] + Txx[idu + N[0] * dN[1]]);
+    bnd[1][j+of] = 0.5 * (Txy[idu] + Txx[idu + N[0] * dN[1]]);
+    for(int k=1; k<dN[1]; ++k) {
+      bnd[0][j+of] += Txx[idu + N[0] * k];
+      bnd[1][j+of] += Txy[idu + N[0] * k];
+    }
+    bnd[0][j+of] *= -dx[1];
+    bnd[1][j+of] *= -dx[1];
   }
 }
 
-double sum(vector<int> &N, vector<double> &data, int is, int neli, int js, int nelj) {
-  double sum = 0.;
-  for(int j=0; j<=nelj; ++j) {
-    int offset = Index(N, {is, j+js, 0});
-    for(int i=0; i<=neli; ++i) {
-      double w = 1.;
-      if(i==0 || i==neli) {
-        w *= 0.5;
-      }
-      if(j==0 || j==nelj) {
-        w *= 0.5;
-      }
-      sum += w * data[offset + i];
-    }
-  }
-  return sum;
-}
-
-void GetVolumeFlow(IncFlow &ffield, vector<int> Nt, vector<vector<double>> &data) {
+void GetFlow(IncFlow &ffield, vector<int> Nt, vector<vector<double>> &data, vector<vector<double>> &bnd) {
   vector<int> N = ffield.GetN();
   vector<int> dN = N;
   int Npts = 1;
@@ -71,253 +138,95 @@ void GetVolumeFlow(IncFlow &ffield, vector<int> Nt, vector<vector<double>> &data
     Npts *= Nt[i];
     dN[i] = (N[i] - 1) / Nt[i];
   }
-  data.resize(4);
+  // volume data
+  data.resize(6);
   for(auto &it : data) {
-    it.resize(Npts);
+    it.resize(Npts, 0.);
+  }
+  vector<double> x = ffield.GetCoord(ffield.GetCoordID("x"));
+  vector<double> y = ffield.GetCoord(ffield.GetCoordID("y"));
+  vector<double> ax = ffield.GetPhys(ffield.GetPhysID("ax"));
+  vector<double> ay = ffield.GetPhys(ffield.GetPhysID("ay"));
+  vector<double> u = ffield.GetPhys(ffield.GetPhysID("u"));
+  vector<double> v = ffield.GetPhys(ffield.GetPhysID("v"));
+  for(int j=0; j<Nt[1]; ++j) {
+    int js = j * dN[1] + dN[1] / 2;
+    for(int i=0; i<Nt[0]; ++i) {
+      int idu = i * dN[0] + dN[0] / 2 + js * N[0];
+      int id = i + j * Nt[0];
+      data[0][id] = x[idu];
+      data[1][id] = y[idu];
+      data[2][id] = ax[idu];
+      data[3][id] = ay[idu];
+      data[4][id] = u[idu];
+      data[5][id] = v[idu];
+    }
+  }
+  // boundary data
+  int Nbndp = 2 * (Nt[0] + Nt[1]);
+  bnd.resize(4);
+  for(auto &it : bnd) {
+    it.resize(Nbndp, 0.);
+  }
+  int of = 0;
+  for(int i=0; i<Nt[0]; ++i) {
+    int idu = i * dN[0] + dN[0] / 2;
+    bnd[0][i+of] = x[idu];
+    bnd[1][i+of] = y[idu];
+    bnd[2][i+of] = u[idu];
+    bnd[3][i+of] = v[idu];
+  }
+  of = Nt[0];
+  for(int i=0; i<Nt[0]; ++i) {
+    int idu = i * dN[0] + dN[0] / 2 + (N[1] - 1) * N[0];
+    bnd[0][i+of] = x[idu];
+    bnd[1][i+of] = y[idu];
+    bnd[2][i+of] = u[idu];
+    bnd[3][i+of] = v[idu];
+  }
+  of = Nt[0] * 2;
+  for(int j=0; j<Nt[1]; ++j) {
+    int idu = (j * dN[1] + dN[1] / 2) * N[0];
+    bnd[0][j+of] = x[idu];
+    bnd[1][j+of] = y[idu];
+    bnd[2][j+of] = u[idu];
+    bnd[3][j+of] = v[idu];
+  }
+  of = Nt[0] * 2 + Nt[1];
+  for(int j=0; j<Nt[1]; ++j) {
+    int idu = N[0] - 1 + (j * dN[1] + dN[1] / 2) * N[0];
+    bnd[0][j+of] = x[idu];
+    bnd[1][j+of] = y[idu];
+    bnd[2][j+of] = u[idu];
+    bnd[3][j+of] = v[idu];
   }
 }
 
-void CalculateBoundaryWeight(IncFlow &wfield, vector<int> Nt, vector<vector<double>> &data) {
-  vector<int> N = wfield.GetN();
-}
-
-void GetBoundaryFlow(IncFlow &ffield, vector<int> Nt, vector<vector<double>> &data) {
-  vector<int> N = ffield.GetN();
-}
-
-void CalculatePhi0(map<string, vector<double>> &phi) {
-  if (phi.find("x") == phi.end() || phi.find("y") == phi.end()) {
-    cout << "x and y are missing when calculating phi." << endl;
-    exit(-1);
-  }
-  vector<double> x, y;
-  x = phi["x"];
-  y = phi["y"];
-  int np = x.size();
-  phi["px"] = vector<double>(np, 0.);
-  phi["px_x"] = vector<double>(np, 0.);
-  phi["px_y"] = vector<double>(np, 0.);
-  phi["px_xx"] = vector<double>(np, 0.);
-  phi["px_yy"] = vector<double>(np, 0.);
-  phi["px_xy"] = vector<double>(np, 0.);
-  phi["px_yx"] = phi["px_xy"];
-  phi["py"] = vector<double>(np, 0.);
-  phi["py_x"] = vector<double>(np, 0.);
-  phi["py_y"] = vector<double>(np, 0.);
-  phi["py_xx"] = vector<double>(np, 0.);
-  phi["py_yy"] = vector<double>(np, 0.);
-  phi["py_xy"] = vector<double>(np, 0.);
-  phi["py_yx"] = phi["py_xy"];
-  double a0 = 0.5;
-  for (int i = 0; i < np; ++i) {
-    double r = std::hypot(y[i], x[i]);
-    double t = std::atan2(y[i], x[i]);
-    double ir = 1. / r;
-    double ir2 = ir * ir;
-    double k0 = a0;
-    phi["px"][i] = k0 * log(r);
-    double k1 = a0 * ir;
-    phi["px_x"][i] = k1 * cos(t);
-    phi["px_y"][i] = k1 * sin(t);
-    double k2 = a0 * ir2;
-    phi["px_xx"][i] = -k2 * cos(2. * t);
-    phi["px_xy"][i] = -k2 * sin(2. * t);
-    phi["px_yy"][i] = k2 * cos(2. * t);
-  }
-}
-
-void processField(string wfieldname, string flowfieldname) {
+void processField(string wfieldname, string flowfieldname, vector<int> Nt) {
   IncFlow wfield;
   IncFlow flowfield;
   wfield.InputData(wfieldname);
   flowfield.InputData(flowfieldname);
-  vector<int> Nw = wfield.GetN();
-  int Np = N[0] * N[1] * N[2];
-  vector<double> ux = baseflow.GetPhys(baseflow.GetPhysID("u"));
-  vector<double> u(Np, 0.);
-  for (int i = 0; i < Np; ++i)
-    u[i] = ux[i] - 1.;
-  vector<double> v = baseflow.GetPhys(baseflow.GetPhysID("v"));
-  vector<double> p = baseflow.GetPhys(baseflow.GetPhysID("p"));
-  vector<double> Txx = baseflow.GetPhys(baseflow.GetPhysID("Txx"));
-  vector<double> Txy = baseflow.GetPhys(baseflow.GetPhysID("Txy"));
-  vector<double> Tyy = baseflow.GetPhys(baseflow.GetPhysID("Tyy"));
-  vector<double> kux(Np, 0.), pu(Np, 0.), tauum(Np, 0.);
-  for (int i = 0; i < Np; ++i) {
-    kux[i] = 0.5 * (u[i] * u[i] + v[i] * v[i]) * ux[i];
-    pu[i] = p[i] * u[i];
-    tauum[i] = -(Txx[i] * u[i] + Txy[i] * v[i]);
-  }
-  // integrate
-  vector<double> intkux(N[0], 0.);
-  vector<double> intpu(N[0], 0.);
-  vector<double> inttauum(N[0], 0.);
-  double dy = baseflow.GetDetx()[1];
-  for (int i = 0; i < N[0]; ++i) {
-    for (int j = 0; j < N[1]; ++j) {
-      int ind = Index(N, {i, j, 0});
-      intkux[i] += kux[ind];
-      intpu[i] += pu[ind];
-      inttauum[i] += tauum[ind];
+  vector<vector<double>> wdata, wbnd, fdata, fbnd;
+  CalculateWeight(wfield, Nt, wdata, wbnd);
+  GetFlow(flowfield, Nt, fdata, fbnd);
+  double sum = 0., sum1 = 0., sum0 = 0.;
+  for(size_t i=0; i<wdata[0].size(); ++i) {
+    for(int k=0; k<4; ++k) {
+      sum0 += wdata[k][i] * fdata[2 + k][i];
     }
   }
-  for (int i = 0; i < N[0]; ++i) {
-    intkux[i] *= dy;
-    intpu[i] *= dy;
-    inttauum[i] *= dy;
-  }
-  ofstream ofile("surface.dat");
-  ofile << std::scientific << std::setprecision(20);
-  ofile << "variables = x, kflux, press, visc\n";
-  for (int i = 0; i < N[0]; ++i) {
-    ofile << baseflow.GetCoordValue(0, i) << " " << intkux[i] << " " << intpu[i]
-          << " " << inttauum[i] << "\n";
-  }
-  ofile.close();
-}
-
-void processField2(IncFlow &baseflow, int m) {
-  vector<double> x = baseflow.GetCoord(baseflow.GetCoordID("x"));
-  vector<double> y = baseflow.GetCoord(baseflow.GetCoordID("y"));
-  double mu = 1. / 100.;
-  map<string, vector<double>> phi;
-  phi["x"] = x;
-  phi["y"] = y;
-  if (m == 0) {
-    CalculatePhi0(phi);
-  } else {
-    CalculatePhi(m, phi);
-  }
-  vector<int> N = baseflow.GetN();
-  int Np = N[0] * N[1] * N[2];
-  vector<double> u = baseflow.GetPhys(baseflow.GetPhysID("u"));
-  vector<double> v = baseflow.GetPhys(baseflow.GetPhysID("v"));
-  vector<double> p = baseflow.GetPhys(baseflow.GetPhysID("p"));
-  
-  vector<double> ax = baseflow.GetPhys(baseflow.GetPhysID("ax"));
-  vector<double> ay = baseflow.GetPhys(baseflow.GetPhysID("ay"));
-  vector<double> om(Np, 0.), lx(Np, 0.), ly(Np, 0.), Txx(Np, 0), Txy(Np, 0.),
-      Tyy(Np, 0.);
-  vector<double> taux(Np, 0.), tauy(Np, 0.);
-  vector<double> ut(Np, 0.), vt(Np, 0.);
-  for (int i = 0; i < Np; ++i) {
-    om[i] = vx[i] - uy[i];
-    Txx[i] = mu * ux[i] * 2.;
-    Txy[i] = mu * (uy[i] + vx[i]);
-    Tyy[i] = mu * vy[i] * 2.;
-    taux[i] = Txx[i];
-    tauy[i] = Txy[i];
-    lx[i] = -om[i] * v[i];
-    ly[i] = om[i] * u[i];
-    ut[i] = ax[i] - u[i] * ux[i] - v[i] * uy[i];
-    vt[i] = ay[i] - u[i] * vx[i] - v[i] * vy[i];
-  }
-  map<string, vector<double>> data;
-  data["taux"].resize(Np, 0.);
-  data["tauy"].resize(Np, 0.);
-  data["mulux"].resize(Np, 0.);
-  data["muluy"].resize(Np, 0.);
-  data["lx"].resize(Np, 0.);
-  data["ly"].resize(Np, 0.);
-  for (int i = 0; i < Np; ++i) {
-    data["taux"][i] = taux[i];
-    data["tauy"][i] = tauy[i];
-    data["mulux"][i] = y[i] * muLv[i];
-    data["muluy"][i] = -x[i] * muLv[i];
-    data["lx"][i] = -y[i] * ly[i];
-    data["ly"][i] = x[i] * ly[i];
-  }
-  map<string, vector<double>> wdata;
-  wdata["pwx"].resize(Np, 0.);
-  wdata["pwy"].resize(Np, 0.);
-  wdata["tauwx"].resize(Np, 0.);
-  wdata["tauwy"].resize(Np, 0.);
-  wdata["fwx"].resize(Np, 0.);
-  wdata["fwy"].resize(Np, 0.);
-  wdata["lwx"].resize(Np, 0.);
-  wdata["lwy"].resize(Np, 0.);
-  wdata["FEx"].resize(Np, 0.);
-  wdata["FEy"].resize(Np, 0.);
-  wdata["WPSx"].resize(Np, 0.);
-  wdata["WPSy"].resize(Np, 0.);
-  vector<double> fwy(Np, 0.);
-  vector<double> lwy(Np, 0.);
-  for (int i = 0; i < Np; ++i) {
-    fwy[i] = ax[i] * phi["py_x"][i] + ay[i] * phi["py_y"][i] +
-             Txx[i] * phi["py_xx"][i] + 2.0 * Txy[i] * phi["py_xy"][i] +
-             Tyy[i] * phi["py_yy"][i];
-    lwy[i] = lx[i] * phi["py_x"][i] + ly[i] * phi["py_y"][i];
-    wdata["pwx"][i] = -p[i] * phi["px_x"][i];
-    wdata["pwy"][i] = -p[i] * phi["py_x"][i];
-    wdata["tauwx"][i] = taux[i] * phi["px_x"][i] + tauy[i] * phi["px_y"][i];
-    wdata["tauwy"][i] = taux[i] * phi["py_x"][i] + tauy[i] * phi["py_y"][i];
-    wdata["fwx"][i] = y[i] * fwy[i];
-    wdata["fwy"][i] = -x[i] * fwy[i];
-    wdata["lwx"][i] = -y[i] * lwy[i];
-    wdata["lwy"][i] = x[i] * lwy[i];
-    wdata["FEx"][i] =
-        -ut[i] * phi["px"][i] -
-        2. * mu * (u[i] * phi["px_xx"][i] + v[i] * phi["px_xy"][i]) -
-        (p[i] + 0.5 * (u[i] * u[i] + v[i] * v[i]) - 0.5) * phi["px_x"][i] +
-        Txx[i] * phi["px_x"][i] + Txy[i] * phi["px_y"][i];
-    wdata["FEy"][i] =
-        -ut[i] * phi["py"][i] -
-        2. * mu * (u[i] * phi["py_xx"][i] + v[i] * phi["py_xy"][i]) -
-        (p[i] + 0.5 * (u[i] * u[i] + v[i] * v[i]) - 0.5) * phi["py_x"][i] +
-        Txx[i] * phi["py_x"][i] + Txy[i] * phi["py_y"][i];
-    wdata["WPSx"][i] =
-        (-ax[i] + muLu[i]) * phi["px"][i] - p[i] * phi["px_x"][i];
-    wdata["WPSy"][i] =
-        (-ax[i] + muLu[i]) * phi["py"][i] - p[i] * phi["py_x"][i];
-  }
-  map<string, vector<double>> result, wresult;
-  for (auto &it : data) {
-    result[it.first].resize(N[0], 0.);
-  }
-  for (auto &it : wdata) {
-    wresult[it.first].resize(N[0], 0.);
-  }
-  double dy = baseflow.GetDetx()[1];
-  for (int i = 0; i < N[0]; ++i) {
-    for (int j = 0; j < N[1]; ++j) {
-      int ind = Index(N, {i, j, 0});
-      for (auto &it : result) {
-        it.second[i] += data[it.first][ind];
-      }
-      for (auto &it : wresult) {
-        it.second[i] += wdata[it.first][ind];
-      }
+  for(size_t i=0; i<wbnd[0].size(); ++i) {
+    for(int k=0; k<2; ++k) {
+      sum1 += wbnd[k][i] * fbnd[2 + k][i];
     }
   }
-  for (int i = 0; i < N[0]; ++i) {
-    for (auto &it : result) {
-      it.second[i] *= dy;
-    }
-    for (auto &it : wresult) {
-      it.second[i] *= dy;
-    }
-  }
-  ofstream ofile("surface.dat");
-  ofile << std::scientific << std::setprecision(20);
-  ofile << "variables = x";
-  for (auto &it : result) {
-    ofile << ", " << it.first;
-  }
-  for (auto &it : wresult) {
-    ofile << ", " << it.first;
-  }
-  ofile << "\n";
-  for (int i = 0; i < N[0]; ++i) {
-    ofile << baseflow.GetCoordValue(0, i);
-    for (auto &it : result) {
-      ofile << " " << it.second[i];
-    }
-    for (auto &it : wresult) {
-      ofile << " " << it.second[i];
-    }
-    ofile << "\n";
-  }
-  ofile.close();
+  sum = sum0 + sum1;
+  cout << "SUMFORCE " << sum << " " << sum0 << " " << sum1 << endl;
+  vector<string> volstr = {"x", "y", "ax", "ay", "u", "v"};
+  OutputTec360_binary("volume.plt", volstr, Nt, fdata, 0);
+  vector<string> bndstr = {"x", "y", "u", "v"};
+  OutputTec360_ascii("bnd.dat", bndstr, fbnd);
 }
 
 int main(int argc, char *argv[]) {
@@ -328,7 +237,8 @@ int main(int argc, char *argv[]) {
   string weightfilename = argv[1];
   string flowfilename = argv[2];
   printf("processing file %s\n", argv[1]);
-  processField(weightfilename, flowfilename);
+  vector<int> Nt = {128, 128, 1};
+  processField(weightfilename, flowfilename, Nt);
   printf("Finished.\n");
   return 0;
 }
