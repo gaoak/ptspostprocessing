@@ -17,6 +17,8 @@ using namespace std;
 // 256 x 256
 void CalculateVolumeWeight(IncFlow &wfield, vector<int> Nt, vector<vector<double>> &data) {
   // Number of grid points, 4097 x 4097
+  wfield.GetDetx
+  double area;
   vector<int> N = wfield.GetN();
   vector<int> dN = N;
   int Npts = 1;
@@ -43,9 +45,22 @@ void CalculateVolumeWeight(IncFlow &wfield, vector<int> Nt, vector<vector<double
   }
 }
 
-double sum(vector<double> &data, int is, int ie, int js, int je) {
+double sum(vector<int> &N, vector<double> &data, int is, int neli, int js, int nelj) {
   double sum = 0.;
-  for(int j=js; )
+  for(int j=0; j<=nelj; ++j) {
+    int offset = Index(N, {is, j+js, 0});
+    for(int i=0; i<=neli; ++i) {
+      double w = 1.;
+      if(i==0 || i==neli) {
+        w *= 0.5;
+      }
+      if(j==0 || j==nelj) {
+        w *= 0.5;
+      }
+      sum += w * data[offset + i];
+    }
+  }
+  return sum;
 }
 
 void GetVolumeFlow(IncFlow &ffield, vector<int> Nt, vector<vector<double>> &data) {
