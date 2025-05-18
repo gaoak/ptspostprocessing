@@ -222,6 +222,7 @@ void processField(string wfieldname, string flowfieldname, vector<int> Nt) {
     }
   }
   sum = sum0 + sum1;
+  cout << std::scientific << std::setprecision(20);
   cout << "SUMFORCE " << sum << " " << sum0 << " " << sum1 << endl;
   vector<string> volstr = {"x", "y", "ax", "ay", "u", "v"};
   OutputTec360_binary("volume.plt", volstr, Nt, fdata, 0);
@@ -230,14 +231,16 @@ void processField(string wfieldname, string flowfieldname, vector<int> Nt) {
 }
 
 int main(int argc, char *argv[]) {
-  if (argc < 3) {
+  if (argc < 5) {
     cout << "2 input files requred: weight, flow" << std::endl;
     return -argc;
   }
   string weightfilename = argv[1];
   string flowfilename = argv[2];
+  int M = stoi(argv[3]);
+  int N = stoi(argv[4]);
   printf("processing file %s\n", argv[1]);
-  vector<int> Nt = {128, 128, 1};
+  vector<int> Nt = {M, N, 1};
   processField(weightfilename, flowfilename, Nt);
   printf("Finished.\n");
   return 0;
