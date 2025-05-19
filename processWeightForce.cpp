@@ -120,7 +120,7 @@ void CalculateWeight(IncFlow &wfield, vector<int> Nt, vector<vector<double>> &da
   for(int j=0; j<Nt[1]; ++j) {
     int idu = N[0] - 1 + j * dN[1] * N[0];
     bnd[0][j+of] = 0.5 * (Txx[idu] + Txx[idu + N[0] * dN[1]]);
-    bnd[1][j+of] = 0.5 * (Txy[idu] + Txx[idu + N[0] * dN[1]]);
+    bnd[1][j+of] = 0.5 * (Txy[idu] + Txy[idu + N[0] * dN[1]]);
     for(int k=1; k<dN[1]; ++k) {
       bnd[0][j+of] += Txx[idu + N[0] * k];
       bnd[1][j+of] += Txy[idu + N[0] * k];
@@ -225,9 +225,9 @@ void processField(string wfieldname, string flowfieldname, vector<int> Nt) {
   cout << std::scientific << std::setprecision(20);
   cout << "SUMFORCE " << sum << " " << sum0 << " " << sum1 << endl;
   vector<string> volstr = {"x", "y", "ax", "ay", "u", "v"};
-  OutputTec360_binary("volume.plt", volstr, Nt, fdata, 0);
+  //OutputTec360_binary("volume.plt", volstr, Nt, fdata, 0);
   vector<string> bndstr = {"x", "y", "u", "v"};
-  OutputTec360_ascii("bnd.dat", bndstr, fbnd);
+  //OutputTec360_ascii("bnd.dat", bndstr, fbnd);
 }
 
 int main(int argc, char *argv[]) {
