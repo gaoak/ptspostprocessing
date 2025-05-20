@@ -10,6 +10,7 @@
 #include <map>
 #include <numeric>
 #include <set>
+#include <random>
 
 using namespace std;
 
@@ -202,28 +203,51 @@ void GetFlow(IncFlow &ffield, vector<int> Nt, vector<vector<double>> &data, vect
   }
 }
 
-void processField(string wfieldname, string flowfieldname, vector<int> Nt) {
+void DisturbFlow(vector<vector<double>> &data, vector<vector<double>> &bnd, double eps) {
+  mt19937 gen{7};
+  normal_distribution<double> dist(0.0, eps);
+  for(size_t n=2; n<data.size(); ++n) {
+    for(size_t i=0; i<data[0].size(); ++i) {
+      data[n][i] += dist(gen);
+    }
+  }
+  for(size_t n=2; n<bnd.size(); ++n) {
+    for(size_t i=0; i<bnd[0].size(); ++i) {
+      bnd[n][i] += dist(gen);
+    }
+  }
+}
+
+void processField(string wfieldname, string flownametemp, vector<int> Nt,
+  int nstart, int nend, int nskip, double eps) {
+    char buffer[1000];
   IncFlow wfield;
   IncFlow flowfield;
   wfield.InputData(wfieldname);
-  flowfield.InputData(flowfieldname);
   vector<vector<double>> wdata, wbnd, fdata, fbnd;
   CalculateWeight(wfield, Nt, wdata, wbnd);
-  GetFlow(flowfield, Nt, fdata, fbnd);
-  double sum = 0., sum1 = 0., sum0 = 0.;
-  for(size_t i=0; i<wdata[0].size(); ++i) {
-    for(int k=0; k<4; ++k) {
-      sum0 += wdata[k][i] * fdata[2 + k][i];
+  for(int n=nstart; n<=nend; n+=nskip) {
+    sprintf(buffer, flownametemp.c_str(), n);
+    string flowfilename(buffer);
+    cout << "filename is " << flowfilename << endl;
+    flowfield.InputData(flowfilename);
+    GetFlow(flowfield, Nt, fdata, fbnd);
+    DisturbFlow(fdata, fbnd, eps);
+    double sum = 0., sum1 = 0., sum0 = 0.;
+    for(size_t i=0; i<wdata[0].size(); ++i) {
+      for(int k=0; k<4; ++k) {
+        sum0 += wdata[k][i] * fdata[2 + k][i];
+      }
     }
-  }
-  for(size_t i=0; i<wbnd[0].size(); ++i) {
-    for(int k=0; k<2; ++k) {
-      sum1 += wbnd[k][i] * fbnd[2 + k][i];
+    for(size_t i=0; i<wbnd[0].size(); ++i) {
+      for(int k=0; k<2; ++k) {
+        sum1 += wbnd[k][i] * fbnd[2 + k][i];
+      }
     }
+    sum = sum0 + sum1;
+    cout << std::scientific << std::setprecision(20);
+    cout << "SUMFORCE " << n << " " << sum << " " << sum0 << " " << sum1 << endl;
   }
-  sum = sum0 + sum1;
-  cout << std::scientific << std::setprecision(20);
-  cout << "SUMFORCE " << sum << " " << sum0 << " " << sum1 << endl;
   vector<string> volstr = {"x", "y", "ax", "ay", "u", "v"};
   //OutputTec360_binary("volume.plt", volstr, Nt, fdata, 0);
   vector<string> bndstr = {"x", "y", "u", "v"};
@@ -231,17 +255,21 @@ void processField(string wfieldname, string flowfieldname, vector<int> Nt) {
 }
 
 int main(int argc, char *argv[]) {
-  if (argc < 5) {
-    cout << "2 input files requred: weight, flow" << std::endl;
+  if (argc < 9) {
+    cout << "weight, flow, startn, endn, skipn, nx, ny, eps" << std::endl;
     return -argc;
   }
   string weightfilename = argv[1];
   string flowfilename = argv[2];
-  int M = stoi(argv[3]);
-  int N = stoi(argv[4]);
+  int nstart = stoi(argv[3]);
+  int nend  = stoi(argv[4]);
+  int nskip = stoi(argv[5]);
+  int M = stoi(argv[6]);
+  int N = stoi(argv[7]);
+  double eps = stod(argv[8]);
   printf("processing file %s\n", argv[1]);
   vector<int> Nt = {M, N, 1};
-  processField(weightfilename, flowfilename, Nt);
+  processField(weightfilename, flowfilename, Nt, nstart, nend, nskip, eps);
   printf("Finished.\n");
   return 0;
 }

@@ -95,7 +95,7 @@ void CalculatePhi0(map<string, vector<double>> &phi) {
     double ir = 1. / r;
     double ir2 = ir * ir;
     double k0 = a0;
-    phi["px"][i] = k0 * log(r);
+    phi["px"][i] = k0 * log(r/a0);
     double k1 = a0 * ir;
     phi["px_x"][i] = k1 * cos(t);
     phi["px_y"][i] = k1 * sin(t);
