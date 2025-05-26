@@ -1,5 +1,6 @@
 #include<tuple>
 #include<limits>
+#include<iostream>
 #include "IncFlow.h"
 #include "Util.h"
 #include "UtilGraph.h"
@@ -205,12 +206,12 @@ int IncFlow::TransformCoord(const std::vector<double> &x0, const double theta, c
     double sz = sin(theta), cz = cos(theta);
     double temp[2];
     for (int k = 0; k < 3; ++k)
-    {
-        for(int i=0; i<m_Np; ++i) {
-            m_x1[k][i] = m_x[k][i] - pivot[k];
-            
+        {
+            for (int i = 0; i < m_Np; ++i)
+            {
+                m_x1[k][i] = m_x[k][i] - pivot[k];
+            }
         }
-    }
     for (int i=0; i<m_Np; ++i)
     {
         temp[0] = cz * m_x1[0][i] - sz * m_x1[1][i];
@@ -223,6 +224,19 @@ int IncFlow::TransformCoord(const std::vector<double> &x0, const double theta, c
         for(int i=0; i<m_Np; ++i) {
             m_x1[k][i] += pivot[k] + x0[k];
         }
+    }
+    return m_Np;
+}
+
+int IncFlow::TransformVector(const double theta) {
+    double sz = sin(theta), cz = cos(theta);
+    double temp[2];
+    for (int i=0; i<m_Np; ++i)
+    {
+        temp[0] = cz * m_phys[0][i] - sz * m_phys[1][i];
+        temp[1] = sz * m_phys[0][i] + cz * m_phys[1][i];
+        m_phys[0][i] = temp[0];
+        m_phys[1][i] = temp[1];
     }
     return m_Np;
 }

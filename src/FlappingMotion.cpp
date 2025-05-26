@@ -4,6 +4,7 @@
 #include<algorithm>
 #include<set>
 #include <limits>
+#include<iostream>
 #include "Util.h"
 #include "FlappingMotion.h"
 
@@ -23,29 +24,55 @@ FlappingMotion::FlappingMotion(std::string dataconfigue) {
             param[p[0]] = p[1];
         }
     }
+    if(param.count("filesnumber")) {
+        parserInt(param["filesnumber"].c_str(), m_file);
+        m_num = (m_file[2] - m_file[0] + 1) / m_file[1];
+    }
+    else
+    {
+        m_file.resize(3, 0);
+    }
     if(param.count("f")) {
         m_f = StringToDouble(param["f"]);
     } else {
         m_f = 0.;
     }
-    if(param.count("v0")) {
-        parserDouble(param["v0"].c_str(), m_v0);
-    } else {
-        m_v0.resize(2, 0.);
+    std::string tmp;
+    m_bodyVel.resize(m_num);
+    m_bodyVel2.resize(m_num);
+    for (int i = 0; i < m_num; ++i)
+    {
+        tmp = "bodyVel" + std::to_string(i + m_file[0]);
+        if (param.count(tmp))
+        {
+            parserDouble(param[tmp].c_str(), m_bodyVel[i]);
+            parserDouble(param[tmp].c_str(), m_bodyVel2[i]);
+        }
+        else
+        {
+            m_bodyVel[i].resize(2, 0.);
+            m_bodyVel2[i].resize(2, 0.);
+        }
     }
+    m_bodyLocation.resize(m_num);
+    for (int i = 0; i < m_num; ++i)
+    {
+        tmp = "bodyLocation" + std::to_string(i + m_file[0]);
+        if (param.count(tmp))
+        {
+            parserDouble(param[tmp].c_str(), m_bodyLocation[i]);
+        }
+        else
+        {
+            m_bodyLocation[i].resize(3, 0.);
+        }
+    }   
     if(param.count("pivot")) {
         parserDouble(param["pivot"].c_str(), m_pivot);
     }
     else
     {
         m_pivot.resize(3, 0.);
-    }
-    if(param.count("bodyLocation")) {
-        parserDouble(param["bodyLocation"].c_str(), m_bodyLocation);
-    }
-    else
-    {
-        m_bodyLocation.resize(3, 0.);
     }
     if(param.count("Amp")) {
         m_Amp = StringToDouble(param["Amp"]);
@@ -72,11 +99,7 @@ FlappingMotion::FlappingMotion(std::string dataconfigue) {
     } else {
         m_vortexcorefileformat = "vcore%d.dat";
     }
-    if(param.count("filesnumber")) {
-        parserInt(param["filesnumber"].c_str(), m_file);
-    } else {
-        m_file.resize(3, 0);
-    }
+    
     GenerateFileSeries();
     if(param.count("phase")) {
         parserDouble(param["phase"].c_str(), m_phase);
@@ -294,6 +317,49 @@ int FlappingMotion::Resampling(IncFlow &flow) {
 
 int FlappingMotion::ProcessCFDWingData(int dir) {
     std::vector<int> filen = m_fileseries;
+    double theta;
+    double sz, cz, temp[2];
+    if (dir < 0)
+    {
+        std::reverse(filen.begin(), filen.end());;
+    }
+
+    for(int k=0; k<(int)filen.size(); ++k) {
+        int n = filen[k];
+        std::vector<double> params;
+        // m_AoA = theta;
+        params.push_back(m_AoA);
+        for(size_t l=0; l<m_span.size(); ++l) {
+            params.push_back(m_span[l]);
+        }
+        IncFlow flow(m_airfoil, params);
+        flow.InputData(GetInFileName(n));
+
+        theta = FlappingAngularAmp(GetFilePhase(n), m_phi);
+        sz = sin(theta);
+        cz = cos(theta);
+        temp[0] = cz * m_bodyVel[k][0] + sz * m_bodyVel[k][1];
+        temp[1] = -sz * m_bodyVel[k][0] + cz * m_bodyVel[k][1];
+        m_bodyVel2[k][0] = temp[0];
+        m_bodyVel2[k][1] = temp[1];
+
+        if(m_airfoil.compare("0000")!=0) {
+            double omega = FlappingAngularVelocity(GetFilePhase(n), m_phi);
+            flow.OverWriteBodyPoint({m_bodyVel2[k][0], m_bodyVel2[k][1], 0.}, {m_pivot[0], m_pivot[1], m_pivot[2]}, {0., 0., omega});
+        }
+    double omega = FlappingAngularVelocity(GetFilePhase(n), m_phi);
+        double theta = FlappingAngularAmp(GetFilePhase(n), m_phi);
+        std::cout << theta << " " << omega << std::endl;
+        flow.TransformCoord({m_bodyLocation[k][0], m_bodyLocation[k][1], m_bodyLocation[k][2]}, theta, {m_pivot[0], m_pivot[1], m_pivot[2]});
+        flow.TransformVector(theta);
+
+        ProcessFiniteWingData(flow, n);
+    }
+    return m_fileseries.size();
+}
+
+int FlappingMotion::TransformFld(int dir) {
+    std::vector<int> filen = m_fileseries;
     if(dir<0) {
         std::reverse(filen.begin(), filen.end());;
     }
@@ -307,17 +373,13 @@ int FlappingMotion::ProcessCFDWingData(int dir) {
         }
         IncFlow flow(m_airfoil, params);
         flow.InputData(GetInFileName(n));
-        if(m_airfoil.compare("0000")!=0) {
-            double omega = FlappingAngularVelocity(GetFilePhase(n), m_phi);
-            flow.OverWriteBodyPoint({m_v0[0], m_v0[1], 0.}, {m_pivot[0], m_pivot[1], m_pivot[2]}, {0., 0., omega});
-        }
         double theta = FlappingAngularAmp(GetFilePhase(n), m_phi);
-        flow.TransformCoord({m_bodyLocation[0], m_bodyLocation[1], m_bodyLocation[2]}, theta, {m_pivot[0], m_pivot[1], m_pivot[2]});
-
-        ProcessFiniteWingData(flow, n);
+        flow.TransformCoord({m_bodyLocation[k][0], m_bodyLocation[k][1], m_bodyLocation[k][2]}, theta, {m_pivot[0], m_pivot[1], m_pivot[2]});
+        flow.OutputData(GetOutFileName(n));
     }
     return m_fileseries.size();
 }
+
 
 int FlappingMotion::ProcessCFDAirfoilData(int dir) {
     std::vector<int> filen = m_fileseries;
@@ -334,7 +396,7 @@ int FlappingMotion::ProcessCFDAirfoilData(int dir) {
         flow.OutputData(GetOutFileName(n));
         if(m_airfoil.compare("0000")!=0) {
             double omega = FlappingAngularVelocity(GetFilePhase(n), m_phi);
-            flow.OverWriteBodyPoint({m_v0[0], m_v0[1]}, {m_pivot[0], m_pivot[1], m_pivot[2]}, {0., 0., omega});
+            flow.OverWriteBodyPoint({m_bodyVel[k][0], m_bodyVel[k][1]}, {m_pivot[0], m_pivot[1], m_pivot[2]}, {0., 0., omega});
         }
         ProcessAirfoilData(flow, n);
     }

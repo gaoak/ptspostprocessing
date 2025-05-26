@@ -16,6 +16,9 @@ int main(int argc, char *argv[]) {
         if(0==string("airfoil").compare(argv[c])) {
             mode = 2;
         }
+        if(0==string("trans").compare(argv[c])) {
+            mode = 3;
+        }
     }
     FlappingMotion flapdata(dataconfigue);
     int dir = 1;
@@ -30,6 +33,9 @@ int main(int argc, char *argv[]) {
         flapdata.ProcessCFDWingData(dir);
     } else if(mode==2) {
         flapdata.ProcessCFDAirfoilData(dir);
+    }
+    else if(mode==3) {
+        flapdata.TransformFld(dir);
     }
     printf("finished\n");
     return 0;

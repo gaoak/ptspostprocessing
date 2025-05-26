@@ -8,6 +8,8 @@ public:
     int ProcessCFDWingData(int dir = 1);
     int ProcessEXPWingData(int dir = 1);
     int ProcessCFDAirfoilData(int dir = 1);
+    int TransformFld(int dir = 1);
+    void TransformBodyVel(const std::vector<double> &bodyVel, const double omega, const double theta);
     int Dumppoints();
     std::string GetInFileName(int n);
     std::string GetOutFileName(int n);
@@ -35,8 +37,9 @@ protected:
     std::vector<int> m_fileseries;
     std::vector<double> m_phase;
     std::vector<double> m_pivot;
-    std::vector<double> m_v0;
-    std::vector<double> m_bodyLocation;
+    std::vector<std::vector<double>> m_bodyVel;
+    std::vector<std::vector<double>> m_bodyVel2;
+    std::vector<std::vector<double>> m_bodyLocation;
     std::string m_inputformat;
     std::string m_outputformat;
     std::string m_airfoil;
@@ -50,6 +53,7 @@ protected:
     double m_threshold;
     int m_calculateVorticityQ;
     int m_translation;
+    int m_num;
     VortexMethod m_vortexmethod;
     int m_processVortexCoreCount;
 };
