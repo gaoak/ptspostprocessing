@@ -204,7 +204,8 @@ void GetFlow(IncFlow &ffield, vector<int> Nt, vector<vector<double>> &data, vect
 }
 
 void DisturbFlow(vector<vector<double>> &data, vector<vector<double>> &bnd, double eps) {
-  mt19937 gen{7};
+  random_device rd;
+  mt19937 gen{rd()};
   normal_distribution<double> dist(0.0, eps);
   for(size_t n=2; n<data.size(); ++n) {
     for(size_t i=0; i<data[0].size(); ++i) {
