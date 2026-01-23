@@ -281,7 +281,7 @@ int StructuredData::ResetAxis() {
         e1 = CrossVect(e0, e1);
     }
     if(m_N.size()>2 && m_N[2]>1) {
-        int i2 = Index(m_N, {0, 0, 1});
+        int i2 = Index(m_N, {0, 0, m_N[2] - 1});
         e2 = {m_x[0][i2]-x0[0], m_x[1][i2]-x0[1], GetCoordValue(2, i2)-x0[2]};
     } else {
         e2 = CrossVect(e0, e1);
