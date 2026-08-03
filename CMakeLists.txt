@@ -84,3 +84,7 @@ target_link_libraries(processKinetic LIBPROCESSING)
 # target process Nektar weighted force
 add_executable(processWeight processWeightForce.cpp)
 target_link_libraries(processWeight LIBPROCESSING)
+
+#target proces vortex moment generated using Nektar
+add_executable(processVortexMoment processVortexMoment.cpp)
+target_link_libraries(processVortexMoment LIBPROCESSING)
