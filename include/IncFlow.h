@@ -65,6 +65,7 @@ public:
     int CalculateVorticity2D(int order = 2);
     int CalculateVorticity3D(int order = 2);
     int CalculateForcePartition2D(int order = 2);
+    int CalculateForcePartition3D(int order = 2);
     int InterpolateFrom(const IncFlow & origin, std::map<int,double> field);
     int CopyAsSubDomain(const std::vector<int> &Ns, const std::vector<int> &Ne,
             const std::vector<int> &skip, std::map<int, double> &field, const IncFlow & big);

@@ -198,6 +198,66 @@ int IncFlow::CalculateForcePartition2D(int order) {
     return m_Np;
 }
 
+int IncFlow::CalculateForcePartition3D(int order) {
+    std::vector<std::vector<double> > u, ux(3), uy(3), uz(3);
+    u.push_back(m_phys[GetPhysID("u")]);
+    u.push_back(m_phys[GetPhysID("v")]);
+    u.push_back(m_phys[GetPhysID("w")]);
+    for(int i=0; i<3; ++i) {
+        ux[i].resize(m_Np);
+        uy[i].resize(m_Np);
+        uz[i].resize(m_Np);
+    }
+    Diff(u, ux, 0, order);
+    Diff(u, uy, 1, order);
+    Diff(u, uz, 2, order);
+
+    // Strain rate tensor, D = 0.5 * (grad(u) + grad(u)^T).
+    const std::vector<std::string> strainNames = {
+        "Dxx", "Dxy", "Dxz", "Dyy", "Dyz", "Dzz"
+    };
+    const int strainId = m_phys.size();
+    for(size_t i=0; i<strainNames.size(); ++i) {
+        m_vars.push_back(strainNames[i]);
+        m_phys.push_back(std::vector<double>(m_Np, 0.));
+    }
+    for(int i=0; i<m_Np; ++i) {
+        m_phys[strainId    ][i] = ux[0][i];
+        m_phys[strainId + 1][i] = 0.5 * (ux[1][i] + uy[0][i]);
+        m_phys[strainId + 2][i] = 0.5 * (ux[2][i] + uz[0][i]);
+        m_phys[strainId + 3][i] = uy[1][i];
+        m_phys[strainId + 4][i] = 0.5 * (uy[2][i] + uz[1][i]);
+        m_phys[strainId + 5][i] = uz[2][i];
+    }
+
+    // Velocity Laplacian.
+    std::vector<std::vector<double> > uxx(3), uyy(3), uzz(3);
+    for(int i=0; i<3; ++i) {
+        uxx[i].resize(m_Np);
+        uyy[i].resize(m_Np);
+        uzz[i].resize(m_Np);
+    }
+    Diff(ux, uxx, 0, order);
+    Diff(uy, uyy, 1, order);
+    Diff(uz, uzz, 2, order);
+
+    const std::vector<std::string> laplaceNames = {
+        "uLaplace", "vLaplace", "wLaplace"
+    };
+    const int laplaceId = m_phys.size();
+    for(size_t i=0; i<laplaceNames.size(); ++i) {
+        m_vars.push_back(laplaceNames[i]);
+        m_phys.push_back(std::vector<double>(m_Np, 0.));
+    }
+    for(int i=0; i<m_Np; ++i) {
+        for(int component=0; component<3; ++component) {
+            m_phys[laplaceId + component][i] =
+                uxx[component][i] + uyy[component][i] + uzz[component][i];
+        }
+    }
+    return m_Np;
+}
+
 int IncFlow::TransformCoord(const std::vector<double> &x0) {
     for(int k=0; k<GetNumCoords(); ++k) {
         m_axis.m_o[k] += x0[k];
